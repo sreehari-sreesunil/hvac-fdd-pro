@@ -1,0 +1,49 @@
+[project]
+name = "asset-service"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "sreehari-sreesunil",email = "sreeharisunil2@gmail.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi (>=0.139.0,<0.140.0)",
+    "uvicorn[standard] (>=0.51.0,<0.52.0)",
+    "sqlalchemy (>=2.0.51,<3.0.0)",
+    "psycopg2-binary (>=2.9.12,<3.0.0)",
+    "pydantic[email] (>=2.13.4,<3.0.0)",
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "common"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "mypy (>=2.3.0,<3.0.0)"
+]
+
+[tool.poetry.dependencies]
+common = {path = "../../libs/common", develop = true}
+
+[tool.poetry]
+package-mode = false
+
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true

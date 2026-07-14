@@ -23,4 +23,17 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
+        name: mypy (auth-service)
+        files: ^services/auth-service/
+        args: [--config-file=services/auth-service/pyproject.toml]
+        additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (asset-service)
+        files: ^services/asset-service/
+        args: [--config-file=services/asset-service/pyproject.toml]
+        additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (common)
+        files: ^libs/common/
+        args: [--config-file=libs/common/pyproject.toml]
         additional_dependencies: [pydantic]
