@@ -8,7 +8,7 @@ to auth-service (see app/core/deps.py verify_org_membership) — never by
 trusting a claim baked into the JWT itself.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -59,13 +59,20 @@ async def create_facility(
     return facility
 
 
-@router.get("", response_model=list[FacilityOut])
-async def list_facilities(
-    organization_id: str,
+@router.get("/{facility_id}", response_model=FacilityOut)
+async def get_facility(
+    facility_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
-) -> list[Facility]:
-    """List all facilities within an organization the caller belongs to."""
-    await verify_org_membership(organization_id, credentials.credentials)
-    return db.query(Facility).filter(Facility.organization_id == organization_id).all()
+) -> Facility:
+    """Get a single facility by ID. Verifies the caller belongs to the
+    facility's organization before returning it or revealing whether it
+    exists."""
+    facility = db.query(Facility).filter(Facility.id == facility_id).first()
+    if facility is None:
+        raise HTTPException(status_code=404, detail="Facility not found")
+
+    await verify_org_membership(facility.organization_id, credentials.credentials)
+
+    return facility

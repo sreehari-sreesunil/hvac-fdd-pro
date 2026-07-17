@@ -12,6 +12,7 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hvac -d auth_db"]
       interval: 5s
@@ -30,6 +31,55 @@ services:
       - "8000:8000"
     depends_on:
       postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  asset-service:
+    build:
+      context: .
+      dockerfile: services/asset-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://hvac:hvac_dev_password@postgres:5432/asset_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
+      AUTH_SERVICE_URL: http://auth-service:8000
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  telemetry-service:
+    build:
+      context: .
+      dockerfile: services/telemetry-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://hvac:hvac_dev_password@postgres:5432/telemetry_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
+      AUTH_SERVICE_URL: http://auth-service:8000
+      ASSET_SERVICE_URL: http://asset-service:8001
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      asset-service:
         condition: service_healthy
 
 volumes:

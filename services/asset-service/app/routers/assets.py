@@ -52,3 +52,27 @@ async def list_assets(
 
     await verify_org_membership(facility.organization_id, credentials.credentials)
     return db.query(Asset).filter(Asset.facility_id == facility_id).all()
+
+
+@router.get("/{asset_id}", response_model=AssetOut)
+async def get_asset(
+    asset_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> Asset:
+    """Get a single asset by ID. Verifies the caller belongs to the
+    asset's facility's organization before returning it."""
+    asset = db.query(Asset).filter(Asset.id == asset_id).first()
+    if asset is None:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    facility = db.query(Facility).filter(Facility.id == asset.facility_id).first()
+    if facility is None:
+        # Data integrity issue, not a client error — an asset pointing at
+        # a facility that no longer exists.
+        raise HTTPException(status_code=500, detail="Asset's facility not found")
+
+    await verify_org_membership(facility.organization_id, credentials.credentials)
+
+    return asset
