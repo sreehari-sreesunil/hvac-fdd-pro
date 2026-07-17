@@ -5,7 +5,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, text
+from sqlalchemy import DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -24,7 +24,7 @@ class EdgeDevice(Base):
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     deactivated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
     ingestion_keys: Mapped[list["IngestionKey"]] = relationship(back_populates="edge_device")
@@ -40,7 +40,7 @@ class IngestionKey(Base):
     key_hash: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     key_prefix: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -55,7 +55,7 @@ class MetricMapping(Base):
     external_key: Mapped[str] = mapped_column(String, nullable=False, index=True)
     metric_definition_id: Mapped[str] = mapped_column(String(36), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
 
@@ -71,6 +71,6 @@ class TelemetryReading(Base):
         DateTime(timezone=True), nullable=False, index=True
     )
     ingested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     source_type: Mapped[str] = mapped_column(String, nullable=False)
