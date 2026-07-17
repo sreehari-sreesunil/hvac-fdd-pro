@@ -1,4 +1,3 @@
-import enum
 import uuid
 from datetime import datetime
 
@@ -6,16 +5,11 @@ from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
+from common.roles import Role  # noqa: F401
 
 
 def gen_uuid() -> str:
     return str(uuid.uuid4())
-
-
-class Role(str, enum.Enum):
-    admin = "admin"
-    operator = "operator"
-    viewer = "viewer"
 
 
 class User(Base):

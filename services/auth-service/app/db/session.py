@@ -1,3 +1,5 @@
+"""Database session/engine setup for auth-service."""
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
@@ -9,7 +11,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Session:  # type: ignore[misc]
+def get_db() -> Session:
+    """Yield a database session, closed automatically after the request."""
     db = SessionLocal()
     try:
         yield db

@@ -1,3 +1,5 @@
+"""Typed, validated settings for auth-service."""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,4 +14,4 @@ class Settings(BaseSettings):
     service_name: str = "auth-service"
 
 
-settings = Settings()  # type: ignore[call-arg]  # values come from env/.env at runtime
+settings = Settings()  # values come from env/.env at runtime
