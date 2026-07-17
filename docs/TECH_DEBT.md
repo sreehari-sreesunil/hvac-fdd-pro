@@ -19,3 +19,17 @@ Categories, roughly in priority order:
 
 Must be fixed before this is genuinely "production-grade" — deferred only
 to avoid rushing sloppy `# type: ignore` fixes under time pressure.
+
+
+## Python version drift
+Local Poetry venvs run on 3.13 (Anaconda's python.exe is first on PATH); Docker images
+pin python:3.11-slim. No issues observed yet, but standardize eventually — either
+install 3.11 locally for all services, or bump Docker images to 3.12/3.13 to match.
+
+## Telemetry-service: incomplete auth-service error handling
+`check_facility_role`, `verify_asset_access`, and `_check_facility_access` in
+telemetry-service/app/core/deps.py only explicitly handle 404/403 responses
+from asset-service. A 401 (e.g. expired token) falls into a generic
+"Unexpected response from asset-service" branch instead of a clear
+"please log in again" message. Low priority — functionally correct,
+just a confusing error message in that specific case.
