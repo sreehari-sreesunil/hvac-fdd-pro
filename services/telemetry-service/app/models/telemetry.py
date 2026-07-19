@@ -1,5 +1,11 @@
 """SQLAlchemy models for telemetry-service.
-...(docstring unchanged)...
+
+Defines EdgeDevice, IngestionKey, MetricMapping, and TelemetryReading.
+All IDs are UUID strings (String(36)) to match auth-service and
+asset-service's convention. No real FK to asset-service's tables exists
+(cross-database, per ADR-0001) — asset_id, facility_id, and
+metric_definition_id are all logical FKs only, resolved via HTTP calls
+where access control matters.
 """
 
 import uuid
@@ -74,3 +80,11 @@ class TelemetryReading(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     source_type: Mapped[str] = mapped_column(String, nullable=False)
+    # Optional, client-supplied dedup token (per-reading, not per-batch).
+    # Nullable + unique: readings that don't send one are unaffected (both
+    # Postgres and SQLite treat multiple NULLs as distinct under a unique
+    # index), but a repeated key on a retried push is rejected as a
+    # duplicate before a second row is ever written.
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String, nullable=True, unique=True, index=True
+    )

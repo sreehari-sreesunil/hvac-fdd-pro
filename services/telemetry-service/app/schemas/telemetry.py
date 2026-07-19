@@ -84,6 +84,7 @@ class TelemetryReadingCreate(BaseModel):
     external_key: str
     value: float
     recorded_at: datetime
+    idempotency_key: str | None = None
 
 
 class TelemetryReadingBulkCreate(BaseModel):
@@ -101,8 +102,22 @@ class TelemetryReadingOut(BaseModel):
     recorded_at: datetime
     ingested_at: datetime
     source_type: str
+    idempotency_key: str | None
 
 
 class TelemetryReadingBulkCreateResponse(BaseModel):
     accepted_count: int
     unmapped_count: int
+    duplicate_count: int
+
+
+class CsvRowError(BaseModel):
+    row: int
+    error: str
+
+
+class TelemetryCsvUploadResponse(BaseModel):
+    accepted_count: int
+    unmapped_count: int
+    duplicate_count: int
+    invalid_rows: list[CsvRowError]

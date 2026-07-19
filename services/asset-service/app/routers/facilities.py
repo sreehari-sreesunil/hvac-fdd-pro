@@ -59,6 +59,36 @@ async def create_facility(
     return facility
 
 
+@router.get("", response_model=list[FacilityOut])
+async def list_facilities(
+    organization_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+) -> list[Facility]:
+    """List all facilities belonging to an organization.
+
+    Args:
+        organization_id: The organization to list facilities for, passed
+            as a query parameter (e.g. GET /facilities?organization_id=...).
+        credentials: Raw bearer token, forwarded to auth-service for the
+            membership check.
+        user_id: The calling user's id, extracted from the token locally.
+        db: Database session.
+
+    Returns:
+        All Facility rows for that organization_id. Empty list if the org
+        has none — not an error, since membership was already confirmed.
+
+    Raises:
+        HTTPException: 403 if the caller is not a member of
+            organization_id, 503 if auth-service is unreachable.
+    """
+    await verify_org_membership(organization_id, credentials.credentials)
+
+    return db.query(Facility).filter(Facility.organization_id == organization_id).all()
+
+
 @router.get("/{facility_id}", response_model=FacilityOut)
 async def get_facility(
     facility_id: str,

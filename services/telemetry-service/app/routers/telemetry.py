@@ -1,9 +1,12 @@
 """Telemetry ingestion, device/key management, and metric mapping endpoints."""
 
+import csv
+import io
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.deps import (
@@ -17,12 +20,14 @@ from app.core.deps import (
 from app.db.session import get_db
 from app.models.telemetry import EdgeDevice, IngestionKey, MetricMapping, TelemetryReading
 from app.schemas.telemetry import (
+    CsvRowError,
     EdgeDeviceCreate,
     EdgeDeviceOut,
     IngestionKeyCreateOut,
     MetricMappingCreate,
     MetricMappingCreateResponse,
     MetricMappingOut,
+    TelemetryCsvUploadResponse,
     TelemetryReadingBulkCreate,
     TelemetryReadingBulkCreateResponse,
     TelemetryReadingCreate,
@@ -103,14 +108,137 @@ def _resolve_metric(db: Session, asset_id: str, external_key: str) -> str | None
     return mapping.metric_definition_id if mapping else None
 
 
+def _ingest_items(db: Session, items: list[TelemetryReadingCreate]) -> tuple[int, int, int]:
+    """Insert a batch of already-validated readings, resolving metrics and
+    skipping idempotency-key duplicates.
+
+    Shared by both the JSON bulk endpoint and the CSV upload endpoint so
+    the two ingestion paths can never silently drift apart — there is
+    exactly one place where "what counts as a duplicate" and "how a
+    metric gets resolved at write time" are decided.
+
+    Returns:
+        (accepted_count, unmapped_count, duplicate_count)
+    """
+    requested_keys = {item.idempotency_key for item in items if item.idempotency_key is not None}
+    existing_keys: set[str] = set()
+    if requested_keys:
+        rows = (
+            db.query(TelemetryReading.idempotency_key)
+            .filter(TelemetryReading.idempotency_key.in_(requested_keys))
+            .all()
+        )
+        existing_keys = {r[0] for r in rows}
+
+    seen_in_batch: set[str] = set()
+    accepted_count = 0
+    unmapped_count = 0
+    duplicate_count = 0
+
+    for item in items:
+        key = item.idempotency_key
+        if key is not None and (key in existing_keys or key in seen_in_batch):
+            duplicate_count += 1
+            continue
+        if key is not None:
+            seen_in_batch.add(key)
+
+        metric_definition_id = _resolve_metric(db, item.asset_id, item.external_key)
+        if metric_definition_id is None:
+            unmapped_count += 1
+
+        db.add(
+            TelemetryReading(
+                asset_id=item.asset_id,
+                external_key=item.external_key,
+                metric_definition_id=metric_definition_id,
+                value=item.value,
+                recorded_at=item.recorded_at,
+                source_type="edge_device",
+                idempotency_key=key,
+            )
+        )
+        accepted_count += 1
+
+    db.commit()
+    return accepted_count, unmapped_count, duplicate_count
+
+
+_REQUIRED_CSV_COLUMNS = {"asset_id", "external_key", "value", "recorded_at"}
+
+
+def _parse_csv_rows(raw: bytes) -> tuple[list[TelemetryReadingCreate], list[CsvRowError]]:
+    """Parse an uploaded CSV file into validated TelemetryReadingCreate
+    items, plus a list of per-row errors for anything that didn't parse.
+
+    Row-level validation, not all-or-nothing: one bad row never prevents
+    the rest of the file from being ingested. Row numbers in the returned
+    errors count from 2, since row 1 is the header line, matching what a
+    person would see if they opened the file in a spreadsheet."""
+    text = raw.decode("utf-8-sig")  # utf-8-sig strips a BOM if Excel added one
+    reader = csv.DictReader(io.StringIO(text))
+
+    if reader.fieldnames is None:
+        return [], [CsvRowError(row=0, error="CSV file has no header row")]
+
+    normalized_fieldnames = {name.strip().lower() for name in reader.fieldnames}
+    missing = _REQUIRED_CSV_COLUMNS - normalized_fieldnames
+    if missing:
+        return [], [
+            CsvRowError(row=0, error=f"Missing required column(s): {', '.join(sorted(missing))}")
+        ]
+
+    valid_items: list[TelemetryReadingCreate] = []
+    errors: list[CsvRowError] = []
+
+    for line_number, raw_row in enumerate(reader, start=2):
+        row = {
+            (k.strip().lower() if k else k): (v.strip() if v is not None else v)
+            for k, v in raw_row.items()
+        }
+        idempotency_key = row.get("idempotency_key") or None
+
+        try:
+            item = TelemetryReadingCreate(
+                asset_id=row["asset_id"],
+                external_key=row["external_key"],
+                value=row["value"],  # type: ignore[arg-type]
+                recorded_at=row["recorded_at"],  # type: ignore[arg-type]
+                idempotency_key=idempotency_key,
+            )
+        except (ValidationError, KeyError) as exc:
+            errors.append(CsvRowError(row=line_number, error=str(exc)))
+            continue
+
+        valid_items.append(item)
+
+    return valid_items, errors
+
+
 @router.post("/telemetry", response_model=TelemetryReadingOut, status_code=status.HTTP_201_CREATED)
 async def ingest_reading(
     payload: TelemetryReadingCreate,
+    response: Response,
     device: EdgeDevice = Depends(verify_ingestion_key),
     db: Session = Depends(get_db),
 ) -> TelemetryReading:
     """Ingest a single telemetry reading. Always stored, even if the
-    metric can't yet be resolved to a known MetricDefinition."""
+    metric can't yet be resolved to a known MetricDefinition.
+
+    If an idempotency_key is supplied and a reading with that key already
+    exists, the existing reading is returned as-is (status 200) instead of
+    writing a duplicate row — this is what makes retried pushes from
+    flaky edge networks safe."""
+    if payload.idempotency_key is not None:
+        existing = (
+            db.query(TelemetryReading)
+            .filter(TelemetryReading.idempotency_key == payload.idempotency_key)
+            .first()
+        )
+        if existing is not None:
+            response.status_code = status.HTTP_200_OK
+            return existing
+
     metric_definition_id = _resolve_metric(db, payload.asset_id, payload.external_key)
 
     reading = TelemetryReading(
@@ -120,6 +248,7 @@ async def ingest_reading(
         value=payload.value,
         recorded_at=payload.recorded_at,
         source_type="edge_device",
+        idempotency_key=payload.idempotency_key,
     )
     db.add(reading)
     db.commit()
@@ -137,30 +266,57 @@ async def ingest_readings_bulk(
     device: EdgeDevice = Depends(verify_ingestion_key),
     db: Session = Depends(get_db),
 ) -> TelemetryReadingBulkCreateResponse:
-    """Ingest a batch of readings (e.g. from a CSV upload)."""
-    unmapped_count = 0
+    """Ingest a batch of structured JSON readings.
 
-    for item in payload.readings:
-        metric_definition_id = _resolve_metric(db, item.asset_id, item.external_key)
-        if metric_definition_id is None:
-            unmapped_count += 1
-
-        db.add(
-            TelemetryReading(
-                asset_id=item.asset_id,
-                external_key=item.external_key,
-                metric_definition_id=metric_definition_id,
-                value=item.value,
-                recorded_at=item.recorded_at,
-                source_type="edge_device",
-            )
-        )
-
-    db.commit()
+    Idempotency is per-item (each reading may carry its own
+    idempotency_key), not per-batch. Any item whose key already exists in
+    the table — or is repeated earlier in the same batch — is skipped and
+    counted in duplicate_count rather than written again."""
+    accepted_count, unmapped_count, duplicate_count = _ingest_items(db, payload.readings)
 
     return TelemetryReadingBulkCreateResponse(
-        accepted_count=len(payload.readings),
+        accepted_count=accepted_count,
         unmapped_count=unmapped_count,
+        duplicate_count=duplicate_count,
+    )
+
+
+@router.post(
+    "/telemetry/csv-upload",
+    response_model=TelemetryCsvUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def ingest_readings_csv(
+    file: UploadFile = File(...),
+    device: EdgeDevice = Depends(verify_ingestion_key),
+    db: Session = Depends(get_db),
+) -> TelemetryCsvUploadResponse:
+    """Ingest a batch of readings from an uploaded CSV file.
+
+    Expected columns: asset_id, external_key, value, recorded_at, and
+    optionally idempotency_key. Column names are matched case-insensitively.
+
+    Row-level validation, not all-or-nothing: a malformed row (bad number,
+    bad date, missing value) is skipped and reported in invalid_rows with
+    its row number and the reason — it does not fail the rest of the
+    upload. This matches telemetry-service's core "never drop data"
+    principle for anything that *can* be parsed. A structural problem
+    (missing required column, empty file) is reported the same way, as a
+    single row-0 entry in invalid_rows, rather than a different error
+    shape."""
+    raw = await file.read()
+    items, invalid_rows = _parse_csv_rows(raw)
+
+    if items:
+        accepted_count, unmapped_count, duplicate_count = _ingest_items(db, items)
+    else:
+        accepted_count, unmapped_count, duplicate_count = 0, 0, 0
+
+    return TelemetryCsvUploadResponse(
+        accepted_count=accepted_count,
+        unmapped_count=unmapped_count,
+        duplicate_count=duplicate_count,
+        invalid_rows=invalid_rows,
     )
 
 
