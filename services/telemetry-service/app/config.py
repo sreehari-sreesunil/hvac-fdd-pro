@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     auth_service_url: str = "http://auth-service:8000"
     asset_service_url: str = "http://asset-service:8001"
     service_name: str = "telemetry-service"
+    mqtt_broker_host: str = "mosquitto"
+    mqtt_broker_port: int = 1883
 
 
 settings = Settings()
