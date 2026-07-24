@@ -1,0 +1,27 @@
+[project]
+name = "ml"
+version = "0.1.0"
+description = "ML/data-science work for HVAC fault detection - not a deployed service"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas (>=2.2.3,<3.0.0)",
+    "numpy (>=2.1.0,<3.0.0)",
+    "matplotlib (>=3.9.0,<4.0.0)",
+    "ipykernel (>=6.29.0,<7.0.0)",
+    "scikit-learn (>=1.5.2,<2.0.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
