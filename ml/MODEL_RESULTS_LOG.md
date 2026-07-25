@@ -193,10 +193,45 @@ dataset; season is the dominant confound, not raw weather.
   requiring either a more sophisticated weather/load model or season-specific
   thresholds, not resolved here.
 
-## Not yet modeled
+### Incorrect economizer setpoint (notebook 21)
 
-Incorrect economizer setpoint (Experimental dataset) - this fault's EDA (notebook
-09) already found that different severities require different seasons just to have
-a valid test window (Winter_2022 had no valid window for the "setpoint too high"
-severities; Fall_2020 did) - a genuinely harder cross-season modeling problem than
-either fault modeled so far, not yet attempted.
+This fault required splitting into two separate sub-models, since notebook 09's EDA
+found the "too low" and "too high" severities behave in opposite, unexplained ways
+AND require different seasons to have a valid test window at all.
+
+**Setpoint too low (6°C, 8°C)**: cross-season model, trained on Winter_2022,
+evaluated on held-out Spring_2021 (both confirmed valid per the EDA). Features:
+`RTU_OA_DMPR_DM`, `RTU_OA_TEMP`. Result: baseline recall 0.40, precision 0.87 - a
+moderate, real result, better than OA damper stuck's raw-feature collapse but worse
+than a clean success. Plausibly explained by this fault direction's own
+already-unusual EDA behavior (unexplained over-engagement extending past both the
+fault's own and the correct setpoint).
+
+**Setpoint too high (12°C, 14°C)**: NOT modeled. Per notebook 09, only Fall_2020
+was confirmed to provide a valid test window for these severities (Winter_2022
+never got cold enough post-occupied-hours-filtering). No genuine cross-season
+evaluation is possible with only one valid season - building one anyway would
+either misuse an invalid season or amount to a within-season random split, which
+would overstate real-world readiness the same way random splits did throughout the
+Simulated-dataset work. Documented as a real, honest data-availability limitation,
+not a modeling failure - would need a second valid season of data collection before
+this direction can be evaluated honestly.
+
+- **Status**: partially modeled. One direction usable-but-imperfect; the other
+  genuinely unmodelable with currently available data.
+
+## Modeling phase status: all 3 Experimental-dataset faults addressed
+
+OA damper stuck (partially mitigated), biased SAT sensor (largely unresolved),
+incorrect economizer setpoint (one direction modeled with a moderate result, the
+other direction correctly identified as unmodelable given current data
+availability). This completes the modeling pass across both the Simulated dataset
+(6 binary classifiers + Isolation Forest) and the Experimental dataset, to the
+extent the available data supports honest evaluation.
+
+## Not yet done
+
+Consolidated final evaluation-metrics summary (precision/recall/F1/false-alarm rate
+across all models in one place) - SHAP/feature-importance output - alert engine -
+Field-dataset validation (reserved exclusively for validation once a model exists,
+per the original project scope - not yet begun).
