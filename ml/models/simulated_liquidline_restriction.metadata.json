@@ -9,7 +9,29 @@
   "status": "Usable",
   "notes": "Stable despite this fault's threshold-shaped severity response. See notebook 15.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T16:24:45.659750+00:00",
+  "trained_at_utc": "2026-07-25T17:45:11.319480+00:00",
   "dataset": "simulated",
-  "training_rows": 289382
+  "training_rows": 289382,
+  "weather_regression_models": {
+    "RTU_REFG_SUCT_PRES": {
+      "slope": 14269.372748044114,
+      "intercept": 13478041.593523448,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_REFG_SUCT_TEMP": {
+      "slope": 0.1496467898709542,
+      "intercept": 44.133254355839355,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_REFG_DISC_PRES": {
+      "slope": 379176.24592141836,
+      "intercept": 3842621.3658596464,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_TOT_CAPA_ewma30_segmented": {
+      "slope": -73.82190098039169,
+      "intercept": 20823.91414053075,
+      "weather_col": "RTU_OA_TEMP"
+    }
+  }
 }

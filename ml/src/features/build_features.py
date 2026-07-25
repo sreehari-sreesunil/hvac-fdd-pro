@@ -38,7 +38,8 @@ def build_feature_table(
     ),
     stage_col: str = "RTU_STG_STA",
     ewma_span: int = 30,
-) -> pd.DataFrame:
+    return_weather_models: bool = False,
+) -> pd.DataFrame | tuple[pd.DataFrame, dict[str, dict[str, float]]]:
     """Build a labeled, stage-2-filtered, weather-residualized feature table.
 
     Loads a baseline file and one or more fault-severity files, applies
@@ -64,12 +65,26 @@ def build_feature_table(
             add_segmented_ewma(). Not validated as a universal default -
             see ml/notebooks/02_eda_overcharge.ipynb for why this needs
             per-fault/per-feature validation, not blind reuse.
+        return_weather_models: If True, also return the fitted weather-
+            regression coefficients (slope/intercept per residualized
+            column). Needed at training time so these coefficients can be
+            PERSISTED and reused identically at inference time - live,
+            unlabeled data has no "baseline rows" to refit against, so the
+            regression must be fit once (here, on known-labeled training
+            data) and then only ever applied, never refit, in production.
+            Default False preserves the original single-return-value
+            behavior for existing callers.
 
     Returns:
-        A single concatenated, sorted-by-Datetime DataFrame with columns:
-        Datetime, one `<col>_residual` per residualized column, label
-        (0=baseline, 1=any fault), and source_file (which input file each
-        row came from).
+        If return_weather_models is False (default): a single concatenated,
+        sorted-by-Datetime DataFrame with columns: Datetime, one
+        `<col>_residual` per residualized column, label (0=baseline, 1=any
+        fault), and source_file (which input file each row came from).
+
+        If return_weather_models is True: a tuple (table, weather_models)
+        where weather_models maps each residualized column name to
+        {"slope": float, "intercept": float} from the baseline-fit
+        LinearRegression against weather_col.
     """
     files = {"baseline": baseline_path, **fault_paths}
     dfs = {label: pd.read_csv(path) for label, path in files.items()}
@@ -98,11 +113,21 @@ def build_feature_table(
     table = pd.concat(labeled_dfs, ignore_index=True).sort_values("Datetime").reset_index(drop=True)
 
     baseline_rows = table[table["label"] == 0]
+    weather_models: dict[str, dict[str, float]] = {}
     for col in cols_to_residualize:
         weather_model = LinearRegression()
         weather_model.fit(baseline_rows[[weather_col]], baseline_rows[col])
         predicted = weather_model.predict(table[[weather_col]])
         table[f"{col}_residual"] = table[col] - predicted
+        weather_models[col] = {
+            "slope": float(weather_model.coef_[0]),
+            "intercept": float(weather_model.intercept_),
+            "weather_col": weather_col,
+        }
 
     residual_cols = [f"{col}_residual" for col in cols_to_residualize]
-    return table[["Datetime", "label", "source_file"] + residual_cols]
+    result = table[["Datetime", "label", "source_file"] + residual_cols]
+
+    if return_weather_models:
+        return result, weather_models
+    return result

@@ -8,7 +8,24 @@
   "status": "Usable",
   "notes": "Strongest, most stable result of all 6 faults. See notebook 13.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T16:23:32.882954+00:00",
+  "trained_at_utc": "2026-07-25T17:43:04.761136+00:00",
   "dataset": "simulated",
-  "training_rows": 379336
+  "training_rows": 379336,
+  "weather_regression_models": {
+    "RTU_REFG_COND_PRES": {
+      "slope": 382431.9788202568,
+      "intercept": 3300988.8172881044,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_REFG_COND_TEMP": {
+      "slope": 0.9713379324690288,
+      "intercept": 24.62975004157189,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_TOT_CAPA_ewma30_segmented": {
+      "slope": -73.82190098039169,
+      "intercept": 20823.91414053075,
+      "weather_col": "RTU_OA_TEMP"
+    }
+  }
 }

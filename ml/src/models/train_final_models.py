@@ -73,10 +73,11 @@ def _save_model(
 def train_simulated_fault_models() -> None:
     """Train and save one binary classifier per SIMULATED_FAULTS entry."""
     for fault_name, config in SIMULATED_FAULTS.items():
-        table = build_feature_table(
+        table, weather_models = build_feature_table(
             baseline_path=_resolve_path(config.baseline_path),
             fault_paths={label: _resolve_path(path) for label, path in config.fault_paths.items()},
             pressure_temp_cols=config.pressure_temp_cols,
+            return_weather_models=True,
         )
 
         residual_cols = [f"{col}_residual" for col in config.pressure_temp_cols]
@@ -93,7 +94,11 @@ def train_simulated_fault_models() -> None:
             feature_cols=residual_cols,
             status=config.status,
             notes=config.notes,
-            extra={"dataset": "simulated", "training_rows": len(table)},
+            extra={
+                "dataset": "simulated",
+                "training_rows": len(table),
+                "weather_regression_models": weather_models,
+            },
         )
 
 
@@ -107,10 +112,11 @@ def train_isolation_forest() -> None:
     # useful baseline-adjacent context; deliberately NOT added here - the
     # Isolation Forest should reflect the same fault scope as the registry.
 
-    table = build_feature_table(
+    table, weather_models = build_feature_table(
         baseline_path=_resolve_path("data/raw/RTU_sim_baseline.csv"),
         fault_paths={label: _resolve_path(path) for label, path in all_fault_paths.items()},
         pressure_temp_cols=ISOLATION_FOREST_CONFIG["feature_cols"],
+        return_weather_models=True,
     )
 
     feature_cols = [f"{col}_residual" for col in ISOLATION_FOREST_CONFIG["feature_cols"]]
@@ -134,6 +140,7 @@ def train_isolation_forest() -> None:
             "dataset": "simulated",
             "training_rows": len(baseline_only),
             "contamination": ISOLATION_FOREST_CONFIG["contamination"],
+            "weather_regression_models": weather_models,
         },
     )
 
@@ -201,17 +208,27 @@ def train_experimental_fault_models() -> None:
         model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
         model.fit(table[feature_cols], table["label"])
 
+        extra = {
+            "dataset": "experimental",
+            "training_rows": len(table),
+            "train_seasons": list(config.train_seasons),
+        }
+        if config.use_weather_residual:
+            extra["weather_regression_models"] = {
+                target_col: {
+                    "slope": float(weather_model.coef_[0]),
+                    "intercept": float(weather_model.intercept_),
+                    "weather_col": weather_col,
+                }
+            }
+
         _save_model(
             model,
             name=f"experimental_{fault_name}",
             feature_cols=feature_cols,
             status=config.status,
             notes=config.notes,
-            extra={
-                "dataset": "experimental",
-                "training_rows": len(table),
-                "train_seasons": list(config.train_seasons),
-            },
+            extra=extra,
         )
 
 

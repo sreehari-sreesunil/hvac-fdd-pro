@@ -7,7 +7,7 @@
   "status": "Usable with caveat",
   "notes": "Only the 6C/8C (too-low) severities - see notebook 21 for why the 12C/14C (too-high) direction has NO entry here (data-availability gap, not modeled). Moderate result: baseline recall 0.40, precision 0.87, trained on Winter_2022.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T16:25:37.382861+00:00",
+  "trained_at_utc": "2026-07-25T17:46:37.043270+00:00",
   "dataset": "experimental",
   "training_rows": 3600,
   "train_seasons": [

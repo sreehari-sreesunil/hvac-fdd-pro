@@ -8,8 +8,25 @@
   "status": "Usable with caveat",
   "notes": "6.1% false-positive rate on held-out later baseline. Detection rate forms an honest gradient matching EDA effect sizes - near-perfect for strong faults, weak for faults already flagged as low-severity/weak-signal in EDA. See notebook 18.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T16:25:35.830975+00:00",
+  "trained_at_utc": "2026-07-25T17:46:34.434526+00:00",
   "dataset": "simulated",
   "training_rows": 63190,
-  "contamination": 0.01
+  "contamination": 0.01,
+  "weather_regression_models": {
+    "RTU_REFG_SUCT_PRES": {
+      "slope": 14269.372748044114,
+      "intercept": 13478041.593523448,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_REFG_SUCT_TEMP": {
+      "slope": 0.1496467898709542,
+      "intercept": 44.133254355839355,
+      "weather_col": "RTU_OA_TEMP"
+    },
+    "RTU_TOT_CAPA_ewma30_segmented": {
+      "slope": -73.82190098039169,
+      "intercept": 20823.91414053075,
+      "weather_col": "RTU_OA_TEMP"
+    }
+  }
 }
