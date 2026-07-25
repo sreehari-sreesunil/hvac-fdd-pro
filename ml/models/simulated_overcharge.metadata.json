@@ -8,7 +8,7 @@
   "status": "Usable",
   "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T18:25:30.887710+00:00",
+  "trained_at_utc": "2026-07-25T19:04:46.172953+00:00",
   "dataset": "simulated",
   "training_rows": 227265,
   "weather_regression_models": {

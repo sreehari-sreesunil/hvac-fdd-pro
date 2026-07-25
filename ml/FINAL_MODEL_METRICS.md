@@ -29,6 +29,15 @@ and re-evaluated with the fix; none flipped to unusable, but their precision/
 false-positive numbers below have been updated to the corrected values. See
 ml/MODEL_RESULTS_LOG.md's "Capacity feature bug fix" entry for full detail.
 
+**Second correction**: the initial re-verification of the Isolation Forest
+after the above fix was insufficient (only 2 of 24 fault-severity files were
+spot-checked). A full sweep later revealed contamination=0.01 was severely
+miscalibrated against the corrected feature - detection on several moderate-
+severity faults had collapsed (e.g. evapfouling40: 0.99998->0.404).
+Re-tuned to contamination=0.03, verified against the actual saved model
+across the complete 24-file sweep this time. See MODEL_RESULTS_LOG.md's
+"Isolation Forest contamination re-tuning" entry.
+
 ## Simulated Dataset - Binary Fault Classifiers
 
 All models: `RandomForestClassifier`, features from `build_feature_table()`
@@ -58,10 +67,10 @@ detection).
 
 | Metric | Value |
 |---|---|
-| False positive rate (held-out later baseline) | 2.9% (improved from an earlier, buggy-feature measurement of 6.1% - see note below) |
-| Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 30-50%) | 0.99 - 1.00 |
-| Detection rate, moderate-signal faults (e.g. liquidpipe08/10bar, evapfouling20) | 0.42 - 0.81 |
-| Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling10-40, low-severity restrictions) | <0.25 |
+| False positive rate (held-out later baseline) | 6-7.6% (contamination re-tuned to 0.03 after a SECOND correction - the initial fix's contamination=0.01 was severely miscalibrated; see note below) |
+| Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 30-50%) | 0.999 - 1.00 |
+| Detection rate, moderate-signal faults (e.g. liquidpipe08/10bar, evapfouling20) | 0.36 - 0.83 |
+| Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling10-40, low-severity restrictions) | <0.15 |
 
 **Status**: **Usable with caveat** - reliable gatekeeper for moderate-to-severe
 conditions; will not reliably catch the mildest fault severities. Precision/recall

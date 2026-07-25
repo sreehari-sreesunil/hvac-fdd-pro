@@ -132,12 +132,22 @@ SIMULATED_FAULTS: dict[str, SimulatedFaultConfig] = {
 ISOLATION_FOREST_CONFIG = {
     "feature_cols": ("RTU_REFG_SUCT_PRES", "RTU_REFG_SUCT_TEMP"),
     "capacity_col": "RTU_TOT_CAPA",
-    "contamination": 0.01,  # tuned in notebook 18; untuned default (0.05) gave 16.1% FPR vs 6.1%
+    "contamination": 0.03,  # RE-tuned in notebook 26 after the capacity-feature bug fix
+    # (build_features.py order-of-operations fix) revealed contamination=0.01 was
+    # miscalibrated against the corrected feature - severe detection regression on
+    # moderate-tier faults (e.g. evapfouling40: 0.99998->0.404), missed by an
+    # insufficient 2-file spot check in notebook 25. contamination=0.03 restores
+    # near-original detection across the full 24-file sweep, at a real, disclosed
+    # FPR cost (7.6% vs the previous, now-invalidated 2.9%).
     "status": "Usable with caveat",
     "notes": (
-        "6.1% false-positive rate on held-out later baseline. Detection rate forms an honest "
-        "gradient matching EDA effect sizes - near-perfect for strong faults, weak for faults "
-        "already flagged as low-severity/weak-signal in EDA. See notebook 18."
+        "7.6% false-positive rate on held-out later baseline (contamination=0.03, "
+        "re-tuned after the capacity-feature bug fix - see notebook 26 and "
+        "MODEL_RESULTS_LOG.md's 'Isolation Forest contamination re-tuning' entry). "
+        "Detection rate forms an honest gradient matching EDA effect sizes - "
+        "near-perfect for strong faults, weak for faults already flagged as "
+        "low-severity/weak-signal in EDA. Verified across the FULL 24-file sweep, "
+        "not a partial spot check."
     ),
 }
 

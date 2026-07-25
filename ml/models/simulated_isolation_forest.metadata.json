@@ -6,12 +6,12 @@
     "RTU_TOT_CAPA_ewma30_segmented_residual"
   ],
   "status": "Usable with caveat",
-  "notes": "6.1% false-positive rate on held-out later baseline. Detection rate forms an honest gradient matching EDA effect sizes - near-perfect for strong faults, weak for faults already flagged as low-severity/weak-signal in EDA. See notebook 18.",
+  "notes": "7.6% false-positive rate on held-out later baseline (contamination=0.03, re-tuned after the capacity-feature bug fix - see notebook 26 and MODEL_RESULTS_LOG.md's 'Isolation Forest contamination re-tuning' entry). Detection rate forms an honest gradient matching EDA effect sizes - near-perfect for strong faults, weak for faults already flagged as low-severity/weak-signal in EDA. Verified across the FULL 24-file sweep, not a partial spot check.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T18:30:09.606559+00:00",
+  "trained_at_utc": "2026-07-25T19:08:12.458726+00:00",
   "dataset": "simulated",
   "training_rows": 63190,
-  "contamination": 0.01,
+  "contamination": 0.03,
   "weather_regression_models": {
     "RTU_REFG_SUCT_PRES": {
       "slope": 14269.372748044114,

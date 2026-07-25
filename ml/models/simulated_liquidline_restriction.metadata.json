@@ -9,7 +9,7 @@
   "status": "Usable",
   "notes": "Stable despite this fault's threshold-shaped severity response. See notebook 15.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T18:28:17.632632+00:00",
+  "trained_at_utc": "2026-07-25T19:06:38.204655+00:00",
   "dataset": "simulated",
   "training_rows": 289382,
   "weather_regression_models": {

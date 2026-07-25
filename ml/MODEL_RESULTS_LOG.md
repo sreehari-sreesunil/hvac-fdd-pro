@@ -281,3 +281,51 @@ compared the function's output against itself consistently, never against an
 independent ground truth. The live-vs-batch cross-validation check is what
 caught it, a direct justification for building that verification rather than
 trusting the pipeline's internal consistency alone.
+
+## Isolation Forest contamination re-tuning (second correction, same day)
+
+**Notebook 25's re-verification of the Isolation Forest after the capacity-
+feature bug fix was insufficient** - it only spot-checked 2 of 24 fault-
+severity files (suctionpipe09bar, already at 100% both before and after;
+overcharge10, already near the noise floor both before and after). Neither
+spot-check could reveal a regression concentrated in the moderate tier.
+
+**Found via notebook 26** (while validating the inference pipeline):
+contamination=0.01 (carried over unchanged from before the capacity fix) was
+severely miscalibrated against the corrected feature. Full 24-file sweep
+revealed a severe regression across nearly the entire moderate tier:
+
+| Fault | Pre-fix (buggy capacity) | Post-fix, contamination=0.01 (broken) |
+|---|---|---|
+| evapfouling40 | 0.99998 | 0.404 |
+| evapfouling30 | 0.9985 | 0.211 |
+| evapfouling20 | 0.738 | 0.020 |
+| liquidpipe08bar | 0.422 | 0.207 |
+| condfouling50 | 0.154 | 0.011 |
+
+**Root cause**: the corrected capacity feature has wider, more faithful
+natural baseline variance (consistent with the classifiers' own wider
+precision drift after the same fix). contamination=0.01's threshold, tuned
+against the OLD narrower distribution, no longer matched the new one.
+
+**Tested two fixes directly, same rigor as the classifier capacity-ablation
+test**: (1) re-tune contamination against the corrected feature, (2) drop
+capacity from the Isolation Forest's features entirely (mirroring the
+classifier fix for evaporator/suction-line restriction). Option 2 was
+clearly worse - evapfouling40 detection collapsed to 0% (capacity is
+essential for detecting evaporator-related faults via this method,
+consistent with evaporator fouling's EDA-established strongest signal being
+capacity). Option 1, contamination=0.03, restored near-original detection
+across the full 24-file sweep at a real, disclosed FPR cost.
+
+**Adopted and verified**: contamination=0.03. Retrained via
+train_final_models.py and re-verified against the ACTUAL SAVED model
+artifact (not just an in-notebook instance) across the complete 24-file
+sweep - not a partial spot check this time. FPR ~6-7.6% (two test runs gave
+slightly different values, a minor unexplained wobble not chased further).
+Detection profile closely matches the original, pre-bug shape.
+
+**Real, repeated lesson**: a 2-file "one strong, one weak" spot check is not
+sufficient verification when a regression could be concentrated in the
+untested middle tier. The full sweep should be the standard going forward
+for any change touching a shared feature used across many fault types.

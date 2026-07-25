@@ -8,7 +8,7 @@
   "status": "Usable",
   "notes": "Strongest, most stable result of all 6 faults. See notebook 13.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T18:26:40.588761+00:00",
+  "trained_at_utc": "2026-07-25T19:05:18.898629+00:00",
   "dataset": "simulated",
   "training_rows": 379336,
   "weather_regression_models": {
