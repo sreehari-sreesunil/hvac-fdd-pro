@@ -7,7 +7,7 @@
   "status": "Usable with caveat",
   "notes": "Capacity deliberately excluded - notebook 17's ablation test confirmed removing it stabilizes TimeSeriesSplit recall (0.87->0.43 becomes 0.96-0.99 stable), at a real precision cost (~1.00 -> consistent 0.63).",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T17:46:08.442374+00:00",
+  "trained_at_utc": "2026-07-25T18:29:15.197634+00:00",
   "dataset": "simulated",
   "training_rows": 368630,
   "weather_regression_models": {
@@ -22,8 +22,8 @@
       "weather_col": "RTU_OA_TEMP"
     },
     "RTU_TOT_CAPA_ewma30_segmented": {
-      "slope": -73.82190098039169,
-      "intercept": 20823.91414053075,
+      "slope": -58.204128318208994,
+      "intercept": 18586.676683960843,
       "weather_col": "RTU_OA_TEMP"
     }
   }

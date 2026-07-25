@@ -235,3 +235,49 @@ Consolidated final evaluation-metrics summary (precision/recall/F1/false-alarm r
 across all models in one place) - SHAP/feature-importance output - alert engine -
 Field-dataset validation (reserved exclusively for validation once a model exists,
 per the original project scope - not yet begun).
+
+## Capacity feature bug fix (post-publication correction)
+
+**Found while building the live-inference feature pipeline** (notebooks 24-25),
+via a cross-validation test comparing the live pipeline's output against
+build_feature_table()'s batch output for the same real row - the two disagreed
+on the capacity feature specifically.
+
+**Root cause**: build_feature_table() called stage2_only() BEFORE
+add_segmented_ewma(), the opposite order from notebook 01's original,
+validated approach (smooth on the full unfiltered series first, filter
+after). Filtering first left every remaining row in the same state bucket
+(stage-2), eliminating the real state transitions segmented EWMA needs to
+correctly separate distinct operating sessions - silently blending together
+what were actually separate real stage-2 sessions (each surrounded by
+now-removed off/stage-1 periods) into one continuous smoothing run.
+
+**Fixed**: build_feature_table() now smooths on the full series first, then
+filters. Verified via a full kernel-restart re-run that the live and batch
+pipelines now produce identical results for the same real row.
+
+**Affected models, retrained and re-evaluated** (any model including capacity
+as a feature):
+- **Condenser fouling**: conclusion unchanged (stable, no collapse). Recall
+  actually improved slightly (1.00 across all folds, up from 0.99-1.00).
+  Precision drift widened (0.95->0.76, vs originally 0.96->0.88) - a real,
+  honest change reflecting more faithful representation of natural session-
+  to-session variation.
+- **Liquid-line restriction**: conclusion unchanged. Recall essentially
+  unchanged. Precision drift modestly widened (0.98->0.91, vs originally
+  0.98->0.96).
+- **Isolation Forest**: genuine improvement - false-positive rate roughly
+  halved (6.1%->2.9%), no loss of strong-fault detection.
+
+**No model flipped status** as a result of this fix - all three remain
+"Usable"/"Usable with caveat" per FINAL_MODEL_METRICS.md, now updated with
+the corrected numbers.
+
+**Why this matters beyond the immediate fix**: this bug had been silently
+present since notebook 11 first extracted build_feature_table(), through 13+
+notebooks of EDA and modeling work, undetected by any of the extensive
+TimeSeriesSplit/ablation testing already done - because all of that testing
+compared the function's output against itself consistently, never against an
+independent ground truth. The live-vs-batch cross-validation check is what
+caught it, a direct justification for building that verification rather than
+trusting the pipeline's internal consistency alone.

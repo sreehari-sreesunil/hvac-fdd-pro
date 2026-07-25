@@ -97,15 +97,24 @@ def build_feature_table(
 
     labeled_dfs = []
     for label, df in dfs.items():
-        filtered = stage2_only(df, stage_col=stage_col)
+        # Segmented EWMA must run on the FULL, unfiltered series first, so its
+        # run-segmentation logic sees real off/stage1/stage2 transitions and
+        # real time gaps between separate stage-2 operating sessions - this
+        # matches notebook 01's original, validated approach. Filtering to
+        # stage-2 rows BEFORE smoothing (the previous, buggy order) leaves
+        # every remaining row in the same state bucket, so there are no real
+        # transitions left to segment by - the smoothing then silently
+        # blends together what were actually separate stage-2 sessions,
+        # exactly the cross-contamination segmented EWMA was built to avoid.
         smoothed = add_segmented_ewma(
-            filtered,
+            df,
             value_col=capacity_col,
             state_col=stage_col,
             span=ewma_span,
             output_col=capacity_smoothed_col,
         )
-        subset = smoothed[["Datetime", weather_col] + cols_to_residualize].copy()
+        filtered = stage2_only(smoothed, stage_col=stage_col)
+        subset = filtered[["Datetime", weather_col] + cols_to_residualize].copy()
         subset["label"] = 0 if label == "baseline" else 1
         subset["source_file"] = label
         labeled_dfs.append(subset)

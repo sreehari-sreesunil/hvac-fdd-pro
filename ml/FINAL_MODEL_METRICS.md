@@ -17,6 +17,18 @@ limitations, not aspirational claims.
 - **Not modeled**: a genuine data-availability or scoping limitation prevents honest
   evaluation, not a modeling failure.
 
+## Correction note (post-publication)
+
+A real order-of-operations bug was found in build_feature_table() during the
+build of the live-inference feature pipeline (ml/notebooks/24, 25): segmented
+EWMA smoothing was being applied AFTER stage-2 filtering instead of before,
+silently blending together separate real stage-2 operating sessions. This
+affected every model using the capacity feature: Condenser Fouling,
+Liquid-Line Restriction, and the Isolation Forest. All three were retrained
+and re-evaluated with the fix; none flipped to unusable, but their precision/
+false-positive numbers below have been updated to the corrected values. See
+ml/MODEL_RESULTS_LOG.md's "Capacity feature bug fix" entry for full detail.
+
 ## Simulated Dataset - Binary Fault Classifiers
 
 All models: `RandomForestClassifier`, features from `build_feature_table()`
@@ -28,9 +40,9 @@ every fault: random split (diagnostic upper bound) and 5-fold `TimeSeriesSplit`
 |---|---|---|---|
 | Refrigerant Undercharge | 0.34-0.55 / varies | 0.44 -> 0.00 (collapses) | **Not production-usable** - root cause partially isolated (weather-variance interaction), not resolved. Capacity-removal fix tested and found to make it WORSE. |
 | Refrigerant Overcharge | 0.73 / 0.89 | 0.97 - 1.00 (stable) | **Usable** - minor unexplained precision dip in 2 of 5 folds. |
-| Condenser Fouling | 0.98 / 0.99 | 0.99 - 1.00 (stable) | **Usable** - strongest, most stable result; mild precision drift over time. |
+| Condenser Fouling | 0.98 / 0.99 | 1.00 (all folds) - 0.76-0.95 precision | **Usable** - strongest, most stable recall; precision drift wider than originally measured (see note below on a fixed feature-engineering bug). |
 | Evaporator Fouling | 0.71 / 0.90 | 0.76 -> 0.41 without fix; 0.70 -> 0.82 with capacity removed | **Usable with caveat** - deploy WITHOUT capacity feature (precision cost: 0.93-0.97 -> 0.72-0.74). |
-| Liquid-Line Restriction | 0.98 / 0.99 | 0.99 - 1.00 (stable) | **Usable** - stable despite this fault's threshold-shaped severity response. |
+| Liquid-Line Restriction | 0.98 / 0.99 | 0.99-1.00 (stable) - 0.91-0.98 precision | **Usable** - stable despite this fault's threshold-shaped severity response; precision drift wider than originally measured (see note below). |
 | Suction-Line Restriction | 0.82 / 0.91 | 0.87 -> 0.43 without fix; 0.96 - 0.99 with capacity removed | **Usable with caveat** - deploy WITHOUT capacity feature (precision cost: ~1.00 -> consistent 0.63). |
 
 **Deployment recommendation**: 4 of 6 faults (overcharge, condenser fouling,
@@ -46,7 +58,7 @@ detection).
 
 | Metric | Value |
 |---|---|
-| False positive rate (held-out later baseline) | 6.1% |
+| False positive rate (held-out later baseline) | 2.9% (improved from an earlier, buggy-feature measurement of 6.1% - see note below) |
 | Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 30-50%) | 0.99 - 1.00 |
 | Detection rate, moderate-signal faults (e.g. liquidpipe08/10bar, evapfouling20) | 0.42 - 0.81 |
 | Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling10-40, low-severity restrictions) | <0.25 |

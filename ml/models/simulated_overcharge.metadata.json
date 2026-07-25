@@ -8,7 +8,7 @@
   "status": "Usable",
   "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T17:42:15.831752+00:00",
+  "trained_at_utc": "2026-07-25T18:25:30.887710+00:00",
   "dataset": "simulated",
   "training_rows": 227265,
   "weather_regression_models": {
@@ -28,8 +28,8 @@
       "weather_col": "RTU_OA_TEMP"
     },
     "RTU_TOT_CAPA_ewma30_segmented": {
-      "slope": -73.82190098039169,
-      "intercept": 20823.91414053075,
+      "slope": -58.204128318208994,
+      "intercept": 18586.676683960843,
       "weather_col": "RTU_OA_TEMP"
     }
   }
