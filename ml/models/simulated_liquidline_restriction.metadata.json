@@ -1,0 +1,15 @@
+{
+  "name": "simulated_liquidline_restriction",
+  "feature_cols": [
+    "RTU_REFG_SUCT_PRES_residual",
+    "RTU_REFG_SUCT_TEMP_residual",
+    "RTU_REFG_DISC_PRES_residual",
+    "RTU_TOT_CAPA_ewma30_segmented_residual"
+  ],
+  "status": "Usable",
+  "notes": "Stable despite this fault's threshold-shaped severity response. See notebook 15.",
+  "sklearn_version": "1.9.0",
+  "trained_at_utc": "2026-07-25T16:24:45.659750+00:00",
+  "dataset": "simulated",
+  "training_rows": 289382
+}

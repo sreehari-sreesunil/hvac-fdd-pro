@@ -1,0 +1,14 @@
+{
+  "name": "simulated_overcharge",
+  "feature_cols": [
+    "RTU_REFG_SUCT_PRES_residual",
+    "RTU_REFG_SUCT_TEMP_residual",
+    "RTU_REFG_DISC_PRES_residual"
+  ],
+  "status": "Usable",
+  "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
+  "sklearn_version": "1.9.0",
+  "trained_at_utc": "2026-07-25T16:23:02.021808+00:00",
+  "dataset": "simulated",
+  "training_rows": 227265
+}

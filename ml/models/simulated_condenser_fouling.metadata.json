@@ -1,0 +1,14 @@
+{
+  "name": "simulated_condenser_fouling",
+  "feature_cols": [
+    "RTU_REFG_COND_PRES_residual",
+    "RTU_REFG_COND_TEMP_residual",
+    "RTU_TOT_CAPA_ewma30_segmented_residual"
+  ],
+  "status": "Usable",
+  "notes": "Strongest, most stable result of all 6 faults. See notebook 13.",
+  "sklearn_version": "1.9.0",
+  "trained_at_utc": "2026-07-25T16:23:32.882954+00:00",
+  "dataset": "simulated",
+  "training_rows": 379336
+}

@@ -1,0 +1,15 @@
+{
+  "name": "simulated_isolation_forest",
+  "feature_cols": [
+    "RTU_REFG_SUCT_PRES_residual",
+    "RTU_REFG_SUCT_TEMP_residual",
+    "RTU_TOT_CAPA_ewma30_segmented_residual"
+  ],
+  "status": "Usable with caveat",
+  "notes": "6.1% false-positive rate on held-out later baseline. Detection rate forms an honest gradient matching EDA effect sizes - near-perfect for strong faults, weak for faults already flagged as low-severity/weak-signal in EDA. See notebook 18.",
+  "sklearn_version": "1.9.0",
+  "trained_at_utc": "2026-07-25T16:25:35.830975+00:00",
+  "dataset": "simulated",
+  "training_rows": 63190,
+  "contamination": 0.01
+}
