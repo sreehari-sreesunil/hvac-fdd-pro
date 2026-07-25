@@ -10,100 +10,98 @@ per-fault feature column choices informed by that fault's own EDA notebook.
 **Standing evaluation practice**: report both a random train/test split (a diagnostic
 upper bound, not representative of real deployment) and 5-fold `TimeSeriesSplit`
 (the honest, forward-in-time evaluation) for every fault - never rely on random-split
-metrics alone. This was established after notebook 11 (undercharge) found the two can
-diverge dramatically.
+metrics alone.
 
 ## Undercharge (notebook 11)
-
-- **Features**: `RTU_REFG_SUCT_PRES`, `RTU_REFG_SUCT_TEMP`, `RTU_REFG_DISC_PRES`,
-  capacity (segmented-EWMA-smoothed, weather-residualized).
-- **Random split**: reasonable (~34-81% baseline recall/precision, per various model
-  attempts).
-- **TimeSeriesSplit**: collapses from fold 1 (baseline recall 0.44) to fold 5
-  (0.00) - a real, significant forward-in-time generalization failure.
-- **Root cause**: partially isolated. Weather-driven variance in baseline behavior
-  (`RTU_OA_TEMP` explains 77-99% of several features' baseline variance) is
-  comparable in magnitude to undercharge's fault effect size. Residualizing against
-  weather measurably improves near-term folds but does not fully resolve
-  farther-future degradation. **Genuinely unresolved** - flagged as a real,
-  documented risk, not fixed.
-- **Status**: NOT production-usable as-is. Real methodological finding, valuable in
-  its own right, but no trustworthy classifier produced.
+- **Features**: suction pressure/temp, discharge pressure, capacity (all
+  weather-residualized).
+- **Random split**: reasonable (~34-81%, varies by model attempt).
+- **TimeSeriesSplit**: collapses, fold 1 (0.44) -> fold 5 (0.00).
+- **Root cause**: weather-driven variance in baseline is comparable in magnitude to
+  the fault effect; residualizing helps near-term folds but not far-future ones.
+  Genuinely unresolved.
+- **Status**: NOT production-usable as-is.
 
 ## Overcharge (notebook 12)
-
-- **Features**: `RTU_REFG_SUCT_PRES`, `RTU_REFG_SUCT_TEMP`, `RTU_REFG_DISC_PRES`
-  (weather-residualized). Capacity excluded - not established as overcharge's
-  strongest signal per notebook 02's EDA.
-- **Random split**: baseline recall 0.73, precision 0.89 (F1=0.80).
-- **TimeSeriesSplit**: baseline recall 0.97-1.00 across all 5 folds - outperforms the
-  random split. No degradation trend.
-- **Minor open item**: baseline precision dips in folds 1 and 5 (0.65, 0.68) vs. folds
-  2-4 (0.78-0.88) - not yet explained, not blocking.
-- **Status**: genuinely usable working model, with a documented minor caveat.
+- **Features**: suction pressure/temp, discharge pressure (capacity excluded - not
+  established as a strong signal for this fault).
+- **Random split**: baseline recall 0.73, precision 0.89.
+- **TimeSeriesSplit**: baseline recall 0.97-1.00, stable, no degradation.
+- **Status**: genuinely usable, minor unexplained precision dip in folds 1 and 5.
 
 ## Condenser fouling (notebook 13)
-
-- **Features**: `RTU_REFG_COND_PRES`, `RTU_REFG_COND_TEMP` (weather-residualized) -
-  the strong, cleanly monotonic signals per notebook 03's EDA. Capacity included
-  despite being flagged as weak between adjacent mid-severities.
-- **Random split**: baseline recall 0.98, precision 0.99 (near-perfect).
-- **TimeSeriesSplit**: baseline recall 0.99-1.00 across all 5 folds - no
-  degradation trend.
-- **Mild, non-blocking open item**: baseline precision drifts down slightly across
-  folds (0.96 to 0.88).
-- **Status**: strongest, most stable working model of the first three faults.
+- **Features**: condenser pressure/temp, capacity.
+- **Random split**: baseline recall 0.98, precision 0.99.
+- **TimeSeriesSplit**: baseline recall 0.99-1.00, stable.
+- **Status**: strongest, most stable of the six.
 
 ## Evaporator fouling (notebook 14)
-
-- **Features**: `RTU_REFG_SUCT_PRES`, `RTU_REFG_SUCT_TEMP`, `RTU_SA_TEMP`, capacity
-  (all weather-residualized) - this fault has the STRONGEST capacity signal in the
-  whole Simulated dataset (Cohen's d=1.376 at the toughest adjacent-severity gap).
-- **Random split**: baseline recall 0.71, precision 0.90 (F1=0.79).
-- **TimeSeriesSplit**: baseline recall degrades gradually across folds (0.76, 0.60,
-  0.53, 0.45, 0.41) - a real trend, but plateaus rather than collapsing to zero.
-  Precision stays consistently high throughout (0.93-0.97).
-- **Key finding**: strongest capacity signal in the dataset, yet still shows real
-  forward-in-time degradation - contradicts a simple "strong signal -> stable"
-  hypothesis.
-- **Status**: usable model with an honestly-reported caveat.
+- **Features**: suction pressure/temp, supply air temp, capacity - the dataset's
+  strongest capacity signal (Cohen's d=1.376).
+- **Random split**: baseline recall 0.71, precision 0.90.
+- **TimeSeriesSplit**: degrades gradually, 0.76 -> 0.41, plateaus (does not collapse
+  to zero). Precision stays high (0.93-0.97) throughout.
+- **Status**: usable, with a real, honestly-reported degradation caveat.
 
 ## Liquid-line restriction (notebook 15)
+- **Features**: suction pressure/temp, discharge pressure, capacity. Genuine
+  threshold-shaped severity response (minimal effect at 1-4 bar, sharp jump at
+  8-10 bar) per notebook 05's EDA.
+- **Random split**: baseline recall 0.98, precision 0.99.
+- **TimeSeriesSplit**: baseline recall 0.99-1.00, stable - despite the threshold
+  shape, ruling out severity shape as an explanation for stability.
+- **Status**: stable, near-perfect.
 
-- **Features**: `RTU_REFG_SUCT_PRES`, `RTU_REFG_SUCT_TEMP`, `RTU_REFG_DISC_PRES`,
-  capacity (weather-residualized) - per notebook 05's EDA, this fault has a genuine
-  THRESHOLD effect (minimal change at 1-4 bar, sharp jump at 8-10 bar), unlike the
-  four continuously-scaling faults modeled before it.
-- **Random split**: baseline recall 0.98, precision 0.99 (near-perfect).
-- **TimeSeriesSplit**: baseline recall 0.99-1.00 across all 5 folds - no
-  degradation trend, matching condenser fouling's stable pattern.
-- **Key finding**: despite the threshold-shaped severity response (half the fault
-  data barely differs from baseline), the model generalizes cleanly forward-in-time.
-  This suggests severity shape (threshold vs. continuous) is NOT what determines the
-  stable-vs-degrading split observed so far.
-- **Status**: stable, near-perfect result - matches condenser fouling, not
-  undercharge or evaporator fouling.
+## Suction-line restriction (notebook 16)
+- **Features**: suction pressure/temp, capacity - the dataset's single strongest,
+  cleanest effect sizes overall (Cohen's d=4.439 at even the mildest severity gap).
+- **Random split**: baseline recall 0.82, precision 0.91.
+- **TimeSeriesSplit**: degrades, 0.87 -> 0.43, matching evaporator fouling's
+  pattern. Precision stays near-perfect (0.99-1.00) throughout.
+- **Key finding**: the single strongest signal in the whole dataset STILL degrades
+  forward-in-time - conclusively rules out signal strength as the explanation for
+  stability.
+- **Status**: usable, with the same real degradation caveat as evaporator fouling.
 
-## Cross-fault pattern so far (5 of 6 faults modeled)
+## Cross-fault pattern: all 6 Simulated faults modeled
 
-| Fault | Random split baseline recall | TS fold range (baseline recall) | Trend |
+| Fault | Random split baseline recall | TS fold range (baseline recall) | Pattern |
 |---|---|---|---|
-| Undercharge | ~0.34-0.55 (varies by model) | 0.44 -> 0.00 | Collapses |
+| Undercharge | ~0.34-0.55 | 0.44 -> 0.00 | Collapses |
 | Overcharge | 0.73 | 0.97 - 1.00 | Stable |
 | Condenser fouling | 0.98 | 0.99 - 1.00 | Stable |
 | Evaporator fouling | 0.71 | 0.76 -> 0.41 | Gradual decline |
 | Liquid-line restriction | 0.98 | 0.99 - 1.00 | Stable |
+| Suction-line restriction | 0.82 | 0.87 -> 0.43 | Gradual decline |
 
-**Current split: 3 stable, 1 gradual decline, 1 collapse.** Neither signal strength
-(evaporator fouling has the strongest signal yet degrades) nor severity shape
-(liquid-line restriction is threshold-shaped yet stable) explains the pattern.
-Genuinely open question - one fault remaining (suction-line restriction) before a
-real pattern might emerge, or this may need a dedicated investigation once all 6
-are modeled.
+**Final split: 3 stable, 2 gradual decline, 1 full collapse.**
+
+**Ruled out as explanations**: signal strength alone (evaporator fouling and
+suction-line restriction have the two strongest signals in the dataset, yet both
+degrade); severity shape (liquid-line restriction is threshold-shaped yet stable).
+
+**Real, falsifiable hypothesis, not yet proven causal**: the three degrading/
+collapsing faults (undercharge, evaporator fouling, suction-line restriction) ALL
+directly produce large-magnitude capacity swings on the evaporator/suction side of
+the refrigerant loop as their primary or a major effect. The three stable faults
+(overcharge, condenser fouling, liquid-line restriction) do NOT have capacity as a
+large-magnitude primary effect - overcharge's capacity effect was weak/non-
+monotonic, condenser fouling's was consistently mild, liquid-line restriction's was
+substantially reduced after stage-2 filtering. Plausible mechanism: capacity's own
+substantial weather-driven variance (R²=0.767-0.988 against RTU_OA_TEMP across
+different features, per notebook 11) may interact poorly with a LARGE fault effect
+specifically, in a way residualization only partially corrects - even though
+residualization worked cleanly for faults where capacity's fault-effect was small
+or absent.
+
+**Not yet tested, a real next step**: deliberately excluding capacity as a feature
+for undercharge, evaporator fouling, and suction-line restriction, and checking
+whether their TimeSeriesSplit degradation disappears - a direct, falsifiable test
+of this hypothesis rather than a correlational observation across 6 data points.
 
 ## Not yet modeled
 
-Suction-line restriction - Isolation Forest anomaly detector - Experimental-dataset
-faults (OA damper stuck, incorrect economizer setpoint, biased SAT sensor), which
-will need season-awareness built into the pipeline per that dataset's EDA findings,
-not yet incorporated into `build_feature_table()`.
+Isolation Forest anomaly detector - Experimental-dataset faults (OA damper stuck,
+incorrect economizer setpoint, biased SAT sensor), which will need season-awareness
+built into the pipeline per that dataset's EDA findings, not yet incorporated into
+`build_feature_table()`.
