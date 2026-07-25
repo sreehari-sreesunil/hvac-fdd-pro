@@ -141,8 +141,39 @@ the EDA already identified as difficult - a reassuring sign that the EDA's findi
 are correctly driving model behavior, not an unexplained failure specific to this
 model.
 
+## Experimental Dataset Models
+
+Separate section - this dataset requires a genuinely different pipeline
+(`ml/src/features/build_experimental_features.py`, not `build_features.py`) and
+evaluation design (cross-season generalization, not TimeSeriesSplit), per
+notebooks 07-10's EDA findings. No RTU_STG_STA/stage-2 filtering exists in this
+dataset; season is the dominant confound, not raw weather.
+
+### OA damper stuck (notebook 19)
+
+- **Features**: `RTU_OA_DMPR_DM`, `RTU_OA_TEMP` (RTU_SA_TEMP deliberately excluded -
+  proven fully compensated/masked per notebook 08's EDA).
+- **Evaluation design**: cross-season generalization - trained on Winter_2022 +
+  Spring_2021, evaluated on held-out Summer_2021 (never examined for this fault in
+  the EDA). Fall_2020 excluded entirely (flagged as structurally atypical in
+  notebook 07).
+- **Raw features**: baseline precision 1.00, recall 0.11 - the model almost never
+  recognizes Summer's genuine baseline as normal. Directly explained by notebook
+  07's finding: Summer's baseline damper position sits near its ~6-7% minimum
+  (OA_TEMP rarely below the 50°F enable threshold), while the model learned "normal
+  = ~22% active" from Winter/Spring - so Summer's real normal looks like a mild
+  damper-stuck fault.
+- **OA_TEMP-residualized features** (regression of damper position on OA_TEMP,
+  fit on training-season baseline only): partial improvement - baseline recall
+  0.11 -> 0.34, but baseline precision drops 1.00 -> 0.42. A real, INCOMPLETE fix -
+  genuine precision/recall tradeoff, not a clean solution.
+- **Status**: NOT production-usable as a single cross-season model without further
+  work. Real, honest limitation - either accept one of the two tradeoffs above, or
+  build season-specific baselines/thresholds (not yet attempted). Flagged as an
+  open item, same standard as undercharge's unresolved Simulated-dataset case.
+
 ## Not yet modeled
 
-Experimental-dataset faults (OA damper stuck, incorrect economizer setpoint, biased
-SAT sensor), which will need season-awareness built into the pipeline per that
-dataset's EDA findings, not yet incorporated into `build_feature_table()`.
+Incorrect economizer setpoint, biased SAT sensor (Experimental dataset) - both
+faults already showed real season-dependent behavior in EDA (notebooks 09, 10) and
+will need the same cross-season evaluation discipline established in notebook 19.
