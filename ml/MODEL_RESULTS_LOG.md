@@ -63,7 +63,8 @@ metrics alone.
   stability.
 - **Status**: usable, with the same real degradation caveat as evaporator fouling.
 
-## Cross-fault pattern: all 6 Simulated faults modeled
+## Cross-fault pattern: all 6 Simulated faults modeled, capacity-magnitude
+hypothesis tested directly (notebook 17)
 
 | Fault | Random split baseline recall | TS fold range (baseline recall) | Pattern |
 |---|---|---|---|
@@ -74,30 +75,33 @@ metrics alone.
 | Liquid-line restriction | 0.98 | 0.99 - 1.00 | Stable |
 | Suction-line restriction | 0.82 | 0.87 -> 0.43 | Gradual decline |
 
-**Final split: 3 stable, 2 gradual decline, 1 full collapse.**
+**Initial correlational observation** (before direct testing): the three degrading/
+collapsing faults all had large-magnitude capacity swings as a major effect; the
+three stable faults did not. This suggested a single, uniform "capacity causes
+degradation" rule.
 
-**Ruled out as explanations**: signal strength alone (evaporator fouling and
-suction-line restriction have the two strongest signals in the dataset, yet both
-degrade); severity shape (liquid-line restriction is threshold-shaped yet stable).
+**Directly tested in notebook 17** by removing capacity from each degrading fault's
+feature set and re-running TimeSeriesSplit. Result: **the hypothesis is TRUE for 2
+of 3 faults, FALSE for the third**:
 
-**Real, falsifiable hypothesis, not yet proven causal**: the three degrading/
-collapsing faults (undercharge, evaporator fouling, suction-line restriction) ALL
-directly produce large-magnitude capacity swings on the evaporator/suction side of
-the refrigerant loop as their primary or a major effect. The three stable faults
-(overcharge, condenser fouling, liquid-line restriction) do NOT have capacity as a
-large-magnitude primary effect - overcharge's capacity effect was weak/non-
-monotonic, condenser fouling's was consistently mild, liquid-line restriction's was
-substantially reduced after stage-2 filtering. Plausible mechanism: capacity's own
-substantial weather-driven variance (R²=0.767-0.988 against RTU_OA_TEMP across
-different features, per notebook 11) may interact poorly with a LARGE fault effect
-specifically, in a way residualization only partially corrects - even though
-residualization worked cleanly for faults where capacity's fault-effect was small
-or absent.
+- **Evaporator fouling**: CONFIRMED. Without capacity, the degradation trend
+  reverses to improvement (0.76->0.41 becomes 0.70->0.82). Real precision cost
+  (0.93-0.97 -> 0.72-0.74).
+- **Suction-line restriction**: CONFIRMED, dramatically. Without capacity, recall
+  becomes stable and near-perfect (0.87->0.43 becomes 0.96-0.99 stable). Real
+  precision cost (~1.00 -> consistent 0.63).
+- **Undercharge**: FALSIFIED. Without capacity, EVERY fold got worse, not better
+  (fold 1: 0.44 -> 0.12). Capacity is undercharge's most helpful feature, not its
+  problem - its instability has a genuinely different, still-unknown cause.
 
-**Not yet tested, a real next step**: deliberately excluding capacity as a feature
-for undercharge, evaporator fouling, and suction-line restriction, and checking
-whether their TimeSeriesSplit degradation disappears - a direct, falsifiable test
-of this hypothesis rather than a correlational observation across 6 data points.
+**Conclusion**: this is a real, useful, but partial explanation, not a universal
+rule. For 2 of 3 degrading faults, dropping capacity is a concrete, tested fix that
+trades precision for much more reliable forward-in-time behavior - recommended for
+real deployment of evaporator fouling and suction-line restriction detectors.
+Undercharge's instability remains genuinely unresolved and should NOT be assumed to
+share the same cause or fix - flagged as a standing open item, not chased further
+per this project's proportionality standard (already invested two full debugging
+sessions into it in notebook 11 without full resolution).
 
 ## Not yet modeled
 
