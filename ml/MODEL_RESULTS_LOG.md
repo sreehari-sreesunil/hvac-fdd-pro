@@ -47,10 +47,29 @@ diverge dramatically.
   blocking.
 - **Status**: genuinely usable working model, with a documented minor caveat.
 
+## Condenser fouling (notebook 13)
+
+- **Features**: `RTU_REFG_COND_PRES`, `RTU_REFG_COND_TEMP` (weather-residualized) -
+  the strong, cleanly monotonic signals per notebook 03's EDA. Capacity included
+  despite being flagged as weak between adjacent mid-severities (30% vs 40%,
+  d=-0.037 in the EDA) - kept in to see if the model extracts any residual value.
+- **Random split**: baseline recall 0.98, precision 0.99 (near-perfect).
+- **TimeSeriesSplit**: baseline recall 0.99-1.00 across all 5 folds - no
+  degradation trend, consistent with overcharge's pattern, not undercharge's.
+- **Mild, non-blocking open item**: baseline precision drifts down slightly across
+  folds (0.96 to 0.88) - a few more false alarms in later periods, much gentler than
+  overcharge's fold 1/5 dip, not chased further.
+- **Emerging pattern across 3 faults so far**: forward-in-time generalization risk
+  seems tied to how strong/weather-independent a fault's EDA-established signal is.
+  Undercharge (weaker, weather-comparable signal) generalized poorly; overcharge and
+  condenser fouling (both strong, largely weather-independent signals) generalized
+  well. Not yet proven as a rule - worth watching across the remaining 3 faults.
+- **Status**: strongest, most stable working model of the three faults modeled so far.
+
 ## Not yet modeled
 
-Condenser fouling, evaporator fouling, liquid-line restriction, suction-line
-restriction — Isolation Forest anomaly detector — Experimental-dataset faults (OA
-damper stuck, incorrect economizer setpoint, biased SAT sensor), which will need
-season-awareness built into the pipeline per that dataset's EDA findings, not yet
-incorporated into `build_feature_table()`.
+Evaporator fouling, liquid-line restriction, suction-line restriction - Isolation
+Forest anomaly detector - Experimental-dataset faults (OA damper stuck, incorrect
+economizer setpoint, biased SAT sensor), which will need season-awareness built into
+the pipeline per that dataset's EDA findings, not yet incorporated into
+`build_feature_table()`.
