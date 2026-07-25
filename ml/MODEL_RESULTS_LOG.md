@@ -172,8 +172,31 @@ dataset; season is the dominant confound, not raw weather.
   build season-specific baselines/thresholds (not yet attempted). Flagged as an
   open item, same standard as undercharge's unresolved Simulated-dataset case.
 
+### Biased SAT sensor (notebook 20)
+
+- **Features**: `RTU_TOT_WATT`, `RTU_SA_TEMP` - RTU_TOT_WATT was the most robust
+  cross-season finding in notebook 10's EDA.
+- **Evaluation design**: same cross-season generalization as notebook 19 - trained
+  on Winter_2022 + Spring_2021, evaluated on held-out Summer_2021.
+- **Raw features**: baseline recall ~0.00, precision 0.12 - near-total collapse,
+  same pattern as OA damper stuck. Plausible cause: RTU_TOT_WATT is naturally much
+  higher in Summer baseline (real cooling load) than in Winter/Spring baseline, so
+  the model learned "normal = low/moderate power" from cooler seasons and mistakes
+  Summer's genuinely normal higher power draw for the fault's effect.
+- **OA_TEMP-residualized features**: only a small improvement (recall 0.00->0.05,
+  precision 0.12->0.34) - MUCH weaker than OA damper stuck's residualization
+  (0.11->0.34). Likely because RTU_TOT_WATT's relationship with weather is more
+  complex (cooling load depends on humidity, occupancy, and nonlinear effects) than
+  a simple linear regression against OA_TEMP captures.
+- **Status**: NOT production-usable as a single cross-season model. Genuinely
+  harder, less-mitigated problem than OA damper stuck - flagged as an open item
+  requiring either a more sophisticated weather/load model or season-specific
+  thresholds, not resolved here.
+
 ## Not yet modeled
 
-Incorrect economizer setpoint, biased SAT sensor (Experimental dataset) - both
-faults already showed real season-dependent behavior in EDA (notebooks 09, 10) and
-will need the same cross-season evaluation discipline established in notebook 19.
+Incorrect economizer setpoint (Experimental dataset) - this fault's EDA (notebook
+09) already found that different severities require different seasons just to have
+a valid test window (Winter_2022 had no valid window for the "setpoint too high"
+severities; Fall_2020 did) - a genuinely harder cross-season modeling problem than
+either fault modeled so far, not yet attempted.
