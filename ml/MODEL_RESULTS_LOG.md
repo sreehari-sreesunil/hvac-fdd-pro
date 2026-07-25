@@ -103,9 +103,46 @@ share the same cause or fix - flagged as a standing open item, not chased furthe
 per this project's proportionality standard (already invested two full debugging
 sessions into it in notebook 11 without full resolution).
 
+## Isolation Forest anomaly detector (notebook 18)
+
+**Architecture role**: the "gatekeeper" model in the two-model architecture -
+trained ONLY on baseline data, no fault labels used during training. Answers "does
+this look abnormal at all," distinct from the binary classifiers' "which specific
+fault is this."
+
+**Features**: `RTU_REFG_SUCT_PRES`, `RTU_REFG_SUCT_TEMP`, capacity (weather-
+residualized) - deliberately narrow and general-purpose, not the union of every
+fault's specialized features.
+
+**Tuning**: bounded check of 3 contamination values (0.01, 0.05, 0.10). Adopted
+contamination=0.01 - meaningfully lower false-positive rate (6.1% vs 16.1% at the
+untried default 0.05) with no loss of strong-fault detection (100% either way).
+
+**Final results (contamination=0.01)**:
+- False positive rate on held-out later baseline: 6.1% - still above the nominal 1%
+  calibration target, echoing the same forward-in-time drift theme seen across
+  several binary classifiers, but a real, tuned improvement over the untuned default.
+- Detection rate forms an honest gradient closely matching EDA effect sizes:
+  near-perfect (>0.99) for suction-line restriction and evaporator fouling 30-50%;
+  moderate (0.42-0.81) for liquidpipe08/10bar and evapfouling20; weak (<0.25) for
+  everything the EDA already flagged as low-severity or weak-signal (overcharge at
+  every severity, condfouling10-40, undercharge10/15, liquidpipe01/04bar).
+
+**Real, unresolved tradeoff**: tightening the threshold to cut false positives also
+cut detection meaningfully for some MODERATE-severity faults that were reasonably
+well-detected at the looser setting (condfouling50: 0.93->0.15; undercharge20:
+0.90->0.21 when moving from contamination=0.05 to 0.01). This is a genuine product
+decision (acceptable false-alarm rate vs. early detection of moderate faults), not
+resolved here - belongs with whoever owns the eventual alert engine's UX.
+
+**Consistent with the rest of this modeling phase**: every model built (6 binary
+classifiers, this anomaly detector) struggles with the same mild/weak-signal cases
+the EDA already identified as difficult - a reassuring sign that the EDA's findings
+are correctly driving model behavior, not an unexplained failure specific to this
+model.
+
 ## Not yet modeled
 
-Isolation Forest anomaly detector - Experimental-dataset faults (OA damper stuck,
-incorrect economizer setpoint, biased SAT sensor), which will need season-awareness
-built into the pipeline per that dataset's EDA findings, not yet incorporated into
-`build_feature_table()`.
+Experimental-dataset faults (OA damper stuck, incorrect economizer setpoint, biased
+SAT sensor), which will need season-awareness built into the pipeline per that
+dataset's EDA findings, not yet incorporated into `build_feature_table()`.
