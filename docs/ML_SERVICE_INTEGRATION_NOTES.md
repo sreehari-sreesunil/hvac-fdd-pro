@@ -179,3 +179,46 @@ remaining model's own fault-severity CSV and testing in turn is the repeatable,
 proven next step - deliberately not done exhaustively for all 6 remaining
 models in this same session (2 of 8 models now genuinely proven end-to-end,
 covering both the capacity-included and capacity-excluded code paths).
+
+## Milestone: all 8 saved models tested end-to-end through the real system
+
+Completed the remaining 6 models (overcharge, evaporator_fouling,
+liquidline_restriction, simulated_isolation_forest, experimental_oa_damper_stuck,
+experimental_econ_setpoint_too_low), each ingested with its own real fault data
+via the comprehensive test asset (ML-Test-RTU-Full), and each tested through the
+actual GET /predictions/{asset_id} endpoint.
+
+Real methodology note: GET /telemetry caps at 500 rows per metric (most recent
+first), so testing a Simulated-dataset model required finding a 500-row window
+within the ingested data that actually contains real stage-2 compressor
+operation (checked directly per file, not assumed) - the first overcharge
+attempt correctly, honestly failed with "No stage-2 rows in buffer" because the
+initial ingestion window happened to only contain off/stage-1 operation. This
+was the pipeline behaving correctly (refusing to guess), not a bug - fixed by
+choosing a better data window, not by changing any code.
+
+Each Simulated-dataset test used a growing TIME_OFFSET_DAYS to avoid timestamp
+collisions with previous tests (all Simulated fault files share identical
+underlying 2018 timestamps). Experimental-dataset tests (real 2020-2022 dates)
+used a larger offset and explicit NAN-string filtering during ingestion,
+matching the na_values=["NAN"] treatment established in the EDA.
+
+Results, all correctly surfacing each model's real, disclosed status/caveats
+rather than a uniform confidence:
+
+| Model | predicted_label | fault_probability / anomaly | confidence |
+|---|---|---|---|
+| condenser_fouling | 1 | 0.9988 | high |
+| suctionline_restriction | 1 | 0.99997 | high |
+| overcharge | 1 | 0.876 | high |
+| evaporator_fouling | 1 | 0.99994 | high |
+| liquidline_restriction | 1 | 0.99967 | high |
+| isolation_forest | is_anomaly=true | score -0.667 | (n/a, unsupervised) |
+| oa_damper_stuck | 1 | 0.512 | low (honest - real disclosed tradeoff) |
+| econ_setpoint_too_low | 0 (incorrect) | 0.438 | low (honest - real disclosed limitation) |
+
+The two "low confidence" / incorrect results are NOT failures of the system -
+they are the correct, honest behavior for two models whose own metadata already
+disclosed real, unresolved limitations (see FINAL_MODEL_METRICS.md). A system
+that returned uniform high confidence regardless of a model's real reliability
+would be actively misleading; this one doesn't.
