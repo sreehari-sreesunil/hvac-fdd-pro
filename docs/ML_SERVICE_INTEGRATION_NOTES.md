@@ -120,3 +120,26 @@ to use the real value. Worth flagging as a pre-existing, latent
 inconsistency in this project's dev-environment setup - not something
 introduced by this work, but only now surfaced because it directly broke
 JWT verification during real testing.
+
+## Milestone: fully containerized ml-service verified working
+
+Added services/ml-service/Dockerfile (mirrors telemetry-service's exact
+pattern) and a docker-compose.yml entry - ml/ mounted read-only at /ml
+inside the container (models + src both accessible without rebuilding the
+image on retrain), internal Docker network URLs for asset-service/
+telemetry-service, and the correct docker-compose-substituted
+JWT_SECRET_KEY (not the value from services/*/.env files - see the earlier
+gotcha entry in this document).
+
+Verified: the exact same prediction request that worked against the local
+poetry-run dev server also works identically against the full containerized
+stack (docker compose up -d) - same 99.88% fault probability result. This
+is the first genuinely production-representative test of the whole system,
+not just a local development shortcut.
+
+Real operational note: `docker compose up -d --build <service>` appeared to
+run in ATTACHED mode despite the -d flag in one test (logs streamed to the
+terminal) - pressing Ctrl+C in that state stopped the entire stack, not
+just the log view. If this happens again, use a plain `docker compose up
+-d` (without --build) afterward, or open a separate terminal rather than
+Ctrl+C-ing out of what might be an attached session.
