@@ -143,3 +143,39 @@ terminal) - pressing Ctrl+C in that state stopped the entire stack, not
 just the log view. If this happens again, use a plain `docker compose up
 -d` (without --build) afterward, or open a separate terminal rather than
 Ctrl+C-ing out of what might be an attached session.
+
+## Real bug found and fixed: build_live_simulated_features assumed every
+## model needs capacity smoothing
+
+Setting up metric mappings for a comprehensive test asset (11 metrics, covering
+all 8 saved models) and testing suction-line restriction (a capacity-EXCLUDED
+model, per notebook 17's ablation-tested fix) immediately surfaced a real bug:
+build_live_simulated_features unconditionally called add_segmented_ewma on
+RTU_TOT_CAPA regardless of whether the model's feature_cols actually needed the
+smoothed-capacity-residual feature. Models with include_capacity=False never
+fetch raw capacity into their buffer (correctly, per required_raw_metrics) so
+the unconditional smoothing step threw a KeyError the moment it ran against
+such a model.
+
+This never surfaced during the condenser_fouling test (our only test before
+today), since that model DOES use capacity. Fixed by checking whether the
+smoothed-capacity-residual feature is actually present in feature_cols
+before attempting the computation at all - a direct, concrete justification for
+testing a second, differently-configured model rather than assuming the pattern
+generalizes from one success.
+
+Verified after the fix: suction-line restriction correctly predicts fault=1 at
+99.997 percent probability (matching this fault's extreme, EDA-established
+effect sizes), with the model's real Usable with caveat status and exact
+capacity-exclusion caveat text correctly surfaced in the response.
+
+## New comprehensive test asset for testing remaining models
+
+Created asset type RTU - Full Model Test (11 metric definitions, covering the
+union of all 8 saved models' required_raw_metrics) and a new asset
+ML-Test-RTU-Full (separate from the original condenser-fouling-only test
+asset, to avoid risk of breaking the already-working setup). Ingesting each
+remaining model's own fault-severity CSV and testing in turn is the repeatable,
+proven next step - deliberately not done exhaustively for all 6 remaining
+models in this same session (2 of 8 models now genuinely proven end-to-end,
+covering both the capacity-included and capacity-excluded code paths).

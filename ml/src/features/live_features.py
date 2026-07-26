@@ -66,14 +66,31 @@ def build_live_simulated_features(
             not silently score on stale or off-state data.
     """
     smoothed_col = f"{capacity_col}_ewma{ewma_span}_segmented"
-    # Segmented EWMA needs the buffer's full history BEFORE stage filtering -
-    # the segmentation logic depends on state transitions across the whole
-    # buffer, per ml/src/features/smoothing.py's add_segmented_ewma().
-    smoothed_buffer = add_segmented_ewma(
-        buffer, value_col=capacity_col, state_col=stage_col, span=ewma_span, output_col=smoothed_col
-    )
+    needs_capacity = f"{smoothed_col}_residual" in metadata["feature_cols"]
 
-    stage2_rows = stage2_only(smoothed_buffer, stage_col=stage_col)
+    if needs_capacity:
+        # Segmented EWMA needs the buffer's full history BEFORE stage
+        # filtering - the segmentation logic depends on state transitions
+        # across the whole buffer, per
+        # ml/src/features/smoothing.py's add_segmented_ewma(). Only run
+        # this when the model actually uses the smoothed-capacity-residual
+        # feature - models with include_capacity=False (see
+        # model_registry.py, e.g. evaporator_fouling, suctionline_restriction,
+        # per notebook 17's ablation-tested fix) never fetch raw capacity
+        # into the buffer at all, so calling this unconditionally would
+        # KeyError on a column that was never fetched. Found via a real
+        # end-to-end test against suctionline_restriction, not assumed.
+        working_buffer = add_segmented_ewma(
+            buffer,
+            value_col=capacity_col,
+            state_col=stage_col,
+            span=ewma_span,
+            output_col=smoothed_col,
+        )
+    else:
+        working_buffer = buffer
+
+    stage2_rows = stage2_only(working_buffer, stage_col=stage_col)
     if stage2_rows.empty:
         raise ValueError(
             "No stage-2 rows in buffer - cannot score this asset right now (not currently in stage-2 operation)."
