@@ -86,3 +86,37 @@ this project's EDA and modeling phases.
 - Any real-time/scheduled invocation - this was a one-shot manual test, not
   a running, periodic prediction loop.
 - Writing predictions anywhere persistent (currently just printed to stdout).
+
+## Milestone: the real ml-service (not a script) works end-to-end
+
+Built a real FastAPI microservice at services/ml-service/, mirroring
+telemetry-service's exact conventions (Poetry setup, pydantic-settings
+config, verify_asset_access auth dependency reusing common.security). A
+real GET /predictions/{asset_id}?model_name=... request against the actual
+running service - not test_ml_pipeline.py's standalone script - correctly
+authenticated, dynamically resolved metric names to real metric_definition_ids
+via asset-service (no hardcoded mapping), fetched real telemetry, assembled
+a live buffer, and returned a correct prediction (condenser fouling, 99.88%
+fault probability, high confidence).
+
+## Real gotcha discovered: docker-compose's JWT_SECRET_KEY does NOT come
+## from services/*/.env files
+
+`services/auth-service/.env` and `services/telemetry-service/.env` both
+contain `JWT_SECRET_KEY=local-dev-secret-change-before-any-real-deployment-8f3k2`,
+but the ACTUAL running Docker containers use
+`dev-secret-change-me-in-production` - the fallback default baked into
+docker-compose.yml's `${JWT_SECRET_KEY:-dev-secret-change-me-in-production}`
+substitution. This substitution resolves against the host environment /
+docker-compose's own env handling at compose-file-parse time, NOT by each
+service loading its own local .env file inside the container.
+
+Confirmed directly via `docker compose exec auth-service printenv
+JWT_SECRET_KEY` - the only authoritative way to check, since two separate
+.env files existing in the repo (both with a DIFFERENT value than what's
+actually running) could easily mislead anyone reading them and assuming
+they reflect real runtime configuration. ml-service's own .env was fixed
+to use the real value. Worth flagging as a pre-existing, latent
+inconsistency in this project's dev-environment setup - not something
+introduced by this work, but only now surfaced because it directly broke
+JWT verification during real testing.

@@ -1,0 +1,45 @@
+[project]
+name = "ml-service"
+version = "0.1.0"
+description = "HVAC-FDD Pro: fault detection inference service"
+authors = [
+    {name = "sreehari-sreesunil",email = "sreeharisunil2@gmail.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi (>=0.140.0,<0.141.0)",
+    "uvicorn[standard] (>=0.51.0,<0.52.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "scikit-learn (>=1.9.0,<2.0.0)",
+    "joblib (>=1.5.3,<2.0.0)",
+    "pydantic-settings (>=2.14.2,<3.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "common"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+common = {path = "../../libs/common", develop = true}
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "mypy (>=2.3.0,<3.0.0)"
+]
+[tool.poetry]
+package-mode = false
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing"
+testpaths = ["tests"]
+pythonpath = ["."]
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
