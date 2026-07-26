@@ -88,6 +88,10 @@ def train_simulated_fault_models() -> None:
         model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
         model.fit(table[residual_cols], table["label"])
 
+        required_raw_metrics = list(config.pressure_temp_cols) + ["RTU_STG_STA", "RTU_OA_TEMP"]
+        if config.include_capacity:
+            required_raw_metrics.append("RTU_TOT_CAPA")
+
         _save_model(
             model,
             name=f"simulated_{fault_name}",
@@ -98,6 +102,7 @@ def train_simulated_fault_models() -> None:
                 "dataset": "simulated",
                 "training_rows": len(table),
                 "weather_regression_models": weather_models,
+                "required_raw_metrics": required_raw_metrics,
             },
         )
 
@@ -141,6 +146,8 @@ def train_isolation_forest() -> None:
             "training_rows": len(baseline_only),
             "contamination": ISOLATION_FOREST_CONFIG["contamination"],
             "weather_regression_models": weather_models,
+            "required_raw_metrics": list(ISOLATION_FOREST_CONFIG["feature_cols"])
+            + ["RTU_TOT_CAPA", "RTU_STG_STA", "RTU_OA_TEMP"],
         },
     )
 
@@ -213,6 +220,7 @@ def train_experimental_fault_models() -> None:
             "training_rows": len(table),
             "train_seasons": list(config.train_seasons),
         }
+        extra["required_raw_metrics"] = list(config.feature_cols) + ["OCCU_MOD"]
         if config.use_weather_residual:
             extra["weather_regression_models"] = {
                 target_col: {

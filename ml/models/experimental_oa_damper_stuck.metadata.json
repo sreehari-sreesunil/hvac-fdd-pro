@@ -6,12 +6,17 @@
   "status": "Usable with caveat",
   "notes": "OA_TEMP-residualized damper position used, not raw - notebook 19 found this partially mitigates cross-season collapse (recall 0.11->0.34), at a real precision cost (1.00->0.42). Real, unresolved tradeoff - not a clean fix.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T19:08:14.177134+00:00",
+  "trained_at_utc": "2026-07-26T14:41:08.056795+00:00",
   "dataset": "experimental",
   "training_rows": 10800,
   "train_seasons": [
     "Winter_2022",
     "Spring_2021"
+  ],
+  "required_raw_metrics": [
+    "RTU_OA_DMPR_DM",
+    "RTU_OA_TEMP",
+    "OCCU_MOD"
   ],
   "weather_regression_models": {
     "RTU_OA_DMPR_DM": {

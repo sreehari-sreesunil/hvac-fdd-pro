@@ -8,7 +8,7 @@
   "status": "Usable",
   "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T19:04:46.172953+00:00",
+  "trained_at_utc": "2026-07-26T14:37:49.458238+00:00",
   "dataset": "simulated",
   "training_rows": 227265,
   "weather_regression_models": {
@@ -32,5 +32,12 @@
       "intercept": 18586.676683960843,
       "weather_col": "RTU_OA_TEMP"
     }
-  }
+  },
+  "required_raw_metrics": [
+    "RTU_REFG_SUCT_PRES",
+    "RTU_REFG_SUCT_TEMP",
+    "RTU_REFG_DISC_PRES",
+    "RTU_STG_STA",
+    "RTU_OA_TEMP"
+  ]
 }

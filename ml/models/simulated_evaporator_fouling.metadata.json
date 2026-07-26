@@ -8,7 +8,7 @@
   "status": "Usable with caveat",
   "notes": "Capacity deliberately excluded - notebook 17's ablation test confirmed removing it reverses TimeSeriesSplit degradation (0.76->0.41 becomes 0.70->0.82), at a real precision cost (0.93-0.97 -> 0.72-0.74).",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-25T19:05:53.855978+00:00",
+  "trained_at_utc": "2026-07-26T14:39:13.417052+00:00",
   "dataset": "simulated",
   "training_rows": 378573,
   "weather_regression_models": {
@@ -32,5 +32,12 @@
       "intercept": 18586.676683960843,
       "weather_col": "RTU_OA_TEMP"
     }
-  }
+  },
+  "required_raw_metrics": [
+    "RTU_REFG_SUCT_PRES",
+    "RTU_REFG_SUCT_TEMP",
+    "RTU_SA_TEMP",
+    "RTU_STG_STA",
+    "RTU_OA_TEMP"
+  ]
 }
