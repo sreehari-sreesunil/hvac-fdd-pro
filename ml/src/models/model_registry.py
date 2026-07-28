@@ -9,7 +9,7 @@ cause gets resolved), update the log/metrics files first, then this
 registry, in that order.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,10 @@ class SimulatedFaultConfig:
     include_capacity: bool
     status: str  # must match a status label from FINAL_MODEL_METRICS.md
     notes: str
+    algorithm: str = "random_forest"  # "random_forest" or "xgboost" - see MODEL_COMPARISON_LOG.md
+    algorithm_params: dict = field(
+        default_factory=dict
+    )  # hyperparameter overrides for the chosen algorithm
 
 
 @dataclass(frozen=True)
@@ -84,11 +88,16 @@ SIMULATED_FAULTS: dict[str, SimulatedFaultConfig] = {
         },
         pressure_temp_cols=("RTU_REFG_SUCT_PRES", "RTU_REFG_SUCT_TEMP", "RTU_SA_TEMP"),
         include_capacity=False,  # notebook 17 ablation test: CONFIRMED capacity causes degradation here
-        status="Usable with caveat",
+        status="Usable",  # UPDATED - see MODEL_COMPARISON_LOG.md: XGBoost resolves the RF recall floor
+        algorithm="xgboost",
+        algorithm_params={"n_estimators": 200, "max_depth": 5, "learning_rate": 0.1},
         notes=(
-            "Capacity deliberately excluded - notebook 17's ablation test confirmed removing it "
-            "reverses TimeSeriesSplit degradation (0.76->0.41 becomes 0.70->0.82), at a real "
-            "precision cost (0.93-0.97 -> 0.72-0.74)."
+            "SWITCHED to XGBoost per MODEL_COMPARISON_LOG.md - Random Forest had a documented "
+            "TimeSeriesSplit recall floor (0.76->0.41). XGBoost achieves stable ~0.95 recall in "
+            "every fold, crossing into 'Usable'. Hyperparameters chosen via nested TimeSeriesSplit "
+            "GridSearchCV (see compare_algorithms.py), consistent across all 5 outer folds. "
+            "Capacity still excluded per notebook 17's original ablation finding - that decision "
+            "was about feature engineering, not algorithm, and was not retested here."
         ),
     ),
     "liquidline_restriction": SimulatedFaultConfig(

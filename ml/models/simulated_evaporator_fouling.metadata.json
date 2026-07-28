@@ -5,11 +5,12 @@
     "RTU_REFG_SUCT_TEMP_residual",
     "RTU_SA_TEMP_residual"
   ],
-  "status": "Usable with caveat",
-  "notes": "Capacity deliberately excluded - notebook 17's ablation test confirmed removing it reverses TimeSeriesSplit degradation (0.76->0.41 becomes 0.70->0.82), at a real precision cost (0.93-0.97 -> 0.72-0.74).",
+  "status": "Usable",
+  "notes": "SWITCHED to XGBoost per MODEL_COMPARISON_LOG.md - Random Forest had a documented TimeSeriesSplit recall floor (0.76->0.41). XGBoost achieves stable ~0.95 recall in every fold, crossing into 'Usable'. Hyperparameters chosen via nested TimeSeriesSplit GridSearchCV (see compare_algorithms.py), consistent across all 5 outer folds. Capacity still excluded per notebook 17's original ablation finding - that decision was about feature engineering, not algorithm, and was not retested here.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-26T14:39:13.417052+00:00",
+  "trained_at_utc": "2026-07-28T14:31:55.824153+00:00",
   "dataset": "simulated",
+  "algorithm": "xgboost",
   "training_rows": 378573,
   "weather_regression_models": {
     "RTU_REFG_SUCT_PRES": {

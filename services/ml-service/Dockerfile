@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS base
+FROM python:3.12-slim AS base
 RUN pip install --no-cache-dir poetry==2.4.1
 WORKDIR /app
 COPY services/ml-service/pyproject.toml services/ml-service/poetry.lock ./

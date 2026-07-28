@@ -23,6 +23,7 @@ import joblib
 import pandas as pd
 import sklearn
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from xgboost import XGBClassifier
 
 ML_ROOT = Path(__file__).resolve().parents[2]
 if str(ML_ROOT) not in sys.path:
@@ -85,7 +86,12 @@ def train_simulated_fault_models() -> None:
         if config.include_capacity:
             residual_cols.append(capacity_residual_col)
 
-        model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
+        if config.algorithm == "xgboost":
+            model = XGBClassifier(eval_metric="logloss", random_state=42, **config.algorithm_params)
+        else:
+            model = RandomForestClassifier(
+                n_estimators=100, max_depth=5, random_state=42, **config.algorithm_params
+            )
         model.fit(table[residual_cols], table["label"])
 
         required_raw_metrics = list(config.pressure_temp_cols) + ["RTU_STG_STA", "RTU_OA_TEMP"]
@@ -100,6 +106,7 @@ def train_simulated_fault_models() -> None:
             notes=config.notes,
             extra={
                 "dataset": "simulated",
+                "algorithm": config.algorithm,
                 "training_rows": len(table),
                 "weather_regression_models": weather_models,
                 "required_raw_metrics": required_raw_metrics,

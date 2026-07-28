@@ -8,8 +8,9 @@
   "status": "Usable",
   "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-26T14:37:49.458238+00:00",
+  "trained_at_utc": "2026-07-28T14:31:01.091493+00:00",
   "dataset": "simulated",
+  "algorithm": "random_forest",
   "training_rows": 227265,
   "weather_regression_models": {
     "RTU_REFG_SUCT_PRES": {

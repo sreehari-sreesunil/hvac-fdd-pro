@@ -8,8 +8,9 @@
   "status": "Usable",
   "notes": "Strongest, most stable result of all 6 faults. See notebook 13.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-26T14:38:22.979544+00:00",
+  "trained_at_utc": "2026-07-28T14:31:43.686819+00:00",
   "dataset": "simulated",
+  "algorithm": "random_forest",
   "training_rows": 379336,
   "weather_regression_models": {
     "RTU_REFG_COND_PRES": {

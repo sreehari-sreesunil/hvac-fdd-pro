@@ -40,24 +40,29 @@ across the complete 24-file sweep this time. See MODEL_RESULTS_LOG.md's
 
 ## Simulated Dataset - Binary Fault Classifiers
 
-All models: `RandomForestClassifier`, features from `build_feature_table()`
+All models: `RandomForestClassifier`, EXCEPT evaporator fouling, which uses
+`XGBClassifier` as of a multi-algorithm comparison (see `MODEL_COMPARISON_LOG.md`
+for full methodology and per-fault rationale). Features from `build_feature_table()`
 (stage-2 filtered, weather-residualized). Two evaluation methods reported for
 every fault: random split (diagnostic upper bound) and 5-fold `TimeSeriesSplit`
-(honest, forward-in-time evaluation).
+(honest, forward-in-time evaluation) - except evaporator fouling's current entry,
+which reports only TimeSeriesSplit (random-split is optional diagnostic-only per
+MODEL_ACCEPTANCE_CRITERIA.md and was not computed in the comparison harness).
 
 | Fault | Random-Split Baseline Recall/Precision | TimeSeriesSplit Baseline Recall Range | Status |
 |---|---|---|---|
 | Refrigerant Undercharge | 0.34-0.55 / varies | 0.44 -> 0.00 (collapses) | **Not production-usable** - root cause partially isolated (weather-variance interaction), not resolved. Capacity-removal fix tested and found to make it WORSE. |
 | Refrigerant Overcharge | 0.73 / 0.89 | 0.97 - 1.00 (stable) | **Usable** - minor unexplained precision dip in 2 of 5 folds. |
 | Condenser Fouling | 0.98 / 0.99 | 1.00 (all folds) - 0.76-0.95 precision | **Usable** - strongest, most stable recall; precision drift wider than originally measured (see note below on a fixed feature-engineering bug). |
-| Evaporator Fouling | 0.71 / 0.90 | 0.76 -> 0.41 without fix; 0.70 -> 0.82 with capacity removed | **Usable with caveat** - deploy WITHOUT capacity feature (precision cost: 0.93-0.97 -> 0.72-0.74). |
+| Evaporator Fouling | N/A - not computed for XGBoost, see note above | 0.949-0.952 recall / 0.967-0.970 precision (XGBoost, capacity excluded) | **Usable** - SWITCHED from Random Forest (which had a 0.76->0.41 recall floor) to XGBoost per `MODEL_COMPARISON_LOG.md`; stable across all 5 folds. Superseded row, kept below for history: RF/0.71-0.90/0.76->0.41 without fix, 0.70->0.82 with capacity removed/was "Usable with caveat". |
 | Liquid-Line Restriction | 0.98 / 0.99 | 0.99-1.00 (stable) - 0.91-0.98 precision | **Usable** - stable despite this fault's threshold-shaped severity response; precision drift wider than originally measured (see note below). |
 | Suction-Line Restriction | 0.82 / 0.91 | 0.87 -> 0.43 without fix; 0.96 - 0.99 with capacity removed | **Usable with caveat** - deploy WITHOUT capacity feature (precision cost: ~1.00 -> consistent 0.63). |
 
-**Deployment recommendation**: 4 of 6 faults (overcharge, condenser fouling,
-liquid-line restriction, and evaporator/suction-line restriction *with capacity
-removed*) are usable now. Undercharge requires further investigation before
-deployment - do not ship as-is.
+**Deployment recommendation**: 5 of 6 faults (overcharge, condenser fouling,
+evaporator fouling, and liquid-line restriction as full "Usable"; suction-line
+restriction as "Usable with caveat", deployed *with capacity removed*) are usable
+now. Undercharge requires further investigation before deployment - do not ship
+as-is.
 
 ## Simulated Dataset - Isolation Forest (Anomaly Gatekeeper)
 
