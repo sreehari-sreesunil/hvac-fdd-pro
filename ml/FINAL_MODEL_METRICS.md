@@ -64,36 +64,43 @@ restriction as "Usable with caveat", deployed *with capacity removed*) are usabl
 now. Undercharge requires further investigation before deployment - do not ship
 as-is.
 
-## Simulated Dataset - Anomaly Gatekeeper (One-Class SVM)
+## Simulated Dataset - Anomaly Gatekeeper (Isolation Forest, expanded features)
 
-SWITCHED from Isolation Forest to One-Class SVM per
-ANOMALY_DETECTOR_COMPARISON_LOG.md - a multi-algorithm comparison triggered by
-external review feedback. Trained only on baseline data; `nu=0.01`, `kernel=rbf`.
+REVERTED to Isolation Forest after a two-part discovery, documented fully in
+ANOMALY_DETECTOR_COMPARISON_LOG.md. (1) A system-level two-stage validation
+(TWO_STAGE_ARCHITECTURE_VALIDATION_LOG.md) found the previously-shipped
+One-Class SVM gatekeeper - trained on only 3 features (SUCT_PRES, SUCT_TEMP,
+capacity) - was structurally blind to condenser_fouling, whose real signal
+lives in COND_PRES/COND_TEMP, columns it never saw. (2) Feature set expanded
+to the full 7-column union of every classifier's diagnostic columns; SVM's
+and LOF's false-positive rates then collapsed (curse of dimensionality for
+distance/kernel methods), while Isolation Forest remained robust.
+`contamination=0.03` against the expanded feature set.
 
 | Metric | Value |
 |---|---|
-| False positive rate (held-out later baseline) | 2.95% - lower than Isolation Forest's best achievable 2.87% at its own most conservative setting, and far below its shipped 7.6% (contamination=0.03) |
-| Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 40-50%) | 1.00 |
-| Detection rate, moderate-signal faults (e.g. liquidpipe10bar, evapfouling30) | 0.76 - 0.98 |
-| Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling all severities) | <0.10 |
+| False positive rate (held-out later baseline) | 7.78% (barely moved from the old 3-feature set's 7.76% at the same contamination) |
+| Detection rate, condenser_fouling (all severities) | 63.3% - 100% (up from ~2-6% pre-expansion) |
+| Detection rate, strong-signal faults (suction-line restriction, evaporator fouling 30-50%) | 0.95 - 1.00 |
+| Detection rate, liquid-line restriction | 0.61 - 0.87 (up from 0.74-0.83 pre-expansion) |
+| Detection rate, overcharge (all severities) | 2.1% - 20.5% - KNOWN LIMITATION, see below |
 
-**Status**: **Usable** (upgraded from "Usable with caveat") - at a near-identical
-FPR to Isolation Forest's best setting, detects evapfouling30 98.4% of the time
-versus Isolation Forest's 13.5% - a different tier of gatekeeper performance, not
-a marginal gain. Local Outlier Factor was also compared and showed comparable
-detection but was disqualified on deployment grounds (11.9MB serialized model
-embedding the full training set, vs. SVM's 24.6KB). Full comparison methodology,
-every algorithm/hyperparameter tested, and the real bug found and fixed in the
-comparison harness itself (an FPR-only selection rule has a trivial optimum and
-would have reproduced Isolation Forest's own known contamination=0.01 detection
-collapse) are documented in ANOMALY_DETECTOR_COMPARISON_LOG.md.
+**Status**: **Usable with caveat** (reverted from "Usable" under the interim
+SVM). Real, honest downgrade in tier label in exchange for a gatekeeper that
+sees the columns most faults actually live in, rather than one tuned to a
+feature set that happened to match only suction-line restriction.
 
-**Historical note**: the original Isolation Forest's `contamination` re-tuning
-(0.01 -> 0.03 after a capacity-feature bug fix, detailed in the previous version
-of this section and in MODEL_RESULTS_LOG.md) remains a real, valuable record of
-this project's evaluation discipline - preserved in git history and
-MODEL_RESULTS_LOG.md, not deleted, even though Isolation Forest itself is no
-longer deployed.
+**Known remaining limitation**: overcharge stays weakly detected even at the
+expanded feature set - likely a genuine structural limit of an *unsupervised*
+gatekeeper (asking "how far from normal") versus overcharge's *supervised*
+classifier (which learns an exact decision boundary and achieves 97-100%
+recall). Not resolved by this fix; flagged honestly rather than glossed over.
+
+**System-level validation** (does this actually reduce false alarms and gating
+risk in a full running system, not just in isolation) is in
+TWO_STAGE_ARCHITECTURE_VALIDATION_LOG.md - the real payoff: system-level false
+positive rate on baseline data dropped from 55.4% (running all 5 classifiers
+directly, no gate) to 1.87% (gated).
 
 ## Experimental Dataset - Cross-Season Models
 

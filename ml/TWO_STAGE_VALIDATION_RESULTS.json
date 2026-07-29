@@ -1,0 +1,295 @@
+{
+  "n_rows_total": 1390426,
+  "n_rows_baseline": 63190,
+  "system_fpr": {
+    "direct": 0.5539167589808514,
+    "two_stage": 0.018721316664029118
+  },
+  "per_fault_file": {
+    "condfouling10": {
+      "n_rows": 62952,
+      "true_fault": "condenser_fouling",
+      "direct_system_detection_rate": 0.9965688143347312,
+      "two_stage_system_detection_rate": 0.5312936840767569,
+      "gatekeeper_flag_rate": 0.5346772143855636,
+      "gating_missed_rate": 0.4652751302579743
+    },
+    "condfouling20": {
+      "n_rows": 63470,
+      "true_fault": "condenser_fouling",
+      "direct_system_detection_rate": 0.9999054671498345,
+      "two_stage_system_detection_rate": 0.9991492043485111,
+      "gatekeeper_flag_rate": 0.9991964707735939,
+      "gating_missed_rate": 0.0007562628013234596
+    },
+    "condfouling30": {
+      "n_rows": 63496,
+      "true_fault": "condenser_fouling",
+      "direct_system_detection_rate": 0.9998740078115157,
+      "two_stage_system_detection_rate": 0.9993542900340179,
+      "gatekeeper_flag_rate": 0.9994487841753811,
+      "gating_missed_rate": 0.000519717777497819
+    },
+    "condfouling40": {
+      "n_rows": 62951,
+      "true_fault": "condenser_fouling",
+      "direct_system_detection_rate": 0.9993963558958555,
+      "two_stage_system_detection_rate": 0.9988880240186812,
+      "gatekeeper_flag_rate": 0.9994440120093406,
+      "gating_missed_rate": 0.0005083318771743617
+    },
+    "condfouling50": {
+      "n_rows": 63277,
+      "true_fault": "condenser_fouling",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.9987989316813376,
+      "gatekeeper_flag_rate": 0.9987989316813376,
+      "gating_missed_rate": 0.0012010683186624016
+    },
+    "evapfouling10": {
+      "n_rows": 62379,
+      "true_fault": "evaporator_fouling",
+      "direct_system_detection_rate": 0.9937959890347713,
+      "two_stage_system_detection_rate": 0.02667564404687475,
+      "gatekeeper_flag_rate": 0.026691675082960612,
+      "gating_missed_rate": 0.9671203449878966
+    },
+    "evapfouling20": {
+      "n_rows": 62438,
+      "true_fault": "evaporator_fouling",
+      "direct_system_detection_rate": 0.9985906018770621,
+      "two_stage_system_detection_rate": 0.41553220795028667,
+      "gatekeeper_flag_rate": 0.41553220795028667,
+      "gating_missed_rate": 0.5830583939267754
+    },
+    "evapfouling30": {
+      "n_rows": 62345,
+      "true_fault": "evaporator_fouling",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.9851471649691235,
+      "gatekeeper_flag_rate": 0.9851471649691235,
+      "gating_missed_rate": 0.014852835030876532
+    },
+    "evapfouling40": {
+      "n_rows": 62681,
+      "true_fault": "evaporator_fouling",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.999776646830778,
+      "gatekeeper_flag_rate": 0.999776646830778,
+      "gating_missed_rate": 0.00022335316922195148
+    },
+    "evapfouling50": {
+      "n_rows": 65540,
+      "true_fault": "evaporator_fouling",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.9999694842844065,
+      "gatekeeper_flag_rate": 0.9999694842844065,
+      "gating_missed_rate": 3.0515715593537607e-05
+    },
+    "liquidpipe01bar": {
+      "n_rows": 61955,
+      "true_fault": "liquidline_restriction",
+      "direct_system_detection_rate": 0.9994834960858687,
+      "two_stage_system_detection_rate": 0.8431119360826407,
+      "gatekeeper_flag_rate": 0.843580017754822,
+      "gating_missed_rate": 0.15637156000322805
+    },
+    "liquidpipe04bar": {
+      "n_rows": 61513,
+      "true_fault": "liquidline_restriction",
+      "direct_system_detection_rate": 0.9999349730951181,
+      "two_stage_system_detection_rate": 0.9995122982133858,
+      "gatekeeper_flag_rate": 0.9995610683920472,
+      "gating_missed_rate": 0.00042267488173231005
+    },
+    "liquidpipe08bar": {
+      "n_rows": 54808,
+      "true_fault": "liquidline_restriction",
+      "direct_system_detection_rate": 0.9999817544883959,
+      "two_stage_system_detection_rate": 0.5799153408261568,
+      "gatekeeper_flag_rate": 0.5799335863377609,
+      "gating_missed_rate": 0.42006641366223907
+    },
+    "liquidpipe10bar": {
+      "n_rows": 47916,
+      "true_fault": "liquidline_restriction",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.7777777777777778,
+      "gatekeeper_flag_rate": 0.7777777777777778,
+      "gating_missed_rate": 0.2222222222222222
+    },
+    "overcharge10": {
+      "n_rows": 63581,
+      "true_fault": "overcharge",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 0.7943725326748557,
+      "gatekeeper_flag_rate": 0.7943725326748557,
+      "gating_missed_rate": 0.20562746732514425
+    },
+    "overcharge15": {
+      "n_rows": 61459,
+      "true_fault": "overcharge",
+      "direct_system_detection_rate": 0.9967132559917994,
+      "two_stage_system_detection_rate": 0.05322247351893132,
+      "gatekeeper_flag_rate": 0.05595600318911795,
+      "gating_missed_rate": 0.9434907824728681
+    },
+    "overcharge20": {
+      "n_rows": 39035,
+      "true_fault": "overcharge",
+      "direct_system_detection_rate": 0.9994107851927757,
+      "two_stage_system_detection_rate": 0.05269629819392853,
+      "gatekeeper_flag_rate": 0.05269629819392853,
+      "gating_missed_rate": 0.9467144869988472
+    },
+    "suctionpipe01bar": {
+      "n_rows": 63686,
+      "true_fault": "suctionline_restriction",
+      "direct_system_detection_rate": 0.7440410765317338,
+      "two_stage_system_detection_rate": 0.09300317181170116,
+      "gatekeeper_flag_rate": 0.09564111421662531,
+      "gating_missed_rate": 0.6510379047200326
+    },
+    "suctionpipe03bar": {
+      "n_rows": 42169,
+      "true_fault": "suctionline_restriction",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 1.0,
+      "gatekeeper_flag_rate": 1.0,
+      "gating_missed_rate": 0.0
+    },
+    "suctionpipe06bar": {
+      "n_rows": 56163,
+      "true_fault": "suctionline_restriction",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 1.0,
+      "gatekeeper_flag_rate": 1.0,
+      "gating_missed_rate": 0.0
+    },
+    "suctionpipe09bar": {
+      "n_rows": 143422,
+      "true_fault": "suctionline_restriction",
+      "direct_system_detection_rate": 1.0,
+      "two_stage_system_detection_rate": 1.0,
+      "gatekeeper_flag_rate": 1.0,
+      "gating_missed_rate": 0.0
+    }
+  },
+  "cross_fault_misfires": {
+    "condfouling10": {
+      "overcharge": 0.8931408056932266,
+      "evaporator_fouling": 0.13882005337399925,
+      "liquidline_restriction": 0.9392076502732241,
+      "suctionline_restriction": 0.11305439064684204
+    },
+    "condfouling20": {
+      "overcharge": 0.8396250196943438,
+      "evaporator_fouling": 0.11937923428391366,
+      "liquidline_restriction": 0.9984086970222152,
+      "suctionline_restriction": 0.07192374350086655
+    },
+    "condfouling30": {
+      "overcharge": 0.8080194027970266,
+      "evaporator_fouling": 0.11287325185838477,
+      "liquidline_restriction": 0.9985825878795515
+    },
+    "condfouling40": {
+      "overcharge": 0.8279137742053343,
+      "evaporator_fouling": 0.12398532191704659,
+      "liquidline_restriction": 0.998792711791711,
+      "suctionline_restriction": 0.05248526631824753
+    },
+    "condfouling50": {
+      "overcharge": 0.7324146214264267,
+      "evaporator_fouling": 0.09324083000142232,
+      "liquidline_restriction": 0.9999841964694913
+    },
+    "evapfouling10": {
+      "overcharge": 0.9432982253643053,
+      "liquidline_restriction": 0.3018644094967858,
+      "suctionline_restriction": 0.6060693502621074
+    },
+    "evapfouling20": {
+      "overcharge": 0.9056984528652423,
+      "liquidline_restriction": 0.689275761555463,
+      "suctionline_restriction": 0.9093821070501938
+    },
+    "evapfouling30": {
+      "overcharge": 0.9697810570214132,
+      "liquidline_restriction": 0.9883390809206833,
+      "suctionline_restriction": 0.999101772395541
+    },
+    "evapfouling40": {
+      "overcharge": 0.9994735246725484,
+      "condenser_fouling": 0.13278345910243933,
+      "liquidline_restriction": 0.9998564158197859,
+      "suctionline_restriction": 1.0
+    },
+    "evapfouling50": {
+      "overcharge": 1.0,
+      "condenser_fouling": 0.4277693011901129,
+      "liquidline_restriction": 1.0,
+      "suctionline_restriction": 1.0
+    },
+    "liquidpipe01bar": {
+      "overcharge": 0.9776127834718747,
+      "condenser_fouling": 0.9952223387942861,
+      "evaporator_fouling": 0.19704624324106207,
+      "suctionline_restriction": 0.22017593414575096
+    },
+    "liquidpipe04bar": {
+      "overcharge": 0.9927982702843301,
+      "condenser_fouling": 0.9981629899370865,
+      "evaporator_fouling": 0.3776762635540455,
+      "suctionline_restriction": 0.28341976492773885
+    },
+    "liquidpipe08bar": {
+      "overcharge": 0.9981024667931688,
+      "condenser_fouling": 0.5802072690118231,
+      "evaporator_fouling": 0.8001569113997956,
+      "suctionline_restriction": 0.8487082177784265
+    },
+    "liquidpipe10bar": {
+      "overcharge": 0.9999791301444194,
+      "condenser_fouling": 0.24152683863427665,
+      "evaporator_fouling": 0.749060856498873,
+      "suctionline_restriction": 0.9665247516487185
+    },
+    "overcharge10": {
+      "evaporator_fouling": 0.1768610119375285,
+      "suctionline_restriction": 0.15460593573551848
+    },
+    "overcharge15": {
+      "condenser_fouling": 0.2948144291316162,
+      "evaporator_fouling": 0.21479360223889096,
+      "liquidline_restriction": 0.2516799817764689,
+      "suctionline_restriction": 0.2589205812004751
+    },
+    "overcharge20": {
+      "condenser_fouling": 0.07208915076213654,
+      "evaporator_fouling": 0.2846676059946202,
+      "liquidline_restriction": 0.18547457410016652,
+      "suctionline_restriction": 0.3933649289099526
+    },
+    "suctionpipe01bar": {
+      "overcharge": 0.6204817385296612,
+      "evaporator_fouling": 0.053261313318468735,
+      "liquidline_restriction": 0.19445404013440945
+    },
+    "suctionpipe03bar": {
+      "overcharge": 1.0,
+      "condenser_fouling": 0.6204557850553725,
+      "liquidline_restriction": 0.9995020038416846
+    },
+    "suctionpipe06bar": {
+      "overcharge": 1.0,
+      "condenser_fouling": 0.6450866228655877,
+      "liquidline_restriction": 1.0
+    },
+    "suctionpipe09bar": {
+      "overcharge": 1.0,
+      "condenser_fouling": 1.0,
+      "liquidline_restriction": 1.0
+    }
+  }
+}

@@ -5,84 +5,84 @@
         "params": {
           "contamination": 0.01
         },
-        "held_out_baseline_fpr": 0.02872289919291027,
+        "held_out_baseline_fpr": 0.032916600727963284,
         "fpr_tier": "Usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.013422925403482017
+            "detection_rate": 0.18779387469818273
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.01506223412635891
+            "detection_rate": 0.6469670710571924
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.014284364369409096
+            "detection_rate": 0.6332209902986015
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.011501008721068767
+            "detection_rate": 0.605550348683897
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.016072190527363812
+            "detection_rate": 0.6202569654060717
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.01000336651757803
+            "detection_rate": 0.011317911476618734
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.020932765303180754
+            "detection_rate": 0.31421570197636056
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.1345416633250461
+            "detection_rate": 0.9470847702301708
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.2571911743590562
+            "detection_rate": 0.996394441696846
           },
           "evapfouling50": {
             "n_rows": 65540,
-            "detection_rate": 0.854943545926152
+            "detection_rate": 0.9999084528532194
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.013655072229844242
+            "detection_rate": 0.32215317569203455
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.009461414660315706
+            "detection_rate": 0.6733861135044624
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.2495073711866881
+            "detection_rate": 0.3436907020872865
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7381041823190584
+            "detection_rate": 0.6126763502796561
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.012204903980748966
+            "detection_rate": 0.26558248533366885
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.014090694609414407
+            "detection_rate": 0.02134756504336224
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.022671961060586655
+            "detection_rate": 0.024209043166389138
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.009986496247212888
+            "detection_rate": 0.045614420751813586
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.726528966776542
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -98,80 +98,80 @@
         "params": {
           "contamination": 0.02
         },
-        "held_out_baseline_fpr": 0.06005697103972148,
+        "held_out_baseline_fpr": 0.05507200506409242,
         "fpr_tier": "Usable with caveat",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.027115897826915744
+            "detection_rate": 0.5637310967086033
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.03081770915393099
+            "detection_rate": 0.9951473136915078
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.03163978833312334
+            "detection_rate": 0.9946453319894166
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.024495242331337073
+            "detection_rate": 0.9962351670346777
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.04145266052436114
+            "detection_rate": 0.9993520552491426
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.03457894483720483
+            "detection_rate": 0.03956459705990798
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.07300041641308178
+            "detection_rate": 0.4835997309330856
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.6826529793888845
+            "detection_rate": 0.9874568930948753
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9981812670506214
+            "detection_rate": 0.9997606930329765
           },
           "evapfouling50": {
             "n_rows": 65540,
-            "detection_rate": 0.9995727799816906
+            "detection_rate": 1.0
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.027826648373819707
+            "detection_rate": 0.8439351141957873
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.020012029977403152
+            "detection_rate": 0.9985694080925983
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.34912786454532185
+            "detection_rate": 0.5496460370748796
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7905501293931047
+            "detection_rate": 0.7831413306619918
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.028703543511426368
+            "detection_rate": 0.435554646828455
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.026180054996013603
+            "detection_rate": 0.04238598089783433
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.04034840527731523
+            "detection_rate": 0.04134750864608684
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.05599346795214019
+            "detection_rate": 0.10771598153440316
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -191,44 +191,44 @@
         "params": {
           "contamination": 0.03
         },
-        "held_out_baseline_fpr": 0.07762304162050958,
+        "held_out_baseline_fpr": 0.07778129450862478,
         "fpr_tier": "Usable with caveat",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.038076629813191
+            "detection_rate": 0.7128129368407675
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.045218213329131875
+            "detection_rate": 0.9998266897746967
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.04814476502456848
+            "detection_rate": 0.9999685019528789
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.037664215024384044
+            "detection_rate": 0.9999364585153532
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.06738625408916352
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.1253787332275285
+            "detection_rate": 0.08485227400246878
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.7863640731605753
+            "detection_rate": 0.5861334443768218
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9997433635415831
+            "detection_rate": 0.9996150453123747
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9997447392351749
+            "detection_rate": 0.9997926006285797
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -236,35 +236,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.0361068517472359
+            "detection_rate": 0.9732870631910258
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.03088777981890007
+            "detection_rate": 0.999691122201811
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.4284228579769377
+            "detection_rate": 0.6880747336155306
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.8273019450705401
+            "detection_rate": 0.8724017029802154
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.04174202985168525
+            "detection_rate": 0.6048505056542048
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.03429928895686555
+            "detection_rate": 0.07214565808099709
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.05448956065069809
+            "detection_rate": 0.06957858332265915
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.16157397230160475
+            "detection_rate": 0.21309235938824858
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -284,44 +284,44 @@
         "params": {
           "contamination": 0.05
         },
-        "held_out_baseline_fpr": 0.10112359550561797,
+        "held_out_baseline_fpr": 0.11307168855831619,
         "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.0580442241707968
+            "detection_rate": 0.8415618248824501
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.07055301717346778
+            "detection_rate": 0.9999054671498345
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.07728045861156609
+            "detection_rate": 0.9999842509764395
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.06106336674556401
+            "detection_rate": 0.9999841146288383
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.1107037312135531
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.41034643068981547
+            "detection_rate": 0.17815290402218695
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.9447612031134885
+            "detection_rate": 0.7779076844229476
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9998877215494426
+            "detection_rate": 0.9996952442056299
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9999680924043969
+            "detection_rate": 0.9998404620219843
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -329,35 +329,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.0640142038576386
+            "detection_rate": 0.9994834960858687
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.1013932014370946
+            "detection_rate": 0.9998699461902362
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.5390453948328711
+            "detection_rate": 0.862447088016348
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.8738417230152767
+            "detection_rate": 0.9787127473077887
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.07554143533445526
+            "detection_rate": 0.9408942923200327
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.07951642558453603
+            "detection_rate": 0.11999869831920468
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.10416293070321507
+            "detection_rate": 0.10342000768541053
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.336070721979713
+            "detection_rate": 0.34362340231762084
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -381,44 +381,44 @@
         "params": {
           "nu": 0.01
         },
-        "held_out_baseline_fpr": 0.02951416363348631,
-        "fpr_tier": "Usable",
+        "held_out_baseline_fpr": 0.3423009969931951,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.014058330156309569
+            "detection_rate": 0.5254003049942814
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.02051362848589885
+            "detection_rate": 0.9932409012131715
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.020221746251732394
+            "detection_rate": 0.9999527529293184
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.014280948674365777
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.03759659908023452
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.3040606614405489
+            "detection_rate": 0.31914586639734527
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.6638745635670585
+            "detection_rate": 0.6663730420577213
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9839762611275964
+            "detection_rate": 0.9905525703745288
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9999042772131906
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -426,39 +426,39 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.017157614397546605
+            "detection_rate": 0.7640706964732467
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.022743159982442737
+            "detection_rate": 0.9234145627753483
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.27870018975332067
+            "detection_rate": 0.6112611297620786
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7593496953001085
+            "detection_rate": 0.9518741130311378
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.021987700728204967
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.03254201988317415
+            "detection_rate": 0.05995867163474837
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.020135775586012553
+            "detection_rate": 0.05205584731651083
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.2119618126432811
+            "detection_rate": 0.367443394152561
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.9995020038416846
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -474,44 +474,44 @@
         "params": {
           "nu": 0.03
         },
-        "held_out_baseline_fpr": 0.05293559107453711,
-        "fpr_tier": "Usable with caveat",
+        "held_out_baseline_fpr": 0.44492799493590757,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.032437412631846484
+            "detection_rate": 0.8250730715465752
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.03477233338585158
+            "detection_rate": 0.9998424452497243
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.031041325437822856
+            "detection_rate": 0.9999685019528789
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.0271639846865022
+            "detection_rate": 0.9999841146288383
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.031433222181835425
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.3481620417127559
+            "detection_rate": 0.35120793856906973
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.6980684839360646
+            "detection_rate": 0.6879944905346104
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9855962787713529
+            "detection_rate": 0.9925896222632128
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9999840462021984
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -519,39 +519,39 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.04872891614881769
+            "detection_rate": 0.9951416350577031
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.05855672784614634
+            "detection_rate": 0.9996098385707086
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.3081301999708072
+            "detection_rate": 0.8521383739600058
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7725603138826279
+            "detection_rate": 0.9999165205776775
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.049668926251553135
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.07330089978684977
+            "detection_rate": 0.12793895117069917
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.04165492506724734
+            "detection_rate": 0.11707442039195594
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.26952548440787616
+            "detection_rate": 0.40922651760198475
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.9995020038416846
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -567,40 +567,40 @@
         "params": {
           "nu": 0.05
         },
-        "held_out_baseline_fpr": 0.08213324893179301,
-        "fpr_tier": "Usable with caveat",
+        "held_out_baseline_fpr": 0.503402437094477,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.054930740881941796
+            "detection_rate": 0.9367772270936586
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.06340003151095006
+            "detection_rate": 0.9998582007247518
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.06124795262693713
+            "detection_rate": 0.9999842509764395
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.04625820082286223
+            "detection_rate": 0.9999841146288383
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.10033661519983564
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.3724009682745796
+            "detection_rate": 0.37357123390884756
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.7114417502162145
+            "detection_rate": 0.7058041577244627
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.986205790360093
+            "detection_rate": 0.993552008982276
           },
           "evapfouling40": {
             "n_rows": 62681,
@@ -612,39 +612,39 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.07791138729723186
+            "detection_rate": 0.9992898071180696
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.08025945735047876
+            "detection_rate": 0.9997398923804725
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.33007955043059406
+            "detection_rate": 0.9512662385053277
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7806369479923199
+            "detection_rate": 0.9999373904332582
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.07182963463927904
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.10393921150685823
+            "detection_rate": 0.2049333702142892
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.0966824644549763
+            "detection_rate": 0.21570385551428206
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.29868416920516283
+            "detection_rate": 0.4358571742612191
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.9995020038416846
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -665,44 +665,44 @@
           "contamination": 0.01,
           "n_neighbors": 20
         },
-        "held_out_baseline_fpr": 0.014875771482829562,
-        "fpr_tier": "Usable",
+        "held_out_baseline_fpr": 0.30329166007279634,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.00859384928199263
+            "detection_rate": 0.2549561570720549
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.014873168426028045
+            "detection_rate": 0.9654009768394517
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.016426231573642435
+            "detection_rate": 0.9999527529293184
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.009547108068180012
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.02101869557659181
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.2582920534154122
+            "detection_rate": 0.3160839385049456
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.733607738876966
+            "detection_rate": 0.6796502130113072
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9816023738872404
+            "detection_rate": 0.9934236907530676
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9993618480879374
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -710,39 +710,39 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.004922927931563232
+            "detection_rate": 0.46922766524090065
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.00838847072976444
+            "detection_rate": 0.5590037878172094
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.28379068749087727
+            "detection_rate": 0.4450080280251058
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7553844227397947
+            "detection_rate": 0.8551840721262209
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.018433179723502304
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.004360630664345336
+            "detection_rate": 0.017165915488374362
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.029230178045343922
+            "detection_rate": 0.040783911873959265
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.14734792576076375
+            "detection_rate": 0.38540652576704454
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.9998340012805615
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -759,44 +759,44 @@
           "contamination": 0.01,
           "n_neighbors": 35
         },
-        "held_out_baseline_fpr": 0.016300047475866435,
-        "fpr_tier": "Usable",
+        "held_out_baseline_fpr": 0.31864219021997153,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.008609734400813317
+            "detection_rate": 0.3447388486465879
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.015944540727902946
+            "detection_rate": 0.9688986922955727
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.01778064759984881
+            "detection_rate": 0.9999527529293184
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.01035726199742657
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.023373421622390443
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.256224049760336
+            "detection_rate": 0.32496513249651326
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.7464845126365355
+            "detection_rate": 0.6835580896249079
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9882107626914749
+            "detection_rate": 0.9946106343732456
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9995852012571592
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -804,35 +804,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.0041158905657331935
+            "detection_rate": 0.5152772173351626
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.006047502154016224
+            "detection_rate": 0.606863589810284
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.2839001605605021
+            "detection_rate": 0.4784885418187126
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.7569079221971784
+            "detection_rate": 0.8714416896235078
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.018669099259212656
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.0034169120877332857
+            "detection_rate": 0.03600774500073219
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.024209043166389138
+            "detection_rate": 0.04864864864864865
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.150504035423798
+            "detection_rate": 0.38996011682316367
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -853,44 +853,44 @@
           "contamination": 0.03,
           "n_neighbors": 20
         },
-        "held_out_baseline_fpr": 0.030701060294350373,
-        "fpr_tier": "Usable",
+        "held_out_baseline_fpr": 0.4230890963760089,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.02460604905324692
+            "detection_rate": 0.4070085144236879
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.03771860721600756
+            "detection_rate": 0.9760516779580904
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.038632354794002774
+            "detection_rate": 0.9999842509764395
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.023129100411431115
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.054885661456769444
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.5206078968883759
+            "detection_rate": 0.34652687603199794
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.8426439027515296
+            "detection_rate": 0.7062686184695217
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9884353195925896
+            "detection_rate": 0.9962466917956532
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9996649702461671
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -898,39 +898,39 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.01975627471551933
+            "detection_rate": 0.6099911225889759
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.028741891957797538
+            "detection_rate": 0.6705411864158796
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.464603707487958
+            "detection_rate": 0.5590972120858269
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.8303489439853077
+            "detection_rate": 0.90076383671425
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.05028231704440006
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.017442522657381342
+            "detection_rate": 0.05800615044175792
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.24759830920968362
+            "detection_rate": 0.07872422185218393
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.4247244292309142
+            "detection_rate": 0.4318531545394592
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
-            "detection_rate": 0.9999762858972231
+            "detection_rate": 1.0
           },
           "suctionpipe06bar": {
             "n_rows": 56163,
@@ -947,44 +947,44 @@
           "contamination": 0.03,
           "n_neighbors": 35
         },
-        "held_out_baseline_fpr": 0.03489476182940339,
-        "fpr_tier": "Usable",
+        "held_out_baseline_fpr": 0.43274252255103657,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.025622696657771
+            "detection_rate": 0.5430804422417079
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.040743658421301406
+            "detection_rate": 0.9762407436584213
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.042490865566334884
+            "detection_rate": 0.9999842509764395
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.025448364601038904
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.04948085402278869
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.3994453261514292
+            "detection_rate": 0.36387245707690086
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.8281014766648516
+            "detection_rate": 0.7088311605112272
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.991771593552009
+            "detection_rate": 0.996471248696768
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9996809240439687
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -992,35 +992,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.016947784682430796
+            "detection_rate": 0.6772496166572513
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.023881130817875896
+            "detection_rate": 0.7223676296067498
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.39970442271201284
+            "detection_rate": 0.6123558604583272
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.803030303030303
+            "detection_rate": 0.9269346356123216
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.049873389849168774
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.014530011877837257
+            "detection_rate": 0.1364649603800908
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.09045728192647624
+            "detection_rate": 0.1661329576021519
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.2548754828376723
+            "detection_rate": 0.4299061018120152
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -1041,44 +1041,44 @@
           "contamination": 0.05,
           "n_neighbors": 20
         },
-        "held_out_baseline_fpr": 0.06860262699794271,
-        "fpr_tier": "Usable with caveat",
+        "held_out_baseline_fpr": 0.49723057445798385,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.055264328377176264
+            "detection_rate": 0.5431439827169907
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.09355601071372302
+            "detection_rate": 0.979344572238853
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.1290160010079375
+            "detection_rate": 1.0
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.1154707629743769
+            "detection_rate": 0.9999682292576766
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.32234461178627305
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.772631815194216
+            "detection_rate": 0.3770659997755655
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.9190877350331529
+            "detection_rate": 0.727505685640155
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9955249017563558
+            "detection_rate": 0.9975138343090866
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9998564158197859
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -1086,35 +1086,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.05081107255265919
+            "detection_rate": 0.6904204664675975
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.08422609854827434
+            "detection_rate": 0.7237657080617105
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.7136366953729383
+            "detection_rate": 0.6418588527222303
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.9152266466316054
+            "detection_rate": 0.9241172051089407
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.08013400229628348
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.060625783042353436
+            "detection_rate": 0.12644201825607315
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.6307928781862431
+            "detection_rate": 0.16874599718201613
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.7814590333825331
+            "detection_rate": 0.46131017806111235
           },
           "suctionpipe03bar": {
             "n_rows": 42169,
@@ -1135,44 +1135,44 @@
           "contamination": 0.05,
           "n_neighbors": 35
         },
-        "held_out_baseline_fpr": 0.05934483304320304,
-        "fpr_tier": "Usable with caveat",
+        "held_out_baseline_fpr": 0.5037189428707074,
+        "fpr_tier": "Not production-usable",
         "detection_by_file": {
           "condfouling10": {
             "n_rows": 62952,
-            "detection_rate": 0.046606938619900874
+            "detection_rate": 0.6523065192527641
           },
           "condfouling20": {
             "n_rows": 63470,
-            "detection_rate": 0.06699227981723649
+            "detection_rate": 0.9809043642665827
           },
           "condfouling30": {
             "n_rows": 63496,
-            "detection_rate": 0.06907521733652514
+            "detection_rate": 1.0
           },
           "condfouling40": {
             "n_rows": 62951,
-            "detection_rate": 0.047751425712061764
+            "detection_rate": 0.9999841146288383
           },
           "condfouling50": {
             "n_rows": 63277,
-            "detection_rate": 0.1701882200483588
+            "detection_rate": 1.0
           },
           "evapfouling10": {
             "n_rows": 62379,
-            "detection_rate": 0.7066641017008929
+            "detection_rate": 0.39320925311402877
           },
           "evapfouling20": {
             "n_rows": 62438,
-            "detection_rate": 0.9168455107466607
+            "detection_rate": 0.7250872865882956
           },
           "evapfouling30": {
             "n_rows": 62345,
-            "detection_rate": 0.9962787713529553
+            "detection_rate": 0.9973213569652739
           },
           "evapfouling40": {
             "n_rows": 62681,
-            "detection_rate": 0.9999202310109921
+            "detection_rate": 1.0
           },
           "evapfouling50": {
             "n_rows": 65540,
@@ -1180,35 +1180,35 @@
           },
           "liquidpipe01bar": {
             "n_rows": 61955,
-            "detection_rate": 0.04062626099588411
+            "detection_rate": 0.7792591396981681
           },
           "liquidpipe04bar": {
             "n_rows": 61513,
-            "detection_rate": 0.0559231381984296
+            "detection_rate": 0.8039926519597483
           },
           "liquidpipe08bar": {
             "n_rows": 54808,
-            "detection_rate": 0.6096737702525179
+            "detection_rate": 0.7106626769814626
           },
           "liquidpipe10bar": {
             "n_rows": 47916,
-            "detection_rate": 0.8834835962935137
+            "detection_rate": 0.9512897570748811
           },
           "overcharge10": {
             "n_rows": 63581,
-            "detection_rate": 0.07695695254871739
+            "detection_rate": 1.0
           },
           "overcharge15": {
             "n_rows": 61459,
-            "detection_rate": 0.04537984672708635
+            "detection_rate": 0.2114580452008656
           },
           "overcharge20": {
             "n_rows": 39035,
-            "detection_rate": 0.47782759062379915
+            "detection_rate": 0.2586396823363648
           },
           "suctionpipe01bar": {
             "n_rows": 63686,
-            "detection_rate": 0.6889426247526929
+            "detection_rate": 0.4551863831925384
           },
           "suctionpipe03bar": {
             "n_rows": 42169,

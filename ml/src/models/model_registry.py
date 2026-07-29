@@ -139,24 +139,50 @@ SIMULATED_FAULTS: dict[str, SimulatedFaultConfig] = {
 # add an entry until that status changes.
 
 ANOMALY_GATEKEEPER_CONFIG = {
-    "feature_cols": ("RTU_REFG_SUCT_PRES", "RTU_REFG_SUCT_TEMP"),
+    # EXPANDED from ("RTU_REFG_SUCT_PRES", "RTU_REFG_SUCT_TEMP") per
+    # ANOMALY_DETECTOR_COMPARISON_LOG.md's follow-up: the two-stage
+    # validation harness (validate_two_stage_architecture.py) found the
+    # gatekeeper was structurally blind to condenser_fouling (whose real
+    # signal is COND_PRES/COND_TEMP, columns the gatekeeper never saw) and
+    # weak on overcharge/liquidline_restriction (whose signal partly lives
+    # in DISC_PRES). Expanded to the full union of every classifier's own
+    # diagnostic columns - the gatekeeper's job is "detect ANY anomaly," so
+    # it should see everything the specialist classifiers can see.
+    "feature_cols": (
+        "RTU_REFG_SUCT_PRES",
+        "RTU_REFG_SUCT_TEMP",
+        "RTU_REFG_DISC_PRES",
+        "RTU_REFG_COND_PRES",
+        "RTU_REFG_COND_TEMP",
+        "RTU_SA_TEMP",
+    ),
     "capacity_col": "RTU_TOT_CAPA",
-    "algorithm": "one_class_svm",  # SWITCHED from Isolation Forest - see ANOMALY_DETECTOR_COMPARISON_LOG.md
-    "algorithm_params": {"kernel": "rbf", "nu": 0.01},
-    "status": "Usable",  # UPDATED - SVM crosses the 5% FPR ceiling Isolation Forest never reached
+    "algorithm": "isolation_forest",  # REVERTED from One-Class SVM - see ANOMALY_DETECTOR_COMPARISON_LOG.md's "Expanded feature set" addendum
+    "algorithm_params": {"contamination": 0.03},
+    "status": "Usable with caveat",  # REVERTED from "Usable" - contamination=0.03 gives 7.78% FPR against the expanded feature set, crossing the 5% "Usable" ceiling but still within the 10% "Usable with caveat" ceiling
     "notes": (
-        "SWITCHED from Isolation Forest to One-Class SVM per "
-        "ANOMALY_DETECTOR_COMPARISON_LOG.md - at a near-identical FPR (2.95% vs "
-        "Isolation Forest's own best achievable 2.87% at contamination=0.01), SVM "
-        "detects evapfouling30 98.4% of the time versus Isolation Forest's 13.5% - "
-        "a different tier of gatekeeper performance, not a marginal gain. Local "
-        "Outlier Factor was also compared and showed comparable detection, but was "
-        "disqualified on deployment grounds: its serialized model embeds the "
-        "entire training set (11.9MB vs SVM's 24.6KB), with prediction cost that "
-        "grows with training-set size - a real, structural operational cost SVM "
-        "and Isolation Forest do not share. Historical Isolation Forest context "
-        "(contamination re-tuning 0.01->0.03 after a capacity-feature bug fix) "
-        "preserved in MODEL_RESULTS_LOG.md for the record."
+        "REVERTED to Isolation Forest after a two-part discovery. (1) The "
+        "two-stage validation harness (validate_two_stage_architecture.py) found "
+        "the original 3-feature gatekeeper (SUCT_PRES/SUCT_TEMP + capacity) was "
+        "structurally blind to condenser_fouling, whose real signal lives in "
+        "COND_PRES/COND_TEMP - columns it never saw. Feature set expanded to the "
+        "full union of every classifier's diagnostic columns. (2) Re-running the "
+        "comparison against this expanded 7-feature set showed One-Class SVM's "
+        "and LOF's false-positive rates COLLAPSED (SVM: 2.95%->34.2% at nu=0.01; "
+        "LOF: 1.49%->30.3%) - a classic curse-of-dimensionality effect for "
+        "distance/kernel-based methods, which lose discriminative power as "
+        "dimensionality grows. Isolation Forest, which partitions on individual "
+        "axes rather than relying on distance in the full feature space, was "
+        "far more robust: contamination=0.03 gives 7.78% FPR (barely moved from "
+        "the 3-feature set's 7.76%) with condfouling30 and evapfouling30 both at "
+        "100% detection (up from ~2-6% and 13.5% respectively, pre-expansion). "
+        "KNOWN REMAINING LIMITATION: overcharge stays weak (7.2% detection at "
+        "this config) even with the expanded features - likely a genuine "
+        "structural limit of an unsupervised gatekeeper, since overcharge's "
+        "supervised classifier achieves 97-100% recall by learning an exact "
+        "boundary the gatekeeper's distance-from-normal framing may not capture. "
+        "Full methodology and all three algorithms' expanded-feature results in "
+        "ANOMALY_DETECTOR_COMPARISON_LOG.md."
     ),
 }
 

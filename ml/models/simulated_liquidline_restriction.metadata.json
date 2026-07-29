@@ -9,7 +9,7 @@
   "status": "Usable",
   "notes": "Stable despite this fault's threshold-shaped severity response. See notebook 15.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-29T10:34:59.658834+00:00",
+  "trained_at_utc": "2026-07-29T12:25:35.247335+00:00",
   "dataset": "simulated",
   "algorithm": "random_forest",
   "training_rows": 289382,

@@ -109,3 +109,56 @@ crashed on the first real request. Fixed by switching to a duck-typing
 check (`hasattr(model, "predict_proba")`) that correctly generalizes to
 any future anomaly-detector algorithm without needing this file edited
 again.
+
+---
+
+## Addendum: Expanded feature set (triggered by A4 two-stage validation)
+
+The original comparison above was run against a 3-feature gatekeeper
+(SUCT_PRES, SUCT_TEMP, capacity). Building `validate_two_stage_architecture.py`
+(see TWO_STAGE_ARCHITECTURE_VALIDATION_LOG.md) surfaced that this feature
+set made the gatekeeper structurally blind to `condenser_fouling` (whose
+real diagnostic signal is `COND_PRES`/`COND_TEMP`, columns never included)
+and weak on `overcharge`/`liquidline_restriction` (partially reliant on
+`DISC_PRES`, also excluded). Feature set expanded to the full union of
+every classifier's own diagnostic columns: `SUCT_PRES`, `SUCT_TEMP`,
+`DISC_PRES`, `COND_PRES`, `COND_TEMP`, `SA_TEMP`, plus capacity.
+
+### Re-run results against the expanded 7-feature set
+
+| Algorithm | Config | FPR | Tier |
+|---|---|---|---|
+| Isolation Forest | contamination=0.01 | 3.29% | Usable |
+| Isolation Forest | contamination=0.02 | 5.51% | Usable with caveat |
+| **Isolation Forest** | **contamination=0.03** | **7.78%** | **Usable with caveat** |
+| Isolation Forest | contamination=0.05 | 11.31% | Not production-usable |
+| One-Class SVM | nu=0.01 | 34.23% | Not production-usable |
+| One-Class SVM | nu=0.03 | 44.49% | Not production-usable |
+| One-Class SVM | nu=0.05 | 50.34% | Not production-usable |
+| Local Outlier Factor | contamination=0.01-0.05 | 30.3-50.4% | Not production-usable |
+
+**One-Class SVM and LOF's false-positive rates collapsed entirely** when
+moving from 3 to 7 features (SVM: 2.95% -> 34.2% at the same `nu=0.01`).
+This is a real, well-understood phenomenon, not a harness bug - distance
+and kernel-based methods (SVM, LOF) suffer from the curse of
+dimensionality, losing discriminative power as feature count grows, since
+"how far is this from normal" becomes noisier in higher-dimensional
+space. Isolation Forest, which partitions on individual axes rather than
+relying on full-space distance, was far more robust - barely moved
+(7.76% -> 7.78% at the same contamination).
+
+### Decision: REVERTED to Isolation Forest, contamination=0.03
+
+At the expanded feature set: `condfouling30` and `evapfouling30` both
+reach 100% detection (up from ~2-6% and 13.5% respectively, pre-
+expansion). `overcharge15` improves only marginally (2.1% -> 7.2%) -
+flagged as a known, likely-structural limitation, not something this fix
+solves. Status reverted from "Usable" (SVM) back to "Usable with caveat"
+(Isolation Forest at 7.78% FPR crosses the 5% "Usable" ceiling but stays
+within the 10% "Usable with caveat" ceiling) - an honest downgrade in
+tier label in exchange for a gatekeeper that actually sees the columns
+most of your faults live in, rather than one narrowly tuned to a feature
+set that happened to match only `suctionline_restriction`.
+
+System-level validation of this reverted config is in
+TWO_STAGE_ARCHITECTURE_VALIDATION_LOG.md.

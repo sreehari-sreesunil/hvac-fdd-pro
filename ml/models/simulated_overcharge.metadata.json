@@ -8,7 +8,7 @@
   "status": "Usable",
   "notes": "Stable across TimeSeriesSplit folds (0.97-1.00). See notebook 12.",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-29T10:33:17.613886+00:00",
+  "trained_at_utc": "2026-07-29T12:23:44.504629+00:00",
   "dataset": "simulated",
   "algorithm": "random_forest",
   "training_rows": 227265,

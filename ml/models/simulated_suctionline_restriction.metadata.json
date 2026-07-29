@@ -7,7 +7,7 @@
   "status": "Usable with caveat",
   "notes": "Capacity deliberately excluded - notebook 17's ablation test confirmed removing it stabilizes TimeSeriesSplit recall (0.87->0.43 becomes 0.96-0.99 stable), at a real precision cost (~1.00 -> consistent 0.63).",
   "sklearn_version": "1.9.0",
-  "trained_at_utc": "2026-07-29T10:35:28.825525+00:00",
+  "trained_at_utc": "2026-07-29T12:26:11.443970+00:00",
   "dataset": "simulated",
   "algorithm": "random_forest",
   "training_rows": 368630,

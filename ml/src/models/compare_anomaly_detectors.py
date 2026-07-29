@@ -11,7 +11,7 @@ are unsupervised - trained ONLY on baseline (unfaulted) data, never shown
 a labeled fault example during training:
 
 - Trained on baseline data only, using the exact same feature set as the
-  currently shipped Isolation Forest (ISOLATION_FOREST_CONFIG).
+  currently shipped Isolation Forest (ANOMALY_GATEKEEPER_CONFIG).
 - Every grid config is evaluated and reported - none is auto-selected.
   For a single-threshold anomaly detector, FPR and detection rate move in
   the SAME direction as contamination/nu changes, so a selection rule
@@ -42,9 +42,9 @@ from sklearn.neighbors import LocalOutlierFactor  # noqa: E402
 from sklearn.svm import OneClassSVM  # noqa: E402
 
 from src.features.build_features import build_feature_table  # noqa: E402
-from src.models.model_registry import ISOLATION_FOREST_CONFIG, SIMULATED_FAULTS  # noqa: E402
+from src.models.model_registry import ANOMALY_GATEKEEPER_CONFIG, SIMULATED_FAULTS  # noqa: E402
 
-FEATURE_COLS = [f"{col}_residual" for col in ISOLATION_FOREST_CONFIG["feature_cols"]]
+FEATURE_COLS = [f"{col}_residual" for col in ANOMALY_GATEKEEPER_CONFIG["feature_cols"]]
 FEATURE_COLS.append("RTU_TOT_CAPA_ewma30_segmented_residual")
 
 HELD_OUT_FRACTION = 0.2  # last 20% of baseline (by time) held out for FPR testing
@@ -86,7 +86,7 @@ def load_baseline_and_faults():
     table, _ = build_feature_table(
         baseline_path=_resolve_path("data/raw/RTU_sim_baseline.csv"),
         fault_paths={label: _resolve_path(path) for label, path in all_fault_paths.items()},
-        pressure_temp_cols=ISOLATION_FOREST_CONFIG["feature_cols"],
+        pressure_temp_cols=ANOMALY_GATEKEEPER_CONFIG["feature_cols"],
         return_weather_models=True,
     )
     return table
