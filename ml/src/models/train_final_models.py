@@ -23,6 +23,7 @@ import joblib
 import pandas as pd
 import sklearn
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.svm import OneClassSVM
 from xgboost import XGBClassifier
 
 ML_ROOT = Path(__file__).resolve().parents[2]
@@ -32,8 +33,8 @@ if str(ML_ROOT) not in sys.path:
 from src.features.build_experimental_features import build_experimental_feature_table  # noqa: E402
 from src.features.build_features import build_feature_table  # noqa: E402
 from src.models.model_registry import (  # noqa: E402
+    ANOMALY_GATEKEEPER_CONFIG,
     EXPERIMENTAL_FAULTS,
-    ISOLATION_FOREST_CONFIG,
     SIMULATED_FAULTS,
 )
 
@@ -114,46 +115,52 @@ def train_simulated_fault_models() -> None:
         )
 
 
-def train_isolation_forest() -> None:
-    """Train and save the Isolation Forest gatekeeper on baseline-only data
-    from every Simulated fault type's file set (matches notebook 18)."""
+def train_anomaly_gatekeeper() -> None:
+    """Train and save the anomaly-detection gatekeeper on baseline-only data
+    from every Simulated fault type's file set (matches notebook 18).
+    Algorithm is configurable via ANOMALY_GATEKEEPER_CONFIG["algorithm"] -
+    currently One-Class SVM, switched from Isolation Forest per
+    ANOMALY_DETECTOR_COMPARISON_LOG.md."""
     all_fault_paths: dict[str, str] = {}
     for config in SIMULATED_FAULTS.values():
         all_fault_paths.update(config.fault_paths)
     # Undercharge is excluded from SIMULATED_FAULTS but its files are still
     # useful baseline-adjacent context; deliberately NOT added here - the
-    # Isolation Forest should reflect the same fault scope as the registry.
+    # gatekeeper should reflect the same fault scope as the registry.
 
     table, weather_models = build_feature_table(
         baseline_path=_resolve_path("data/raw/RTU_sim_baseline.csv"),
         fault_paths={label: _resolve_path(path) for label, path in all_fault_paths.items()},
-        pressure_temp_cols=ISOLATION_FOREST_CONFIG["feature_cols"],
+        pressure_temp_cols=ANOMALY_GATEKEEPER_CONFIG["feature_cols"],
         return_weather_models=True,
     )
 
-    feature_cols = [f"{col}_residual" for col in ISOLATION_FOREST_CONFIG["feature_cols"]]
+    feature_cols = [f"{col}_residual" for col in ANOMALY_GATEKEEPER_CONFIG["feature_cols"]]
     feature_cols.append("RTU_TOT_CAPA_ewma30_segmented_residual")
 
     baseline_only = table[table["label"] == 0]
-    model = IsolationForest(
-        contamination=ISOLATION_FOREST_CONFIG["contamination"],
-        random_state=42,
-        n_estimators=100,
-    )
+
+    algorithm = ANOMALY_GATEKEEPER_CONFIG["algorithm"]
+    params = ANOMALY_GATEKEEPER_CONFIG["algorithm_params"]
+    if algorithm == "one_class_svm":
+        model = OneClassSVM(**params)
+    else:
+        model = IsolationForest(random_state=42, n_estimators=100, **params)
     model.fit(baseline_only[feature_cols])
 
     _save_model(
         model,
-        name="simulated_isolation_forest",
+        name="simulated_anomaly_gatekeeper",
         feature_cols=feature_cols,
-        status=ISOLATION_FOREST_CONFIG["status"],
-        notes=ISOLATION_FOREST_CONFIG["notes"],
+        status=ANOMALY_GATEKEEPER_CONFIG["status"],
+        notes=ANOMALY_GATEKEEPER_CONFIG["notes"],
         extra={
             "dataset": "simulated",
+            "algorithm": algorithm,
+            "algorithm_params": params,
             "training_rows": len(baseline_only),
-            "contamination": ISOLATION_FOREST_CONFIG["contamination"],
             "weather_regression_models": weather_models,
-            "required_raw_metrics": list(ISOLATION_FOREST_CONFIG["feature_cols"])
+            "required_raw_metrics": list(ANOMALY_GATEKEEPER_CONFIG["feature_cols"])
             + ["RTU_TOT_CAPA", "RTU_STG_STA", "RTU_OA_TEMP"],
         },
     )
@@ -251,8 +258,8 @@ if __name__ == "__main__":
     print("Training Simulated-dataset fault classifiers...")
     train_simulated_fault_models()
 
-    print("\nTraining Isolation Forest anomaly detector...")
-    train_isolation_forest()
+    print("\nTraining anomaly-detection gatekeeper...")
+    train_anomaly_gatekeeper()
 
     print("\nTraining Experimental-dataset fault models...")
     train_experimental_fault_models()

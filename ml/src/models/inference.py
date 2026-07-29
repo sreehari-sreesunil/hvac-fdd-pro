@@ -10,7 +10,6 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from sklearn.ensemble import IsolationForest
 
 from src.features.live_features import build_live_features
 
@@ -78,7 +77,13 @@ def predict(model_name: str, buffer: pd.DataFrame, models_dir: Path) -> dict:
         "feature_values": features.to_dict(),
     }
 
-    if isinstance(model, IsolationForest):
+    if not hasattr(model, "predict_proba"):
+        # Anomaly detectors (Isolation Forest, One-Class SVM, etc.) share no
+        # common base class but all lack predict_proba - duck-typing here
+        # means this branch stays correct automatically if the gatekeeper
+        # algorithm changes again, without needing this file edited every
+        # time (see ANOMALY_DETECTOR_COMPARISON_LOG.md for the most recent
+        # such change, Isolation Forest -> One-Class SVM).
         raw_pred = model.predict(features_df)[0]
         anomaly_score = model.score_samples(features_df)[0]
         result["is_anomaly"] = bool(raw_pred == -1)

@@ -138,25 +138,25 @@ SIMULATED_FAULTS: dict[str, SimulatedFaultConfig] = {
 # "Not production-usable" - root cause partially isolated, not resolved. Do not
 # add an entry until that status changes.
 
-ISOLATION_FOREST_CONFIG = {
+ANOMALY_GATEKEEPER_CONFIG = {
     "feature_cols": ("RTU_REFG_SUCT_PRES", "RTU_REFG_SUCT_TEMP"),
     "capacity_col": "RTU_TOT_CAPA",
-    "contamination": 0.03,  # RE-tuned in notebook 26 after the capacity-feature bug fix
-    # (build_features.py order-of-operations fix) revealed contamination=0.01 was
-    # miscalibrated against the corrected feature - severe detection regression on
-    # moderate-tier faults (e.g. evapfouling40: 0.99998->0.404), missed by an
-    # insufficient 2-file spot check in notebook 25. contamination=0.03 restores
-    # near-original detection across the full 24-file sweep, at a real, disclosed
-    # FPR cost (7.6% vs the previous, now-invalidated 2.9%).
-    "status": "Usable with caveat",
+    "algorithm": "one_class_svm",  # SWITCHED from Isolation Forest - see ANOMALY_DETECTOR_COMPARISON_LOG.md
+    "algorithm_params": {"kernel": "rbf", "nu": 0.01},
+    "status": "Usable",  # UPDATED - SVM crosses the 5% FPR ceiling Isolation Forest never reached
     "notes": (
-        "7.6% false-positive rate on held-out later baseline (contamination=0.03, "
-        "re-tuned after the capacity-feature bug fix - see notebook 26 and "
-        "MODEL_RESULTS_LOG.md's 'Isolation Forest contamination re-tuning' entry). "
-        "Detection rate forms an honest gradient matching EDA effect sizes - "
-        "near-perfect for strong faults, weak for faults already flagged as "
-        "low-severity/weak-signal in EDA. Verified across the FULL 24-file sweep, "
-        "not a partial spot check."
+        "SWITCHED from Isolation Forest to One-Class SVM per "
+        "ANOMALY_DETECTOR_COMPARISON_LOG.md - at a near-identical FPR (2.95% vs "
+        "Isolation Forest's own best achievable 2.87% at contamination=0.01), SVM "
+        "detects evapfouling30 98.4% of the time versus Isolation Forest's 13.5% - "
+        "a different tier of gatekeeper performance, not a marginal gain. Local "
+        "Outlier Factor was also compared and showed comparable detection, but was "
+        "disqualified on deployment grounds: its serialized model embeds the "
+        "entire training set (11.9MB vs SVM's 24.6KB), with prediction cost that "
+        "grows with training-set size - a real, structural operational cost SVM "
+        "and Isolation Forest do not share. Historical Isolation Forest context "
+        "(contamination re-tuning 0.01->0.03 after a capacity-feature bug fix) "
+        "preserved in MODEL_RESULTS_LOG.md for the record."
     ),
 }
 

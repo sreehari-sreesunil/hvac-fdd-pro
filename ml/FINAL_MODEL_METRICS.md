@@ -64,23 +64,36 @@ restriction as "Usable with caveat", deployed *with capacity removed*) are usabl
 now. Undercharge requires further investigation before deployment - do not ship
 as-is.
 
-## Simulated Dataset - Isolation Forest (Anomaly Gatekeeper)
+## Simulated Dataset - Anomaly Gatekeeper (One-Class SVM)
 
-Trained only on baseline data; `contamination=0.01` (tuned from an untuned default
-of 0.05, cutting false-positive rate roughly in third with no loss of strong-fault
-detection).
+SWITCHED from Isolation Forest to One-Class SVM per
+ANOMALY_DETECTOR_COMPARISON_LOG.md - a multi-algorithm comparison triggered by
+external review feedback. Trained only on baseline data; `nu=0.01`, `kernel=rbf`.
 
 | Metric | Value |
 |---|---|
-| False positive rate (held-out later baseline) | 6-7.6% (contamination re-tuned to 0.03 after a SECOND correction - the initial fix's contamination=0.01 was severely miscalibrated; see note below) |
-| Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 30-50%) | 0.999 - 1.00 |
-| Detection rate, moderate-signal faults (e.g. liquidpipe08/10bar, evapfouling20) | 0.36 - 0.83 |
-| Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling10-40, low-severity restrictions) | <0.15 |
+| False positive rate (held-out later baseline) | 2.95% - lower than Isolation Forest's best achievable 2.87% at its own most conservative setting, and far below its shipped 7.6% (contamination=0.03) |
+| Detection rate, strong-signal faults (e.g. suction-line restriction, evaporator fouling 40-50%) | 1.00 |
+| Detection rate, moderate-signal faults (e.g. liquidpipe10bar, evapfouling30) | 0.76 - 0.98 |
+| Detection rate, weak-signal faults (e.g. overcharge all severities, condfouling all severities) | <0.10 |
 
-**Status**: **Usable with caveat** - reliable gatekeeper for moderate-to-severe
-conditions; will not reliably catch the mildest fault severities. Precision/recall
-tradeoff at the contamination parameter is a real, unresolved product decision
-(tighter threshold = fewer false alarms but weaker detection of moderate faults).
+**Status**: **Usable** (upgraded from "Usable with caveat") - at a near-identical
+FPR to Isolation Forest's best setting, detects evapfouling30 98.4% of the time
+versus Isolation Forest's 13.5% - a different tier of gatekeeper performance, not
+a marginal gain. Local Outlier Factor was also compared and showed comparable
+detection but was disqualified on deployment grounds (11.9MB serialized model
+embedding the full training set, vs. SVM's 24.6KB). Full comparison methodology,
+every algorithm/hyperparameter tested, and the real bug found and fixed in the
+comparison harness itself (an FPR-only selection rule has a trivial optimum and
+would have reproduced Isolation Forest's own known contamination=0.01 detection
+collapse) are documented in ANOMALY_DETECTOR_COMPARISON_LOG.md.
+
+**Historical note**: the original Isolation Forest's `contamination` re-tuning
+(0.01 -> 0.03 after a capacity-feature bug fix, detailed in the previous version
+of this section and in MODEL_RESULTS_LOG.md) remains a real, valuable record of
+this project's evaluation discipline - preserved in git history and
+MODEL_RESULTS_LOG.md, not deleted, even though Isolation Forest itself is no
+longer deployed.
 
 ## Experimental Dataset - Cross-Season Models
 
