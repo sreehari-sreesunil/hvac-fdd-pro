@@ -5,6 +5,8 @@ authenticated user can view or define asset types (e.g. "RTU", "Chiller"),
 so these endpoints only require a valid login, never verify_org_membership.
 """
 
+from typing import cast
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -47,6 +49,8 @@ async def create_asset_type(
                 unit=metric.unit,
                 datatype=metric.datatype,
                 chart_type=metric.chart_type,
+                min_value=metric.min_value,
+                max_value=metric.max_value,
             )
         )
 
@@ -61,4 +65,4 @@ async def list_asset_types(
     db: Session = Depends(get_db),
 ) -> list[AssetType]:
     """List every asset type defined on the platform."""
-    return db.query(AssetType).all()
+    return cast(list[AssetType], db.query(AssetType).all())

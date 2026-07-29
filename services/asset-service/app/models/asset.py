@@ -12,7 +12,7 @@ enforced by calling auth-service's API instead (see app/core/deps.py).
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -61,6 +61,13 @@ class MetricDefinition(Base):
     unit = Column(String, nullable=True)  # e.g. "°C"
     datatype = Column(String, default="float")
     chart_type = Column(String, default="line")  # line, gauge, kpi
+    # Only meaningful for chart_type="gauge" - the expected engineering-unit
+    # range for this metric (e.g. 50-90 for a Supply Air Temp gauge), set
+    # once per asset type. Nullable: line/kpi charts ignore these entirely,
+    # and a gauge with no range set falls back to a simple numeric display
+    # rather than guessing bounds from whatever data happens to be visible.
+    min_value = Column(Float, nullable=True)
+    max_value = Column(Float, nullable=True)
 
     asset_type = relationship("AssetType", back_populates="metric_definitions")
 

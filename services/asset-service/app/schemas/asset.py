@@ -28,6 +28,8 @@ class MetricDefinitionCreate(BaseModel):
     unit: str | None = None
     datatype: str = "float"
     chart_type: str = "line"
+    min_value: float | None = None
+    max_value: float | None = None
 
 
 class MetricDefinitionOut(MetricDefinitionCreate):

@@ -5,6 +5,8 @@ data — it calls auth-service's API to verify org membership and role. This
 is a real service-to-service call, the first one in this platform.
 """
 
+from typing import cast
+
 import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -37,7 +39,7 @@ def get_current_user_id(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
         )
-    return user_id
+    return cast(str, user_id)
 
 
 async def verify_org_membership(org_id: str, token: str) -> str:
@@ -77,4 +79,4 @@ async def verify_org_membership(org_id: str, token: str) -> str:
             status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this organization"
         )
 
-    return matching_org["role"]
+    return cast(str, matching_org["role"])
