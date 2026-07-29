@@ -38,3 +38,8 @@ repos:
         files: ^libs/common/
         args: [--config-file=libs/common/pyproject.toml]
         additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (ml-service)
+        files: ^services/ml-service/
+        args: [--config-file=services/ml-service/pyproject.toml]
+        additional_dependencies: [pydantic]

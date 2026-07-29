@@ -3,11 +3,12 @@
 from fastapi import FastAPI
 
 from app.config import settings
-from app.routers import predictions
+from app.routers import baselines, predictions
 
 app = FastAPI(title=settings.service_name)
 
 app.include_router(predictions.router)
+app.include_router(baselines.router)
 
 
 @app.get("/health")

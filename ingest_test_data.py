@@ -24,8 +24,10 @@ from datetime import datetime, timedelta
 INGESTION_URL = "http://localhost:8002/telemetry/bulk"
 API_KEY = "PASTE_YOUR_INGESTION_KEY_HERE"
 ASSET_ID = "PASTE_YOUR_ASSET_ID_HERE"
-CSV_PATH = "ml/data/raw/RTU_sim_evapfouling40.csv"
-TIME_OFFSET_DAYS = 4000  # deliberately larger than the current max (2027-12-07) so this becomes the newest ingestion across ALL required metrics, unifying the overlap window
+CSV_PATH = "ml/data/raw/RTU_sim_condfouling40.csv"
+TIME_OFFSET_DAYS = (
+    9000  # condenser fouling, fresh offset - real test with stage-2 filtering active this time
+)
 START_ROW = 40000
 NUM_ROWS = 2000  # wider window than usual - no way to pre-verify stage-2 presence without the raw CSV, so cast a wider net
 

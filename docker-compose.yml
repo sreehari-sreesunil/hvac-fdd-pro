@@ -102,6 +102,7 @@ services:
       dockerfile: services/ml-service/Dockerfile
     restart: unless-stopped
     environment:
+      DATABASE_URL: postgresql://hvac:hvac_dev_password@postgres:5432/ml_service_db
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
       ASSET_SERVICE_URL: http://asset-service:8001
       TELEMETRY_SERVICE_URL: http://telemetry-service:8002
@@ -112,6 +113,8 @@ services:
     ports:
       - "8003:8003"
     depends_on:
+      postgres:
+        condition: service_healthy
       asset-service:
         condition: service_healthy
       telemetry-service:

@@ -21,6 +21,29 @@ Must be fixed before this is genuinely "production-grade" — deferred only
 to avoid rushing sloppy `# type: ignore` fixes under time pressure.
 
 
+## ml-service: mypy errors, now covered by pre-commit but not yet fixed
+
+Adding the A5 per-asset baseline work surfaced that ml-service had no
+mypy pre-commit hook at all (unlike auth-service/asset-service/common) -
+its mypy checks had never actually run in CI/pre-commit. Added the
+missing hook (matching the existing per-service pattern exactly). Fixed
+the 2 real errors this surfaced in NEW code from this session
+(app/db/session.py's get_db() Generator return type,
+app/routers/baselines.py's missing return annotation). 3 errors remain,
+pre-dating this session, matching categories already tracked above:
+
+- app/config.py:19 - `Settings()` call-arg: a known pydantic-settings/
+  mypy limitation (mypy can't see that required fields are populated
+  from env vars at runtime, not constructor args) - confirmed present in
+  auth-service and asset-service's identical `Settings()` pattern too,
+  not specific to ml-service.
+- app/core/deps.py:59, app/routers/predictions.py:58 - "Returning Any"
+  errors, matching category 3 above exactly (decode_and_verify_token's
+  return type needs tightening upstream in libs/common).
+
+telemetry-service is also still missing a mypy pre-commit hook - not
+touched this session, flagged here so it isn't lost.
+
 ## Python version drift
 Local Poetry venvs run on 3.13 (Anaconda's python.exe is first on PATH); Docker images
 pin python:3.11-slim. No issues observed yet, but standardize eventually — either
