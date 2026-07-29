@@ -100,3 +100,33 @@ than worked around.
       asset detail page, map it to a metric, and confirm the reading
       immediately appears under "Recent readings" with the metric's
       display name and unit.
+- [ ] **Gauge with a configured range renders an arc**: create an asset
+      type with a `"gauge"`-type metric that has `min_value`/`max_value`
+      set (the UI forms don't expose `chart_type`/range yet, so use
+      `curl` against `POST http://localhost:8001/asset-types`, e.g.
+      `{"metrics":[{"metric_name":"load","display_name":"Compressor
+      Load","unit":"%","chart_type":"gauge","min_value":0,"max_value":100}]}`),
+      post a reading for it, map it, and confirm the asset detail page
+      shows an actual semi-circular arc gauge — not a flat number — with
+      the current value centered in mono type and the min/max labeled at
+      each end.
+- [ ] **Gauge with no configured range falls back gracefully**: create a
+      `"gauge"`-type metric without `min_value`/`max_value`. Confirm it
+      renders the same large-numeral treatment as a KPI metric, with a
+      small "No range configured for this metric yet." note — not a
+      broken or empty gauge.
+- [ ] **KPI trend arrow**: post two readings for a `"kpi"`-type metric
+      where the second is higher than the first. Confirm the asset detail
+      page shows an up arrow with the correct positive delta (e.g. "▲
+      1.5h since last reading"); with only one reading ever, confirm the
+      trend indicator is omitted entirely rather than showing a
+      meaningless comparison.
+- [ ] **Units stay consistent across all three chart types**: toggle
+      °F/°C in Settings, then check the same asset's line chart Y-axis,
+      gauge center value, and KPI numeral all update together — not just
+      the old flat "Recent readings" list.
+- [ ] **`prefers-reduced-motion` stops the line chart's entrance
+      animation**: with reduced motion emulated in DevTools, load an
+      asset with a `"line"`-type metric — the chart should render with no
+      draw-in animation (Recharts' `isAnimationActive` is gated by the
+      same `usePrefersReducedMotion` hook the marketing hero uses).

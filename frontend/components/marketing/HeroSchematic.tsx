@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePrefersReducedMotion } from "@/lib/utils/usePrefersReducedMotion";
 
 // Decorative animated schematic — the numbers below are illustrative motion,
 // not real telemetry (the marketing page has no data connection).
@@ -8,22 +9,13 @@ export function HeroSchematic() {
   const [supplyTemp, setSupplyTemp] = useState(58.4);
   // SMIL <animateMotion> doesn't respond to the motion-safe: CSS variant, so
   // the traveling flow dots are only rendered when motion is allowed.
-  const [reduceMotion, setReduceMotion] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-  );
+  const reduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const id = setInterval(() => {
       setSupplyTemp((prev) => Math.round((prev + (Math.random() - 0.5) * 0.6) * 10) / 10);
     }, 2500);
     return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
   }, []);
 
   return (

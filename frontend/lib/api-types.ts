@@ -40,6 +40,8 @@ export type FacilityOut = {
   timezone: string;
 };
 
+export type ChartType = "line" | "gauge" | "kpi";
+
 export type MetricDefinitionOut = {
   id: string;
   asset_type_id: string;
@@ -48,6 +50,8 @@ export type MetricDefinitionOut = {
   unit: string | null;
   datatype: string;
   chart_type: string;
+  min_value: number | null;
+  max_value: number | null;
 };
 
 export type AssetTypeOut = {
