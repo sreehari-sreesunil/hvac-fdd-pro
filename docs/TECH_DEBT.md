@@ -44,6 +44,57 @@ pre-dating this session, matching categories already tracked above:
 telemetry-service is also still missing a mypy pre-commit hook - not
 touched this session, flagged here so it isn't lost.
 
+## notification-service: mypy errors (new service, Phase 2)
+
+Same already-documented pattern categories, new occurrences - not new
+categories of problem:
+- app/config.py: `Settings()` call-arg (jwt_secret_key, internal_api_key)
+  - the same pydantic-settings/mypy limitation already noted for
+    ml-service and confirmed present in auth-service/asset-service too.
+- app/core/deps.py:65, app/routers/alerts.py (list_alerts, create_alert,
+  acknowledge_alert, resolve_alert) - "Returning Any", matching category
+  3 in the original mypy backlog above.
+
+ml-service/app/config.py also gained 3 more required fields for the
+Phase 2 scheduler (internal_api_key, scheduler_service_account_email,
+scheduler_service_account_password) - same already-known pattern, not
+new debt in itself.
+
+## Pre-commit's mypy hooks can't see SQLAlchemy types at all
+
+Discovered while building notification-service: pre-commit's mypy hooks
+only list `additional_dependencies: [pydantic]` for every service (auth,
+asset, ml, notification) - none include sqlalchemy. Since each hook runs
+mypy in its own fully isolated environment (not the project's actual
+poetry venv), and each service's own `ignore_missing_imports = true`
+config means an unresolvable import degrades to `Any` rather than
+erroring, every SQLAlchemy-derived type (Column[], Query results, model
+instances) silently becomes `Any` inside pre-commit's mypy runs, but NOT
+in a real `poetry run mypy .` run (which has the real venv, and sees the
+real types).
+
+Concrete effect found in ml-service/app/scheduler.py: a genuine
+Column[str]-vs-str mismatch (fixed with explicit str() casts, since that
+fix is correct and necessary in the REAL, fully-installed environment
+regardless of what pre-commit's degraded environment can see) was
+INVISIBLE to pre-commit the whole time - pre-commit would have passed
+either way. Concrete effect found in notification-service/app/routers/
+alerts.py: `# type: ignore[assignment]` comments that were genuinely
+necessary locally became "Unused type: ignore" errors under pre-commit
+(removed rather than fought, since pre-commit is what actually gates
+commits) - this is also very likely why "Returning Any" errors are so
+pervasive across every single service's pre-commit mypy output already
+documented above - the SAME root cause, not four separate coincidences.
+
+Real fix: add `sqlalchemy` (plus any other heavily-used typed
+dependencies) to every mypy hook's `additional_dependencies` in
+.pre-commit-config.yaml. Deliberately NOT done in this session - it
+would likely surface a new round of real type errors across all four
+services simultaneously, on top of the ~44-error backlog already
+deferred above. A `poetry run mypy .` run inside each service's actual
+venv remains the authoritative type-safety check until this is fixed;
+pre-commit's mypy hooks today are a weaker, partial signal.
+
 ## Python version drift
 Local Poetry venvs run on 3.13 (Anaconda's python.exe is first on PATH); Docker images
 pin python:3.11-slim. No issues observed yet, but standardize eventually — either

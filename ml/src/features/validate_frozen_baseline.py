@@ -7,7 +7,6 @@ If the severity gradient found earlier doesn't survive residualization,
 it may have been a weather confound, not genuine fault signal.
 """
 
-
 from src.features.build_features import build_feature_table
 
 K_STD = 3.0

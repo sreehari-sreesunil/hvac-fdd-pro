@@ -41,5 +41,17 @@ repos:
       - id: mypy
         name: mypy (ml-service)
         files: ^services/ml-service/
+        # pyproject.toml's [tool.mypy] exclude only applies when mypy
+        # does its own recursive directory discovery - pre-commit passes
+        # specific changed file paths directly as arguments, which
+        # bypasses that setting entirely (a known mypy behavior, not a
+        # config mistake). The exclude has to live here instead.
+        exclude: ^services/ml-service/alembic/
         args: [--config-file=services/ml-service/pyproject.toml]
+        additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (notification-service)
+        files: ^services/notification-service/
+        exclude: ^services/notification-service/alembic/
+        args: [--config-file=services/notification-service/pyproject.toml]
         additional_dependencies: [pydantic]

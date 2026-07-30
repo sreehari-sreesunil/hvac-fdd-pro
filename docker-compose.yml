@@ -106,6 +106,12 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
       ASSET_SERVICE_URL: http://asset-service:8001
       TELEMETRY_SERVICE_URL: http://telemetry-service:8002
+      NOTIFICATION_SERVICE_URL: http://notification-service:8004
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-9XoN58P_E5_uog4px3MqGfhHSRhi18WAWSz3IMd26LI}
+      AUTH_SERVICE_URL: http://auth-service:8000
+      SCHEDULER_SERVICE_ACCOUNT_EMAIL: ${SCHEDULER_SERVICE_ACCOUNT_EMAIL:-ml-scheduler-service@hvacfddpro.com}
+      SCHEDULER_SERVICE_ACCOUNT_PASSWORD: ${SCHEDULER_SERVICE_ACCOUNT_PASSWORD:-xWxN-l0FC51gPzDE5VXYf7Os-BDC5UCJ}
+      SCHEDULER_INTERVAL_SECONDS: 60
       MODELS_DIR: /ml/models
       ML_SRC_DIR: /ml
     volumes:
@@ -119,5 +125,24 @@ services:
         condition: service_healthy
       telemetry-service:
         condition: service_started
+      notification-service:
+        condition: service_started
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://hvac:hvac_dev_password@postgres:5432/notification_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
+      ASSET_SERVICE_URL: http://asset-service:8001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-9XoN58P_E5_uog4px3MqGfhHSRhi18WAWSz3IMd26LI}
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      asset-service:
+        condition: service_healthy
 volumes:
   pgdata:

@@ -15,6 +15,11 @@ and only ever APPLIED at scoring time, never refit - matching the exact
 discipline every classifier/gatekeeper already follows, for the same
 reason: live data has no way to know which readings are "baseline" to
 refit against.
+
+score_baseline() is extracted as a plain function (not folded into the
+GET endpoint) so app/scheduler.py can call the exact same scoring logic
+on a periodic basis, without duplicating it - the endpoint and the
+scheduler must never drift apart on what "deviation" means.
 """
 
 import pandas as pd
@@ -95,6 +100,48 @@ async def _fetch_target_and_weather(
     return stage2_only
 
 
+async def score_baseline(
+    asset_id: str,
+    metric_definition_id: str,
+    token: str,
+    db: Session,
+    k_std: float = DEFAULT_K_STD,
+) -> dict | None:
+    """Score the LATEST reading for this asset+metric against its
+    previously-fit frozen baseline. Returns None if no baseline has been
+    fit yet (callers decide what that means - a 404 for the HTTP
+    endpoint, a silent skip for the scheduler, which only evaluates
+    assets that already have one)."""
+    baseline = (
+        db.query(AssetBaseline)
+        .filter(
+            AssetBaseline.asset_id == asset_id,
+            AssetBaseline.metric_definition_id == metric_definition_id,
+        )
+        .first()
+    )
+    if baseline is None:
+        return None
+
+    merged = await _fetch_target_and_weather(asset_id, metric_definition_id, token)
+    latest = merged.iloc[-1]
+
+    predicted = baseline.weather_slope * latest["value_weather"] + baseline.weather_intercept
+    residual = float(latest["value_target"] - predicted)
+    z_score = (residual - baseline.mean) / baseline.std
+
+    return {
+        "asset_id": asset_id,
+        "metric_definition_id": metric_definition_id,
+        "latest_value": float(latest["value_target"]),
+        "latest_weather_value": float(latest["value_weather"]),
+        "residual": residual,
+        "z_score": z_score,
+        "is_deviation": abs(z_score) > k_std,
+        "baseline_fit_at": baseline.fit_at,
+    }
+
+
 @router.post("/{asset_id}", response_model=BaselineOut)
 async def fit_baseline(
     asset_id: str,
@@ -164,36 +211,12 @@ async def score_against_baseline(
     """Score the LATEST reading for this asset+metric against its
     previously-fit frozen baseline. 404 if no baseline has been fit yet -
     fitting is a separate, deliberate step (POST first)."""
-    baseline = (
-        db.query(AssetBaseline)
-        .filter(
-            AssetBaseline.asset_id == asset_id,
-            AssetBaseline.metric_definition_id == metric_definition_id,
-        )
-        .first()
+    result = await score_baseline(
+        asset_id, metric_definition_id, credentials.credentials, db, k_std
     )
-    if baseline is None:
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No baseline has been fit yet for this asset+metric - POST /baselines first.",
         )
-
-    merged = await _fetch_target_and_weather(
-        asset_id, metric_definition_id, credentials.credentials
-    )
-    latest = merged.iloc[-1]
-
-    predicted = baseline.weather_slope * latest["value_weather"] + baseline.weather_intercept
-    residual = float(latest["value_target"] - predicted)
-    z_score = (residual - baseline.mean) / baseline.std
-
-    return {
-        "asset_id": asset_id,
-        "metric_definition_id": metric_definition_id,
-        "latest_value": float(latest["value_target"]),
-        "latest_weather_value": float(latest["value_weather"]),
-        "residual": residual,
-        "z_score": z_score,
-        "is_deviation": abs(z_score) > k_std,
-        "baseline_fit_at": baseline.fit_at,
-    }
+    return result
