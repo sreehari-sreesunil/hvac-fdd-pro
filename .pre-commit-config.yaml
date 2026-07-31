@@ -63,5 +63,6 @@ repos:
       - id: mypy
         name: mypy (copilot-service)
         files: ^services/copilot-service/
+        exclude: ^services/copilot-service/alembic/
         args: [--config-file=services/copilot-service/pyproject.toml]
         additional_dependencies: [pydantic]

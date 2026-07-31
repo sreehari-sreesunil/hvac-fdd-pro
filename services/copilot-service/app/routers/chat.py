@@ -1,4 +1,5 @@
-"""The copilot's chat endpoint - the actual agentic tool-calling loop.
+"""The copilot's chat endpoint - the actual agentic tool-calling loop,
+with persisted, token-budgeted conversation memory.
 
 asset_id is fixed at the endpoint/auth level (via verify_asset_access,
 the same pattern every other service uses), NOT something the LLM
@@ -13,8 +14,14 @@ THE LOOP: call the LLM with the available tools -> if it wants to call
 one, execute it and feed the result back as a new message -> repeat
 until the LLM has enough information to answer directly. This is the
 entire mechanism behind "agentic AI" - deliberately built by hand here
-rather than via LangChain, so it's fully inspectable and explainable
-(see notes elsewhere in this project on that tradeoff).
+rather than via LangChain, so it's fully inspectable and explainable.
+
+MEMORY: an LLM has no memory of its own between API calls - "memory" is
+just replaying prior messages back to it. app/services/history.py loads
+this conversation's history under a fixed token budget (oldest messages
+dropped first if the conversation has grown too long, not summarized -
+a real, documented tradeoff). Only user/final-assistant-answer turns are
+persisted, not the tool-call churn within a single turn.
 """
 
 import json
@@ -22,10 +29,14 @@ from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 
 from app.core.deps import security, verify_asset_access
+from app.db.session import get_db
 from app.llm.client import get_llm_client, get_model_name
+from app.models.conversation import Conversation, Message
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.history import load_history_within_budget
 from app.tools import executors
 from app.tools.schemas import TOOL_SCHEMAS
 
@@ -42,6 +53,32 @@ assume values.
 If your tools don't return enough information to answer confidently, say so plainly - do
 not fabricate a plausible-sounding answer. It is always better to say "I don't have enough
 information to answer that" than to guess."""
+
+
+def _get_or_create_conversation(
+    asset_id: str, user_id: str, conversation_id: str | None, db: Session
+) -> Conversation:
+    if conversation_id is None:
+        conversation = Conversation(asset_id=asset_id, user_id=user_id)
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
+        return conversation
+
+    # Separate variable name from the function's own return-type-typed
+    # "conversation" above - mypy infers a single type across all
+    # branches assigning to one name, and a fresh query result is
+    # Conversation | None (Optional) where the other branch's fresh
+    # Conversation() is not, confusing that inference. A distinct name
+    # avoids the ambiguity entirely rather than fighting mypy over it.
+    existing = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    # Deliberately the same 404 whether the conversation doesn't exist
+    # OR belongs to a different user/asset - not distinguishing which
+    # avoids confirming to a caller that a conversation_id exists at
+    # all for someone else's data.
+    if existing is None or existing.asset_id != asset_id or existing.user_id != user_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found")
+    return existing
 
 
 async def _execute_tool_call(name: str, arguments: dict, asset_id: str, token: str) -> dict:
@@ -62,24 +99,28 @@ async def chat(
     asset_id: str,
     payload: ChatRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    _user_id: str = Depends(verify_asset_access),
+    user_id: str = Depends(verify_asset_access),
+    db: Session = Depends(get_db),
 ) -> ChatResponse:
     token = credentials.credentials
     client = get_llm_client()
 
-    messages: list[dict] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": payload.message},
-    ]
+    conversation = _get_or_create_conversation(asset_id, user_id, payload.conversation_id, db)
+    # str(...) here isn't a defensive no-op either - see history.py's
+    # matching comment on the same Column[str]-vs-str friction.
+    conversation_id_str = str(conversation.id)
+    prior_history = load_history_within_budget(conversation_id_str, db)
+
+    messages: list[dict] = (
+        [{"role": "system", "content": SYSTEM_PROMPT}]
+        + prior_history
+        + [{"role": "user", "content": payload.message}]
+    )
 
     sources_used: list[str] = []
     tools_called: list[str] = []
 
     for _ in range(MAX_TOOL_ITERATIONS):
-        # Groq's SDK expects specific TypedDict shapes (e.g.
-        # ChatCompletionAssistantMessageParam) rather than plain dicts -
-        # the runtime accepts this shape fine (confirmed live), the
-        # casts just tell mypy what we already know from testing.
         response = client.chat.completions.create(
             model=get_model_name(),
             messages=cast(Any, messages),
@@ -88,23 +129,32 @@ async def chat(
         message = response.choices[0].message
 
         if not message.tool_calls:
+            final_answer = message.content or ""
+
+            db.add(
+                Message(conversation_id=conversation_id_str, role="user", content=payload.message)
+            )
+            db.add(
+                Message(
+                    conversation_id=conversation_id_str,
+                    role="assistant",
+                    content=final_answer,
+                )
+            )
+            db.commit()
+
             return ChatResponse(
-                answer=message.content or "",
+                answer=final_answer,
+                conversation_id=conversation_id_str,
                 sources_used=sources_used,
                 tools_called=tools_called,
             )
 
-        # The LLM's own message (with its tool call requests) has to be
-        # added to history before the tool results, or the next call's
-        # message list is malformed - tool results are replies TO
-        # specific tool_call_ids the model just generated.
-        #
         # Deliberately NOT message.model_dump() - the response object
         # includes fields (e.g. "annotations") that the API's own
-        # REQUEST schema doesn't accept, since a message TYPE can carry
-        # more fields when RECEIVED than are valid to send back. Blindly
-        # round-tripping a response object into the next request is a
-        # common gotcha; constructing a clean, minimal dict avoids it.
+        # REQUEST schema doesn't accept. Constructing a clean, minimal
+        # dict avoids blindly round-tripping a response object into the
+        # next request.
         messages.append(
             {
                 "role": "assistant",

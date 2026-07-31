@@ -200,3 +200,47 @@ decision as above), and a minor system-prompt refinement opportunity
 confusingly labeled in this first test, though the underlying numbers
 were correct).
 DOCEOF
+
+## Conversation persistence (added after initial agentic loop)
+
+Real gap noticed and fixed before moving on: the initial chat endpoint
+had no memory - every message was a fresh conversation, which isn't a
+real "chat" experience and blocks a UI from being useful. Added:
+
+- New `copilot_service_db` Postgres database (this service's first -
+  previously stateless), `conversations`/`messages` tables via Alembic.
+- Only user + final-assistant-answer messages persisted per turn, not
+  the intermediate tool-call/tool-result churn a single turn's agent
+  loop produces internally - tool calls are an implementation detail of
+  HOW one turn produces its answer, not part of the conversation's
+  actual semantic content.
+- Token-budget sliding-window history loading (app/services/history.py):
+  walks backward from the most recent message, keeps what fits under a
+  ~4000-token budget, drops older messages if the conversation has grown
+  too long. A genuine, documented tradeoff - dropped, not summarized.
+  Summarization (compressing old context into a short summary instead
+  of dropping it) is the natural next step for longer-running
+  conversations than this project's demo scope needs today.
+
+Infra note: `alembic init`/`revision --autogenerate` had to run via
+`docker compose exec` (not locally - local `poetry install` still can't
+complete on this Windows machine, chroma-hnswlib blocker), and the
+generated migration file had to be copied OUT of the running container
+back to the host with `docker compose cp`, since the container's
+filesystem is a build-time copy, not a live mount - anything created
+fresh inside a running container doesn't automatically appear on the
+host. Also hit a real `ModuleNotFoundError: No module named 'app'`
+running bare `poetry run alembic` inside the container - fixed with
+`poetry run python -m alembic` instead (`python -m` reliably adds the
+current directory to the import path; a bare installed console-script
+entry point does not, a real Python packaging nuance, not new to this
+session but newly hit here).
+
+CONFIRMED WORKING live: asked a follow-up question in the same
+conversation ("What was the severity of that alert again?") - answered
+correctly from memory without needing to re-call a tool on first test;
+functionally correct with the model choosing to re-verify via tool on a
+later test too (LLM behavior is stochastic - both are legitimate given
+the system prompt's "always verify live-state questions" instruction).
+Verified directly against the database (not just trusting the API
+response) that all 4 messages persisted with correct roles and order.

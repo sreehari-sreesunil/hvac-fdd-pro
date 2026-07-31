@@ -104,9 +104,9 @@ categories of problem:
   other service.
 - app/core/deps.py, app/tools/executors.py - "Returning Any" x3,
   matching category 3 in the original mypy backlog above.
-- app/rag/embeddings.py - "Returning Any" from sentence-transformers'
-  `.encode().tolist()` call - same root cause (a dependency without
-  complete type stubs), new library, same category.
+- app/rag/embeddings.py, app/routers/chat.py - "Returning Any" x3 more,
+  same root cause (dependencies/SQLAlchemy model construction without
+  complete type stubs), same category, not new problems.
 
 mypy pre-commit hook added for copilot-service, matching every other
 service. Note: local `poetry install` cannot complete on this Windows
