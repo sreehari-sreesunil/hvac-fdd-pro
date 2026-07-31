@@ -95,6 +95,28 @@ deferred above. A `poetry run mypy .` run inside each service's actual
 venv remains the authoritative type-safety check until this is fixed;
 pre-commit's mypy hooks today are a weaker, partial signal.
 
+## copilot-service: mypy errors (new service, Phase 3)
+
+Same already-documented pattern categories, new occurrences - not new
+categories of problem:
+- app/config.py: `Settings()` call-arg (jwt_secret_key, groq_api_key) -
+  the same pydantic-settings/mypy limitation already noted for every
+  other service.
+- app/core/deps.py, app/tools/executors.py - "Returning Any" x3,
+  matching category 3 in the original mypy backlog above.
+- app/rag/embeddings.py - "Returning Any" from sentence-transformers'
+  `.encode().tolist()` call - same root cause (a dependency without
+  complete type stubs), new library, same category.
+
+mypy pre-commit hook added for copilot-service, matching every other
+service. Note: local `poetry install` cannot complete on this Windows
+dev machine specifically (chroma-hnswlib needs MSVC Build Tools, not
+installed) - see COPILOT_RAG_BUILD_LOG.md for why this doesn't block
+Docker builds (Linux has prebuilt wheels) or the pre-commit hook itself
+(runs in its own isolated environment, not the local venv). Local
+`poetry run mypy .` for this one service currently has to run via
+`docker compose exec copilot-service poetry run mypy .` instead.
+
 ## Python version drift
 Local Poetry venvs run on 3.13 (Anaconda's python.exe is first on PATH); Docker images
 pin python:3.11-slim. No issues observed yet, but standardize eventually — either

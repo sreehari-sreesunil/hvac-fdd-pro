@@ -6,7 +6,12 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        # Raised from 1000KB: copilot-service's RAG knowledge base
+        # needs real technical PDF source documents (a real 68-page
+        # ASME paper is 1.7MB) - still low enough to catch genuine
+        # accidents (e.g. model weights, datasets), just not so low it
+        # blocks realistic reference documents.
+        args: ['--maxkb=3000']
       - id: check-merge-conflict
 
   - repo: https://github.com/psf/black
@@ -54,4 +59,9 @@ repos:
         files: ^services/notification-service/
         exclude: ^services/notification-service/alembic/
         args: [--config-file=services/notification-service/pyproject.toml]
+        additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (copilot-service)
+        files: ^services/copilot-service/
+        args: [--config-file=services/copilot-service/pyproject.toml]
         additional_dependencies: [pydantic]

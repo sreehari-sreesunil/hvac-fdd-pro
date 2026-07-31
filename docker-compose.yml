@@ -144,5 +144,29 @@ services:
         condition: service_healthy
       asset-service:
         condition: service_healthy
+  copilot-service:
+    build:
+      context: .
+      dockerfile: services/copilot-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-me-in-production}
+      ASSET_SERVICE_URL: http://asset-service:8001
+      TELEMETRY_SERVICE_URL: http://telemetry-service:8002
+      ML_SERVICE_URL: http://ml-service:8003
+      NOTIFICATION_SERVICE_URL: http://notification-service:8004
+      GROQ_API_KEY: ${GROQ_API_KEY:?GROQ_API_KEY must be set in a root .env file - no safe default, this is a real secret}
+      CHROMA_PERSIST_DIR: /app/data/chroma
+    volumes:
+      - chroma_data:/app/data/chroma
+      - ./services/copilot-service/data/source_docs:/app/data/source_docs:ro
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      asset-service:
+        condition: service_healthy
 volumes:
   pgdata:
+  chroma_data:

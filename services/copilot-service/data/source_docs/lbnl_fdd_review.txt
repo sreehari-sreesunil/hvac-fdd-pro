@@ -1,0 +1,84 @@
+A review of data-driven fault detection and diagnostics for building HVAC systems
+
+Zhelun Chen, Zheng O'Neill, Jin Wen, Ojas Pradhan, Tao Yang, Xing Lu, Guanjing Lin, Shohei Miyata, Seungjae Lee, Chou Shen, Roberto Chiosa, Marco Savino Piscitelli, Alfonso Capozzoli, Franz Hengel, Alexander Kuhrer, Marco Pritoni, Wei Liu, John Clauss, Yimin Chen, and Terry Herr
+
+Lawrence Berkeley National Laboratory / Drexel University / Texas A&M University, March 2023
+Preprint submitted to Elsevier
+
+ABSTRACT
+With the wide adoption of building automation system, and the advancement of data, sensing, and machine learning techniques, data-driven fault detection and diagnostics (FDD) for building heating, ventilation, and air conditioning systems has gained increasing attention. In this paper, data-driven FDD is defined as those that are built or trained from data via machine learning or multivariate statistical analysis methods. Following this definition, this paper reviews and summarizes the literature on data-driven FDD from three aspects: process, systems studied (including the systems being investigated, the faults being identified, and the associated data sources), and evaluation metrics. A data-driven FDD process is further divided into the following steps: data collection, data cleansing, data preprocessing, baseline establishment, fault detection, fault diagnostics, and potential fault prognostics.
+
+1. INTRODUCTION
+
+Building systems, including heating, ventilation and air conditioning (HVAC) systems, are usually subject to faults that can lead to undesirable performance, such as excessive energy waste, high maintenance costs, uncomfortable indoor thermal environments, and poor air quality. These faults refer to sensor failure, equipment failure, or faulty system operation. Studies have shown that 15%-30% of energy may be wasted due to building system faults and improper controls. Therefore, fault detection and diagnostics (FDD) or automated fault detection and diagnostics (AFDD) as it is also commonly referred to, is crucial to ensure reliable system operation and avoid energy waste. Fault detection is defined as "determination that the operation of the building is incorrect or unacceptable in some respect" and fault diagnostics is defined as "identification or localization of the cause of faulty operation". It is reported that FDD users in the office and higher education market sectors of the United States were able to achieve 10% median energy savings annually with two-year simple payback period.
+
+Compared to the traditional expert knowledge/rule based approaches that are typically seen in commercial-off-the-shelf FDD products, data-driven FDD requires little or no a priori knowledge and has the potential to achieve high detection and diagnostic accuracy at relatively low cost.
+
+3. MAIN STEPS OF DATA-DRIVEN FDD PROCESS
+
+A data-driven FDD process can be broadly generalized as: data collection from BAS, meter, or other data sources; data cleansing (missing data imputation and outlier detection); data preprocessing (feature selection, data reduction, data scaling); baseline establishment; fault detection; fault diagnostics; and potential fault prognostics.
+
+3.1 Data Collection
+Collecting data from a BAS is often the most time-consuming and labor-intensive process due to the fact that an individual building may have its unique BAS configurations, database structures, and datapoint naming conventions. The use of standardized communication protocols, e.g., Building Automation and Control Network (BACnet), and metadata schemas, e.g., Project Haystack, Brick, and the recent ASHRAE 223P standard, can effectively ease the data collection process.
+
+3.2 Data Cleansing
+Datasets obtained from the BAS or other sources may be incomplete due to sensor and equipment failures, communication or transmission issues, data corruption, or inconsistencies due to sensor noise, leading to loss of valuable information. Existing literature on data imputation methods for building data has focused on univariate time series data using statistical methods as well as nonlinear machine learning and deep learning.
+
+3.3 Data Preprocessing
+Data used for training FDD algorithms often need to be preprocessed to achieve desired training performance, including feature selection, data reduction, data scaling, data transformation, and data partitioning. Considering that there are hundreds or thousands of sensors from a BAS, often consisting of redundant measurements, the selection of informative and representative features strongly affects the performance of a data-driven FDD method. Different categories of feature selection methods include filter, wrapper, embedded, and hybrid methods.
+
+3.4 Baseline Establishment
+In order to enable FDD, a baseline which represents normal system operation is often needed. A baseline is defined as a status at which the building's operation is considered to be satisfactory, for instance, when the building has just gone through a commissioning process. It is well-recognized that most existing buildings do not operate the way they are supposed to; for a real building, a true fault-free status is hardly achievable. Hence, a more realistic fault detection process is to detect when a building's status is significantly different from its baseline status. Such a baseline can either be generated by simulation or constructed from historical (normal) data collected from a building. Building HVAC systems present significantly different system dynamics under different operation modes (heating, cooling, etc.); both weather and internal loads could trigger the HVAC system to change its operation mode. Hence it is often challenging to differentiate system parameter/behavior variations triggered by weather and/or internal conditions from abnormalities triggered by faults in the system. Since most data-driven FDD methods detect and diagnose faults by comparing real-time or quasi real-time operation data (snapshot data) with the baseline, it is important that the baseline is under the same operation mode as the snapshot data.
+
+3.5 Fault Detection
+Data-driven fault detection strategies determine whether the HVAC system has failures or abnormal operations. A wide range of fault detection methods have been studied that can be categorized as supervised, semi-supervised, or unsupervised methods. Supervised methods are trained using both normal operation and labeled fault data. Classification methods (e.g., SVM, Decision Tree) predict whether incoming data belongs to the fault or fault-free class, while regression methods (e.g., SVR, Neural Networks) predict continuous variables representing system operation status, which are then compared to the baseline to identify faults. The challenge with supervised methods is obtaining sufficient labeled fault data for training, often leading to imbalanced classes. Unsupervised methods that do not require fault labels are helpful in discovering hidden correlations within a building's dataset; popular unsupervised methods include clustering algorithms and Principal Component Analysis (PCA). Since only fault-free data is required for deploying unsupervised methods, these methods are easier to develop and deploy for fault detection purposes.
+
+3.6 Fault Diagnosis
+Identifying or localizing the root cause of a fault is typically more challenging than detecting the anomaly, since different faults (e.g., malfunctioning hardware, software errors) can lead to the same symptom. Correctly diagnosing the root cause often requires detailed knowledge of the HVAC configuration and control strategies, both of which are specific to a building. Bayesian network (BN) models based on conditional probability theorem that predict fault beliefs based on observations are popular; BN models can incorporate system structure information through probabilistic conditional relations between faults and their symptoms.
+
+3.7 Fault Prognosis
+Fault identification and diagnosis may not be sufficient in cases where critical functions of the systems may have already failed before the fault symptoms are observed, leading to excess operation and maintenance cost. Some faults in building HVAC occur gradually and, although they do not produce a significant effect on operation at the time, may lead to considerable energy waste over time. For example, if a zone temperature sensor drifts resulting in a higher-than-actual value, the controller will supply more chilled water to the cooling coil to reduce zone temperature, incurring energy wastage. Other examples of gradual faults include coil fouling, duct leakage, and decrease in fan efficiency. It is estimated that over 20% of HVAC systems are running under early-stage gradual faults resulting in over 15% energy waste.
+
+4. SYSTEMS STUDIED WITH DATA-DRIVEN FDD
+
+4.1 Faulty Systems and Identified Faults
+HVAC faults can be categorized as hardware and software faults by component type. Hardware faults further include equipment faults, sensor faults, and controlled device (including actuator) faults. Software faults further include controller faults (e.g., unstable control), human faults (operator faults), and control logic errors.
+
+From the reviewed papers, the most popular research subjects are secondary AHU-VAV systems (35%) and chillers (32%), followed by whole-building studies (17%) and VRFs (7%). Vapor Compression Cycle (VCC) systems, consisting of compressors, heat exchangers, and expansion devices, are included in a wide range of equipment, from small split air conditioners to large central chiller systems. Among them, chiller faults are the most widely studied with regard to data-driven methods. Those faults can be classified as local faults (e.g., condenser fouling, reduced condenser water flow, non-condensables in the refrigerant, reduced evaporator water flow) and system faults (e.g., refrigerant leak/undercharge, refrigerant overcharge, excess oil).
+
+4.2 Data Sources
+For data-driven FDD method development, labeled normal and fault data are needed for training and evaluation. Among reviewed papers, 48% use lab experiment data, 20% use simulation data, and 32% use real building data. Four notable public datasets are highlighted:
+
+- ASHRAE Project 1043-RP data: experiments on a R134a refrigerant centrifugal chiller with 90 tons cooling capacity. Nine typical chiller faults were artificially implemented, including reduced evaporator water flow, reduced condenser water flow, condenser fouling, refrigerant leakage, refrigerant overcharge, excess oil in compressor, non-condensables in refrigerant, and a defective pilot valve. Each fault was implemented at four severity levels ranging from 10% to 40%.
+
+- ASHRAE Project 1312-RP data: experiments on two identical multizone AHU-VAV systems serving building zones. Seventeen faults were tested including equipment, control device, sensor, and controller faults, at multiple fault intensity levels across three seasons.
+
+- Building fault detection data (LBNL/DOE public dataset): experimental datasets for single-zone AHU-CAV and AHU-VAV systems, plus an RTU-VAV dataset covering faults including condenser fouling, HVAC/lighting setback errors, excessive infiltration, and thermostat temperature bias.
+
+- LBNL fault detection and diagnostics datasets: an RTU experimental test dataset covering faults of incorrect economizer setpoint, outside air damper stuck, and supply air temperature sensor bias, across spring, summer, fall, and winter seasons at 1-minute measurement frequency. A large simulated dataset family also exists spanning seven HVAC system configurations (single-duct AHU, RTU, dual-duct AHU, series/parallel fan-powered VAV, fan coil unit, chiller plant, boiler plant), using HVACSIM+ and Modelica-EnergyPlus co-simulation across 250+ faulted/fault-free condition states over a full year of operation.
+
+5. EVALUATION METRICS FOR DATA-DRIVEN FDD
+
+To assess fault detection performance, common metrics include true positive rate (TPR), true negative rate (TNR), false positive rate (FPR), false negative rate (FNR), and no-detection rate (NDR). To assess fault diagnosis, common metrics include correct diagnosis rate (CDR), misdiagnosis rate (MDR), and no-diagnosis rate (NDgR). Each metric focuses on a specific aspect of the FDD problem, and relying solely on one metric can be misleading — for instance, in a dataset with many fault-free samples and few fault samples, TNR can be misleading since an algorithm that simply predicts fault-free for all samples can still achieve a high TNR.
+
+A confusion matrix visualizes prediction results, with actual class in rows and predicted class in columns; diagonal elements show correct predictions. Overall accuracy is the number of correct predictions divided by total observations, though it may fail on classification problems with skewed class distribution. F-measure combines precision and recall into a single score ranging 0 to 1. ROC curves plot TPR against FPR across classification thresholds, and AUC (area under the ROC curve) measures overall discriminative performance.
+
+6. FUTURE CHALLENGES AND OPPORTUNITIES
+
+Real-building Deployment: Most studies developed or validated data-driven methods in simulated environments, laboratory settings, or small-scale HVAC systems. Online, real-time implementations in large-scale real buildings remain rare. Main challenges include lack of sensors, poor sensor accuracy, imbalance of fault and fault-free training data, ad-hoc naming conventions for data points, non-standardized sensor installation and control logic, and missing data.
+
+Performance Evaluation and Benchmarking: There are limited studies comparing FDD methods across different categories (e.g., data-driven vs. rule-based, supervised vs. unsupervised). Establishing common FDD datasets with validated ground truth is needed to facilitate assessment.
+
+Scalability and Transferability: HVAC systems in large commercial buildings are typically designed uniquely for each building, so a data-driven FDD method developed for one building may not transfer to another. Hybrid approaches (combining data-driven and expert-based reasoning), transfer learning, and standardized metadata schemas (Project Haystack, Brick, ASHRAE 223P) are being investigated to improve scalability.
+
+Interpretability: Building professionals tend to be suspicious of data-driven outputs because they cannot fully understand the model's inference mechanism. For pure black-box approaches (e.g., ANN), users often cannot explain how decisions are made. Explainable AI techniques such as LIME (Local Interpretable Model-agnostic Explanations) and Gradient-weighted Class Activation Mapping have been applied to increase interpretability and user confidence in data-driven FDD models.
+
+Cyber Security and Data Privacy: Modern building automation systems are typically connected to the internet or enterprise networks, making them potential targets of cyber attacks that can disrupt normal operation and cause occupant discomfort, energy waste, and equipment downtime.
+
+User Experience: A positive user experience depends on how information is presented to facility managers, building owners, and tenants. Proper indication of fault severity is important for the person who has to repair faulty systems; clustering and ranking faults/alarms based on severity and criticality saves time for facility managers.
+
+7. CONCLUSION
+
+This paper provides a comprehensive review of the process, systems studied, and evaluation metrics for data-driven FDD. Existing literature provides promising methods and frameworks for implementing data-driven fault detection and diagnosis, step by step from collecting data to detecting anomalies to isolating root causes. Data-driven fault prognosis remains to be further developed. Significant challenges remain for wide market adoption, including real-time and real-building implementation subject to data uncertainties, method performance benchmarking in real buildings, fault impact analysis, method scalability and transferability, fault interpretation, cyber security and data privacy, and user experience.
+
+Source: Chen, Z., O'Neill, Z., Wen, J., et al. (2023). A review of data-driven fault detection and diagnostics for building HVAC systems. Lawrence Berkeley National Laboratory, prepared for the U.S. Department of Energy under Contract No. DE-AC02-05CH11231.
