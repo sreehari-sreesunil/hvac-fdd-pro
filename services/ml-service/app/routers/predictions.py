@@ -17,6 +17,7 @@ from app.services.buffer_builder import build_buffer
 if settings.ml_src_dir not in sys.path:
     sys.path.insert(0, settings.ml_src_dir)
 
+from src.models.explainability import explain  # noqa: E402
 from src.models.inference import load_model, predict  # noqa: E402
 
 router = APIRouter()
@@ -55,4 +56,38 @@ async def get_prediction(
     buffer = await build_buffer(asset_id, required_raw_metrics, credentials.credentials)
 
     result = predict(model_name, buffer, models_dir)
+    return result
+
+
+@router.get("/predictions/{asset_id}/explain")
+async def get_prediction_explanation(
+    asset_id: str,
+    model_name: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    _user_id: str = Depends(verify_asset_access),
+) -> dict:
+    """SHAP feature-importance for one prediction - which features
+    pushed the model toward/away from the predicted class, and by how
+    much. See ml/src/models/explainability.py for why SHAP/TreeExplainer
+    specifically, and the classifier-only scope (not the Isolation
+    Forest gatekeeper)."""
+    models_dir = Path(settings.models_dir)
+    metadata_path = models_dir / f"{model_name}.metadata.json"
+    if not metadata_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No saved model named '{model_name}'",
+        )
+
+    _, metadata = load_model(model_name, models_dir)
+    required_raw_metrics = metadata.get("required_raw_metrics")
+    if not required_raw_metrics:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Model '{model_name}' metadata is missing required_raw_metrics",
+        )
+
+    buffer = await build_buffer(asset_id, required_raw_metrics, credentials.credentials)
+
+    result = explain(model_name, buffer, models_dir)
     return result
