@@ -104,9 +104,19 @@ categories of problem:
   other service.
 - app/core/deps.py, app/tools/executors.py - "Returning Any" x3,
   matching category 3 in the original mypy backlog above.
-- app/rag/embeddings.py, app/routers/chat.py - "Returning Any" x3 more,
-  same root cause (dependencies/SQLAlchemy model construction without
-  complete type stubs), same category, not new problems.
+- app/rag/embeddings.py, app/routers/chat.py - "Returning Any" x4 more
+  (embeddings.py gained a second occurrence, chat.py's Conversation
+  construction is a new occurrence), same root cause (dependencies/
+  SQLAlchemy model construction without complete type stubs), same
+  category, not new problems.
+- tests/eval/groq_judge.py's generate()/a_generate() signature-override
+  mismatch (a stricter, schema-aware signature vs DeepEvalBaseLLM's
+  deliberately loose *args/**kwargs base) needed a type: ignore[override]
+  locally (poetry run mypy .), but pre-commit's isolated environment
+  flagged it as "unused" - same missing-dependency-stubs pattern as
+  above, applied to deepeval specifically now. Removed rather than
+  fought, matching the same precedent already set for notification-
+  service's alerts.py.
 
 mypy pre-commit hook added for copilot-service, matching every other
 service. Note: local `poetry install` cannot complete on this Windows

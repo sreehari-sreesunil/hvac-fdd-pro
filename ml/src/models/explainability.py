@@ -82,7 +82,9 @@ def explain(model_name: str, buffer: pd.DataFrame, models_dir: Path) -> dict:
             "value": float(features[feature_name]),
             "shap_contribution": float(contribution),
         }
-        for feature_name, contribution in zip(metadata["feature_cols"], fault_class_values, strict=False)
+        for feature_name, contribution in zip(
+            metadata["feature_cols"], fault_class_values, strict=False
+        )
     ]
     contributions.sort(key=lambda c: abs(c["shap_contribution"]), reverse=True)
 

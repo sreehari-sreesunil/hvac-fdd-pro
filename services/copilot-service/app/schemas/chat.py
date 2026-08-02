@@ -19,3 +19,9 @@ class ChatResponse(BaseModel):
     # own process. See app/routers/chat.py.
     sources_used: list[str]
     tools_called: list[str]
+    # The actual retrieved chunk text, not just filenames - needed for
+    # eval metrics (faithfulness, contextual precision/recall all need
+    # the real context text to score against, not just knowing WHICH
+    # document it came from), and useful standalone for verifying what
+    # the agent actually saw.
+    retrieved_context: list[str]

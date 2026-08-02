@@ -25,6 +25,7 @@ persisted, not the tool-call churn within a single turn.
 """
 
 import json
+import logging
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -41,6 +42,7 @@ from app.tools import executors
 from app.tools.schemas import TOOL_SCHEMAS
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+logger = logging.getLogger("copilot-service.chat")
 
 MAX_TOOL_ITERATIONS = 5
 
@@ -102,6 +104,28 @@ async def chat(
     user_id: str = Depends(verify_asset_access),
     db: Session = Depends(get_db),
 ) -> ChatResponse:
+    try:
+        return await _run_chat_turn(asset_id, payload, credentials, user_id, db)
+    except HTTPException:
+        raise
+    except Exception:
+        # Explicit logging here because uvicorn's default error handling
+        # wasn't surfacing tracebacks in this container's logs during
+        # development - rather than keep debugging THAT specifically,
+        # taking direct control of visibility at the endpoint boundary
+        # is itself standard, defensible practice for a production
+        # service, not just a workaround.
+        logger.exception("Unhandled error in chat turn for asset_id=%s", asset_id)
+        raise
+
+
+async def _run_chat_turn(
+    asset_id: str,
+    payload: ChatRequest,
+    credentials: HTTPAuthorizationCredentials,
+    user_id: str,
+    db: Session,
+) -> ChatResponse:
     token = credentials.credentials
     client = get_llm_client()
 
@@ -119,6 +143,7 @@ async def chat(
 
     sources_used: list[str] = []
     tools_called: list[str] = []
+    retrieved_context: list[str] = []
 
     for _ in range(MAX_TOOL_ITERATIONS):
         response = client.chat.completions.create(
@@ -148,6 +173,7 @@ async def chat(
                 conversation_id=conversation_id_str,
                 sources_used=sources_used,
                 tools_called=tools_called,
+                retrieved_context=retrieved_context,
             )
 
         # Deliberately NOT message.model_dump() - the response object
@@ -178,7 +204,18 @@ async def chat(
             result = await _execute_tool_call(name, arguments, asset_id, token)
 
             if name == "search_knowledge_base" and "results" in result:
-                sources_used.extend(r["source"] for r in result["results"])
+                for r in result["results"]:
+                    # Dedupe by text content, not just append - the
+                    # agent can call search_knowledge_base more than
+                    # once per turn (as it did in live testing), and
+                    # overlapping queries can retrieve the SAME chunk
+                    # twice. Real cost, not cosmetic: duplicate context
+                    # both wastes eval-judge tokens scoring the same
+                    # text twice AND doesn't reflect what was genuinely,
+                    # distinctly retrieved.
+                    if r["text"] not in retrieved_context:
+                        retrieved_context.append(r["text"])
+                        sources_used.append(r["source"])
 
             messages.append(
                 {
