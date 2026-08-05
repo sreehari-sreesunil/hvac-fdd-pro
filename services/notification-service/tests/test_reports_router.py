@@ -1,12 +1,12 @@
 """Tests for GET /reports/{facility_id}.
 
-verify_facility_access and get_facility_assets are mocked - see
-conftest.py's mock_facility_access fixture and the get_facility_assets
-patch below - so these tests run without a live asset-service, same
-approach asset-service's own tests already use for verify_org_membership.
-These tests are about the aggregation logic itself (the genuinely new
-code in this router), not re-proving the auth pattern, which already
-mirrors verify_asset_access exactly.
+verify_facility_access, get_facility_assets, and get_asset_ingestion_count
+are all mocked - see conftest.py's mock_facility_access fixture and the
+patches below - so these tests run without a live asset-service or
+telemetry-service, same approach asset-service's own tests already use
+for verify_org_membership. These tests are about the aggregation logic
+itself (the genuinely new code in this router), not re-proving the auth
+pattern, which already mirrors verify_asset_access exactly.
 """
 
 from datetime import datetime
@@ -35,6 +35,25 @@ def _make_alert(**overrides):
     }
     defaults.update(overrides)
     return Alert(**defaults)
+
+
+def _patched_report_deps(assets=FAKE_ASSETS, ingestion_counts=None):
+    """Patches both cross-service calls the report router makes -
+    get_facility_assets and get_asset_ingestion_count - so a test can
+    control both without any real network call. ingestion_counts, if
+    given, is a dict of {asset_id: count}; defaults to 0 for every
+    asset in `assets` if not specified for a test that doesn't care
+    about this field."""
+    ingestion_counts = ingestion_counts or {}
+
+    async def _fake_ingestion_count(asset_id, start, end, token):
+        return ingestion_counts.get(asset_id, 0)
+
+    assets_patch = patch("app.routers.reports.get_facility_assets", new_callable=AsyncMock)
+    ingestion_patch = patch(
+        "app.routers.reports.get_asset_ingestion_count", side_effect=_fake_ingestion_count
+    )
+    return assets_patch, ingestion_patch, assets
 
 
 def test_report_aggregates_alerts_across_all_assets_in_the_period(client, mock_facility_access):
@@ -69,10 +88,9 @@ def test_report_aggregates_alerts_across_all_assets_in_the_period(client, mock_f
     db.commit()
     db.close()
 
-    with patch(
-        "app.routers.reports.get_facility_assets", new_callable=AsyncMock
-    ) as mock_get_assets:
-        mock_get_assets.return_value = FAKE_ASSETS
+    assets_patch, ingestion_patch, assets = _patched_report_deps()
+    with assets_patch as mock_get_assets, ingestion_patch:
+        mock_get_assets.return_value = assets
         response = client.get(
             "/reports/facility-1?period=daily&date=2026-08-05",
             headers={"Authorization": "Bearer irrelevant-mocked-out"},
@@ -91,6 +109,25 @@ def test_report_aggregates_alerts_across_all_assets_in_the_period(client, mock_f
     assert "asset-2" in per_asset
 
 
+def test_report_includes_ingestion_count_per_asset(client, mock_facility_access):
+    """The whole point of wiring in telemetry-service's volume endpoint -
+    each asset's row must carry its real ingestion_count, independent
+    of that asset's alert_count."""
+    assets_patch, ingestion_patch, assets = _patched_report_deps(
+        ingestion_counts={"asset-1": 1500, "asset-2": 0}
+    )
+    with assets_patch as mock_get_assets, ingestion_patch:
+        mock_get_assets.return_value = assets
+        response = client.get(
+            "/reports/facility-1?period=daily&date=2026-08-05",
+            headers={"Authorization": "Bearer irrelevant-mocked-out"},
+        )
+
+    assert response.status_code == 200
+    per_asset = {row["asset_id"]: row["ingestion_count"] for row in response.json()["per_asset"]}
+    assert per_asset == {"asset-1": 1500, "asset-2": 0}
+
+
 def test_report_excludes_alerts_outside_the_period_window(client, mock_facility_access):
     """An alert timestamped outside the requested window must not be
     counted - this is the real behavior test for resolve_report_period's
@@ -101,10 +138,9 @@ def test_report_excludes_alerts_outside_the_period_window(client, mock_facility_
     db.commit()
     db.close()
 
-    with patch(
-        "app.routers.reports.get_facility_assets", new_callable=AsyncMock
-    ) as mock_get_assets:
-        mock_get_assets.return_value = FAKE_ASSETS
+    assets_patch, ingestion_patch, assets = _patched_report_deps()
+    with assets_patch as mock_get_assets, ingestion_patch:
+        mock_get_assets.return_value = assets
         response = client.get(
             "/reports/facility-1?period=daily&date=2026-08-05",
             headers={"Authorization": "Bearer irrelevant-mocked-out"},
@@ -119,7 +155,8 @@ def test_report_for_a_facility_with_no_assets_returns_an_empty_report_not_an_err
 ):
     """A facility right after onboarding has zero assets - this is a
     real, valid state, not a failure. The endpoint must return a clean
-    empty report, not a 404/500."""
+    empty report, not a 404/500. get_asset_ingestion_count is never even
+    called in this path, since there's no asset to look it up for."""
     with patch(
         "app.routers.reports.get_facility_assets", new_callable=AsyncMock
     ) as mock_get_assets:

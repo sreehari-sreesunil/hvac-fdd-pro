@@ -7,6 +7,8 @@ that N+1 pattern doesn't scale and isn't how any other cross-service
 aggregation in this project is built.
 """
 
+import asyncio
+
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -17,6 +19,7 @@ from app.models.alert import Alert
 from app.schemas.report import FacilityReportOut, ReportAlertsSummary, ReportAssetSummary
 from app.services.asset_client import get_facility_assets
 from app.services.report_period import ReportPeriod, resolve_report_period
+from app.services.telemetry_client import get_asset_ingestion_count
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -90,11 +93,23 @@ async def get_facility_report(
         by_source[alert.source] = by_source.get(alert.source, 0) + 1
         alert_count_by_asset[alert.asset_id] = alert_count_by_asset.get(alert.asset_id, 0) + 1
 
+    # Fetched concurrently, not one asset at a time in a loop - a
+    # facility could have many assets, and each is an independent
+    # cross-service HTTP call; running them sequentially would make
+    # this endpoint's latency scale linearly with asset count for no
+    # real reason, since none of these calls depend on each other's
+    # results.
+    ingestion_counts = await asyncio.gather(
+        *(get_asset_ingestion_count(asset_id, start, end, token) for asset_id in asset_ids)
+    )
+    ingestion_count_by_asset = dict(zip(asset_ids, ingestion_counts, strict=True))
+
     per_asset = [
         ReportAssetSummary(
             asset_id=asset_id,
             asset_name=asset_name_by_id.get(asset_id, "Unknown asset"),
             alert_count=alert_count_by_asset[asset_id],
+            ingestion_count=ingestion_count_by_asset[asset_id],
         )
         for asset_id in asset_ids
     ]

@@ -23,17 +23,12 @@ class ReportAlertsSummary(BaseModel):
 
 
 class ReportAssetSummary(BaseModel):
-    """Per-asset breakdown within a facility report.
-
-    ingestion_count is intentionally absent for now - it depends on
-    telemetry-service's GET /telemetry/volume endpoint, which doesn't
-    exist yet (separate step). Adding it later is a non-breaking,
-    additive field change, not a redesign of this schema.
-    """
+    """Per-asset breakdown within a facility report."""
 
     asset_id: str
     asset_name: str
     alert_count: int
+    ingestion_count: int
 
 
 class FacilityReportOut(BaseModel):

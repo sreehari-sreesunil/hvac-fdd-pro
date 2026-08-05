@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     asset_service_url: str = "http://asset-service:8001"
+    telemetry_service_url: str = "http://telemetry-service:8002"
     service_name: str = "notification-service"
     # Shared secret for trusted internal service-to-service calls (e.g.
     # ml-service creating an alert) - NOT the same trust model as

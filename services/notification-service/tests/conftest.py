@@ -5,6 +5,7 @@ import os
 os.environ["JWT_SECRET_KEY"] = "test-secret-key"
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ["ASSET_SERVICE_URL"] = "http://unused-in-tests:8001"
+os.environ["TELEMETRY_SERVICE_URL"] = "http://unused-in-tests:8002"
 os.environ["INTERNAL_API_KEY"] = "test-internal-key"
 
 import pytest
