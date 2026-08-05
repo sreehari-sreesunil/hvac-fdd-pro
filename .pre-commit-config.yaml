@@ -36,6 +36,16 @@ repos:
       - id: mypy
         name: mypy (asset-service)
         files: ^services/asset-service/
+        # Test functions and pytest fixtures are conventionally left
+        # untyped (signatures carry little type-safety value, fixtures
+        # are dynamically injected by pytest) - excluded the same way
+        # ml-service/notification-service/copilot-service already
+        # exclude their alembic/ directories below. This exclude has
+        # to live HERE, not in pyproject.toml's [tool.mypy] exclude,
+        # for the same reason documented on those alembic excludes:
+        # pre-commit passes specific changed file paths directly as
+        # arguments, bypassing pyproject.toml's exclude entirely.
+        exclude: ^services/asset-service/tests/
         args: [--config-file=services/asset-service/pyproject.toml]
         additional_dependencies: [pydantic]
       - id: mypy
