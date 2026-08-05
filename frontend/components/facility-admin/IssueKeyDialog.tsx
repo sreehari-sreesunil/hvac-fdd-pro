@@ -6,6 +6,7 @@ import { issueIngestionKey } from "@/lib/api/telemetry";
 import { ApiError } from "@/lib/api-client";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { CsvUploadDialog } from "./CsvUploadDialog";
 
 export function IssueKeyDialog({
   open,
@@ -22,6 +23,7 @@ export function IssueKeyDialog({
   const [error, setError] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
 
   // The parent remounts this component (via a `key` on deviceId) whenever a
   // different device's dialog opens, so local state starts fresh without
@@ -82,10 +84,28 @@ export function IssueKeyDialog({
             I&apos;ve copied this key and understand it won&apos;t be shown again.
           </label>
 
-          <Button onClick={handleClose} disabled={!acknowledged} className="self-end">
-            Done
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setCsvDialogOpen(true)}
+              disabled={!acknowledged}
+            >
+              Upload CSV now
+            </Button>
+            <Button onClick={handleClose} disabled={!acknowledged}>
+              Done
+            </Button>
+          </div>
         </div>
+      )}
+
+      {apiKey && (
+        <CsvUploadDialog
+          key={csvDialogOpen ? "open" : "closed"}
+          open={csvDialogOpen}
+          onClose={() => setCsvDialogOpen(false)}
+          initialIngestionKey={apiKey}
+        />
       )}
     </Modal>
   );

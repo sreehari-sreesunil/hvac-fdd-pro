@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Cpu, KeyRound, Plus, Radio } from "lucide-react";
+import { Cpu, KeyRound, Plus, Radio, Upload } from "lucide-react";
 import { getFacility, listAssets } from "@/lib/api/assets";
 import { createEdgeDevice } from "@/lib/api/telemetry";
 import { qk } from "@/lib/query/keys";
@@ -19,6 +19,7 @@ import { QueryErrorState } from "@/components/ui/QueryErrorState";
 import { useToast } from "@/components/ui/Toast";
 import { AssetForm } from "@/components/facility-admin/AssetForm";
 import { IssueKeyDialog } from "@/components/facility-admin/IssueKeyDialog";
+import { CsvUploadDialog } from "@/components/facility-admin/CsvUploadDialog";
 
 export default function FacilityDetailPage() {
   const { facilityId } = useParams<{ facilityId: string }>();
@@ -29,6 +30,7 @@ export default function FacilityDetailPage() {
   const [assetModalOpen, setAssetModalOpen] = useState(false);
   const [deviceName, setDeviceName] = useState("");
   const [keyDialogDeviceId, setKeyDialogDeviceId] = useState<string | null>(null);
+  const [csvUploadDeviceId, setCsvUploadDeviceId] = useState<string | null>(null);
   // telemetry-service has no GET /edge-devices list endpoint, so devices
   // registered in earlier sessions can't be fetched back — only devices
   // created in this session are shown. Flag for backend follow-up.
@@ -174,10 +176,16 @@ export default function FacilityDetailPage() {
                   {device.name}
                 </span>
                 {canManageDevices && (
-                  <Button variant="secondary" size="sm" onClick={() => setKeyDialogDeviceId(device.id)}>
-                    <KeyRound size={14} strokeWidth={1.75} />
-                    Issue key
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => setKeyDialogDeviceId(device.id)}>
+                      <KeyRound size={14} strokeWidth={1.75} />
+                      Issue key
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => setCsvUploadDeviceId(device.id)}>
+                      <Upload size={14} strokeWidth={1.75} />
+                      Upload CSV
+                    </Button>
+                  </div>
                 )}
               </li>
             ))}
@@ -196,11 +204,17 @@ export default function FacilityDetailPage() {
       </Modal>
 
       <IssueKeyDialog
-        key={keyDialogDeviceId ?? "closed"}
+        key={`issue-key-${keyDialogDeviceId ?? "closed"}`}
         open={!!keyDialogDeviceId}
         deviceId={keyDialogDeviceId}
         deviceName={devices.find((d) => d.id === keyDialogDeviceId)?.name ?? ""}
         onClose={() => setKeyDialogDeviceId(null)}
+      />
+
+      <CsvUploadDialog
+        key={`csv-upload-${csvUploadDeviceId ?? "closed"}`}
+        open={!!csvUploadDeviceId}
+        onClose={() => setCsvUploadDeviceId(null)}
       />
     </div>
   );

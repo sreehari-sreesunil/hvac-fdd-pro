@@ -3,6 +3,8 @@ import type {
   EdgeDeviceOut,
   IngestionKeyCreateOut,
   MetricMappingCreateResponse,
+  TelemetryCsvUploadResponse,
+  TelemetryReadingBulkCreateResponse,
   TelemetryReadingOut,
 } from "@/lib/api-types";
 
@@ -37,5 +39,28 @@ export function createMetricMapping(body: {
   return apiFetch<MetricMappingCreateResponse>("telemetry", "/metric-mappings", {
     method: "POST",
     body,
+  });
+}
+
+export function uploadTelemetryCsv(ingestionKey: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiFetch<TelemetryCsvUploadResponse>("telemetry", "/telemetry/csv-upload", {
+    method: "POST",
+    body: formData,
+    auth: false,
+    headers: { "X-Ingestion-Key": ingestionKey },
+  });
+}
+
+export function uploadTelemetryBulk(
+  ingestionKey: string,
+  readings: { asset_id: string; external_key: string; value: number; recorded_at: string }[],
+) {
+  return apiFetch<TelemetryReadingBulkCreateResponse>("telemetry", "/telemetry/bulk", {
+    method: "POST",
+    body: { readings },
+    auth: false,
+    headers: { "X-Ingestion-Key": ingestionKey },
   });
 }
