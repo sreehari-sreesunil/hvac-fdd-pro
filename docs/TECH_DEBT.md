@@ -132,6 +132,54 @@ Local Poetry venvs run on 3.13 (Anaconda's python.exe is first on PATH); Docker 
 pin python:3.11-slim. No issues observed yet, but standardize eventually — either
 install 3.11 locally for all services, or bump Docker images to 3.12/3.13 to match.
 
+## copilot-service: no real confidence score or structured citation metadata
+
+The frontend copilot chat (`frontend/components/copilot/`) was wired to the
+real `POST /chat/{asset_id}` endpoint in place of the old mock. The mock UI
+had invented a 0-1 `confidence` number and a typed `{label, sourceType}`
+citation shape with an `insufficientEvidence` boolean — none of these exist
+in the real `ChatResponse` (`answer`, `conversation_id`, `sources_used:
+string[]`, `tools_called: string[]`, `retrieved_context: string[]`).
+Rather than keep displaying a fabricated confidence bar or citation-type
+icon, those UI elements (`ConfidenceIndicator`, `InsufficientEvidenceState`,
+and the old per-citation sourceType icon map) were deleted; the model
+expresses low-confidence/insufficient-evidence as plain text in `answer`
+per its own system prompt (`services/copilot-service/app/routers/chat.py`),
+and `sources_used`/`tools_called` are now shown as-is (citation chips + a
+small "Used: ..." footer).
+
+If a real confidence score or structured per-citation source-type metadata
+is wanted later, it needs to come from the backend (e.g. the RAG retrieval
+step returning a similarity score per chunk, or `_execute_tool_call`
+tagging which tool produced which retrieved chunk) — not reconstructed
+client-side, since the frontend has no honest signal to derive either from
+today.
+
+## copilot-service: missing CORS middleware blocks browser calls entirely
+
+`services/copilot-service/app/main.py` never adds `CORSMiddleware`, unlike
+every other service (compare `services/asset-service/app/main.py`, which
+adds `CORSMiddleware` with `allow_origins=["*"], allow_credentials=True,
+allow_methods=["*"], allow_headers=["*"]`). Confirmed live: the browser's
+preflight `OPTIONS /chat/{asset_id}` request gets back a 405, so the
+frontend's `POST /chat/{asset_id}` (`frontend/lib/api/copilot.ts`) never
+reaches the backend at all from a browser — `net::ERR_FAILED` on the
+actual request, surfaced correctly in the UI as an inline "Could not reach
+the service" error (not a crash), but the real round trip cannot be
+verified end-to-end until this is fixed.
+
+This blocked full browser verification of the Copilot chat wiring done in
+this session — the frontend code (API client entry, `sendChatMessage`,
+`AssetSelector`, `ChatPanel`, message rendering, conversation_id threading,
+error handling) is otherwise confirmed working: facility/asset cascading
+selection, input enable/disable, and the request/response wiring were all
+verified up to the point of the actual HTTP call, which is blocked purely
+by this backend CORS gap.
+
+Fix: add the same `CORSMiddleware` block used by every other service to
+`services/copilot-service/app/main.py`, before or after `app.include_router
+(chat.router)`, mirroring `asset-service`'s exact configuration.
+
 ## Telemetry-service: incomplete auth-service error handling
 `check_facility_role`, `verify_asset_access`, and `_check_facility_access` in
 telemetry-service/app/core/deps.py only explicitly handle 404/403 responses

@@ -1,32 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Send } from "lucide-react";
-import { mockAskCopilot, type MockCopilotMessage } from "@/lib/mock-copilot";
+import { sendChatMessage } from "@/lib/api/copilot";
+import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormField";
 import { MessageBubble } from "./MessageBubble";
+import type { ChatMessage } from "./types";
 
-const INITIAL: MockCopilotMessage = {
+const INITIAL: ChatMessage = {
   role: "assistant",
-  content: "Ask about any asset in your fleet — I'll cite the telemetry behind the answer.",
+  content: "Ask about the selected asset — I'll cite the telemetry and docs behind the answer.",
+  sourcesUsed: [],
+  toolsCalled: [],
 };
 
-export function ChatPanel() {
-  const [messages, setMessages] = useState<MockCopilotMessage[]>([INITIAL]);
+export function ChatPanel({ assetId }: { assetId: string | null }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL]);
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (message: string) =>
+      sendChatMessage(assetId as string, { message, conversation_id: conversationId }),
+    onSuccess: (response) => {
+      setConversationId(response.conversation_id);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.answer,
+          sourcesUsed: response.sources_used,
+          toolsCalled: response.tools_called,
+        },
+      ]);
+    },
+    onError: (err) => {
+      const content =
+        err instanceof ApiError ? err.message : "Could not reach the copilot service.";
+      setMessages((prev) => [...prev, { role: "error", content }]);
+    },
+  });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || sending) return;
+    if (!input.trim() || mutation.isPending || !assetId) return;
     const question = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setInput("");
-    setSending(true);
-    const reply = await mockAskCopilot(question);
-    setMessages((prev) => [...prev, reply]);
-    setSending(false);
+    mutation.mutate(question);
   }
 
   return (
@@ -35,17 +59,18 @@ export function ChatPanel() {
         {messages.map((message, i) => (
           <MessageBubble key={i} message={message} />
         ))}
-        {sending && <p className="text-sm text-text-muted">Thinking…</p>}
+        {mutation.isPending && <p className="text-sm text-text-muted">Thinking…</p>}
       </div>
       <form onSubmit={onSubmit} className="flex gap-2 border-t border-border p-4">
         <Input
           aria-label="Ask the copilot"
-          placeholder="Why is RTU-3 running hot?"
+          placeholder={assetId ? "Why is this asset running hot?" : "Select an asset to start chatting"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          disabled={!assetId}
           className="flex-1"
         />
-        <Button type="submit" disabled={sending}>
+        <Button type="submit" disabled={mutation.isPending || !assetId}>
           <Send size={14} strokeWidth={1.75} />
           Send
         </Button>

@@ -8,12 +8,13 @@ import {
 } from "./auth/token-store";
 import type { TokenPair } from "./api-types";
 
-export type Service = "auth" | "asset" | "telemetry";
+export type Service = "auth" | "asset" | "telemetry" | "copilot";
 
 const BASE_URLS: Record<Service, string> = {
   auth: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8000",
   asset: process.env.NEXT_PUBLIC_ASSET_SERVICE_URL ?? "http://localhost:8001",
   telemetry: process.env.NEXT_PUBLIC_TELEMETRY_SERVICE_URL ?? "http://localhost:8002",
+  copilot: process.env.NEXT_PUBLIC_COPILOT_SERVICE_URL ?? "http://localhost:8005",
 };
 
 type ApiFetchOptions = {
@@ -21,6 +22,8 @@ type ApiFetchOptions = {
   body?: unknown;
   /** Attach the Authorization header and participate in 401 refresh. Default true. */
   auth?: boolean;
+  /** Extra headers merged in after the default Content-Type/Authorization, e.g. X-Ingestion-Key. */
+  headers?: Record<string, string>;
 };
 
 let refreshPromise: Promise<boolean> | null = null;
@@ -56,15 +59,20 @@ async function rawFetch(
   path: string,
   opts: ApiFetchOptions,
 ): Promise<Response> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const isFormData = opts.body instanceof FormData;
+
+  const headers: Record<string, string> = {};
+  if (!isFormData) headers["Content-Type"] = "application/json";
   if (opts.auth !== false) {
     const token = getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
+  if (opts.headers) Object.assign(headers, opts.headers);
+
   return fetch(`${BASE_URLS[service]}${path}`, {
     method: opts.method ?? "GET",
     headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    body: isFormData ? (opts.body as FormData) : opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
 }
 

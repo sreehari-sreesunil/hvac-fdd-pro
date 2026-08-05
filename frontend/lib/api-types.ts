@@ -113,3 +113,36 @@ export type MetricMappingCreateResponse = {
   mapping: MetricMappingOut;
   backfilled_count: number;
 };
+
+export type CsvRowError = {
+  row: number;
+  error: string;
+};
+
+export type TelemetryCsvUploadResponse = {
+  accepted_count: number;
+  unmapped_count: number;
+  duplicate_count: number;
+  invalid_rows: CsvRowError[];
+};
+
+export type TelemetryReadingBulkCreateResponse = {
+  accepted_count: number;
+  unmapped_count: number;
+  duplicate_count: number;
+};
+
+// ---- copilot-service ----
+
+export type ChatRequest = {
+  message: string;
+  conversation_id?: string | null;
+};
+
+export type ChatResponse = {
+  answer: string;
+  conversation_id: string;
+  sources_used: string[];
+  tools_called: string[];
+  retrieved_context: string[];
+};
