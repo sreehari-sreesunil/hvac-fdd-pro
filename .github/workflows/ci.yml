@@ -1,0 +1,76 @@
+name: CI
+
+# Runs on every push and PR against main - mirrors the two checks
+# already required locally before any commit (see AGENTS/working
+# conventions): pre-commit run --all-files, and poetry run pytest per
+# service. CI doesn't introduce new rules, it just makes the existing
+# ones automatic and visible on every push instead of relying on
+# someone remembering to run them by hand.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  pre-commit:
+    name: pre-commit (black, ruff, mypy, hygiene checks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Runs the exact .pre-commit-config.yaml already used locally -
+      # same hooks, same versions, same per-service mypy scoping. If it
+      # passes here, it would have passed a local `pre-commit run
+      # --all-files` too, and vice versa - no separate CI-only lint
+      # config to keep in sync with the local one.
+      - uses: pre-commit/action@v3.0.1
+
+  test:
+    name: pytest (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Deliberately NOT every service in services/ - ml-service and
+        # copilot-service have pytest configured (pyproject.toml) but
+        # zero actual test files yet, a real, tracked gap (see
+        # docs/TECH_DEBT.md), not an oversight here. Listing them in
+        # this matrix would either fail with "no tests collected" or
+        # require a workaround that hides the real gap - better to be
+        # honest that only these four are currently covered, and add
+        # the other two here the same day real tests are written for
+        # them, not before.
+        service:
+          - auth-service
+          - asset-service
+          - telemetry-service
+          - notification-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Pinned to match the exact version every service's Dockerfile
+      # already installs, so CI's dependency resolution behaves
+      # identically to a real `docker compose build` - a version drift
+      # here would be the kind of thing that passes in CI and then
+      # fails in the real build, which defeats the point of CI.
+      - name: Install Poetry
+        run: pip install poetry==2.4.1
+
+      - name: Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: poetry install --no-interaction --no-ansi
+
+      # No DATABASE_URL/JWT_SECRET_KEY secrets needed here - each
+      # service's tests/conftest.py sets its own isolated SQLite DB and
+      # test JWT secret via os.environ before the app is imported (see
+      # e.g. asset-service/tests/conftest.py), and mocks any real
+      # cross-service HTTP calls. These tests are self-contained by
+      # design, not dependent on the real Docker Compose stack running.
+      - name: Run tests
+        working-directory: services/${{ matrix.service }}
+        run: poetry run pytest
