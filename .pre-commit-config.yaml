@@ -67,7 +67,11 @@ repos:
       - id: mypy
         name: mypy (notification-service)
         files: ^services/notification-service/
-        exclude: ^services/notification-service/alembic/
+        # Excludes both alembic/ (auto-generated migrations, not worth
+        # annotating) and tests/ (test functions and pytest fixtures
+        # are conventionally left untyped - same reasoning already
+        # applied to asset-service's tests/ exclude above).
+        exclude: ^services/notification-service/(alembic|tests)/
         args: [--config-file=services/notification-service/pyproject.toml]
         additional_dependencies: [pydantic]
       - id: mypy

@@ -48,16 +48,39 @@ async def list_alerts(
     asset_id: str,
     status_filter: str | None = Query(None, alias="status"),
     severity: str | None = Query(None),
+    start_date: datetime | None = Query(
+        None, description="Only alerts created at or after this timestamp (ISO 8601)."
+    ),
+    end_date: datetime | None = Query(
+        None, description="Only alerts created at or before this timestamp (ISO 8601)."
+    ),
     limit: int = Query(50, le=200),
     _user_id: str = Depends(verify_asset_access),
     db: Session = Depends(get_db),
 ) -> list[Alert]:
-    """List alerts for one asset, newest first, optionally filtered."""
+    """List alerts for one asset, newest first, optionally filtered.
+
+    start_date/end_date are both optional and independent - either can be
+    given alone (an open-ended range) or together (a bounded window). Added
+    to support the facility-level report aggregation endpoint, which needs
+    to ask "alerts in this period" rather than always the most recent N -
+    see notification-service's GET /reports/{facility_id}.
+    """
+    if start_date is not None and end_date is not None and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_date must be before end_date",
+        )
+
     q = db.query(Alert).filter(Alert.asset_id == asset_id)
     if status_filter:
         q = q.filter(Alert.status == status_filter)
     if severity:
         q = q.filter(Alert.severity == severity)
+    if start_date is not None:
+        q = q.filter(Alert.created_at >= start_date)
+    if end_date is not None:
+        q = q.filter(Alert.created_at <= end_date)
     return q.order_by(Alert.created_at.desc()).limit(limit).all()
 
 
