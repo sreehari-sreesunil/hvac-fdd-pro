@@ -105,6 +105,16 @@ class TelemetryReadingOut(BaseModel):
     idempotency_key: str | None
 
 
+class TelemetryVolumeOut(BaseModel):
+    """Response for GET /telemetry/volume - a simple ingestion-count
+    over a date range, used by notification-service's facility report
+    to show "is data actually flowing" per asset, alongside alert
+    activity."""
+
+    asset_id: str
+    count: int
+
+
 class TelemetryReadingBulkCreateResponse(BaseModel):
     accepted_count: int
     unmapped_count: int

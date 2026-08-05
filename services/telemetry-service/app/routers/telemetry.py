@@ -3,6 +3,7 @@
 import csv
 import io
 import secrets
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -32,6 +33,7 @@ from app.schemas.telemetry import (
     TelemetryReadingBulkCreateResponse,
     TelemetryReadingCreate,
     TelemetryReadingOut,
+    TelemetryVolumeOut,
 )
 from common.roles import Role
 
@@ -355,6 +357,45 @@ async def list_unmapped_keys(
         .all()
     )
     return [r[0] for r in rows]
+
+
+@router.get("/telemetry/volume", response_model=TelemetryVolumeOut)
+async def get_telemetry_volume(
+    asset_id: str,
+    start_date: datetime,
+    end_date: datetime,
+    db: Session = Depends(get_db),
+    _user_id: str = Depends(verify_asset_access),
+) -> TelemetryVolumeOut:
+    """Count how many readings were ingested for an asset in a date
+    range - a rough "is data actually flowing" signal.
+
+    Both start_date and end_date are required (unlike notification-
+    service's alert date filters, which are both optional) - this
+    endpoint only exists to answer "how much data in THIS period", so
+    an unbounded query has no real use case here and would just risk
+    someone accidentally counting an asset's entire history.
+
+    Built for notification-service's facility report, which calls this
+    once per asset in a facility to build the per-asset ingestion_count
+    field alongside alert_count (see services/notification-service/app/
+    schemas/report.py's ReportAssetSummary, currently missing this field
+    pending exactly this endpoint).
+    """
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="start_date must be before end_date",
+        )
+
+    count = (
+        db.query(TelemetryReading)
+        .filter(TelemetryReading.asset_id == asset_id)
+        .filter(TelemetryReading.recorded_at >= start_date)
+        .filter(TelemetryReading.recorded_at < end_date)
+        .count()
+    )
+    return TelemetryVolumeOut(asset_id=asset_id, count=count)
 
 
 # ---- Metric mapping (human JWT) ----

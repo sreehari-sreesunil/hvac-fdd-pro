@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from app.core.deps import verify_ingestion_key
+from app.core.deps import verify_asset_access, verify_ingestion_key
 from app.db.session import Base, engine
 from app.main import app
 from app.models.telemetry import EdgeDevice
@@ -81,7 +81,14 @@ def mock_facility_role_denied():
 
 @pytest.fixture
 def mock_asset_access():
-    """Patches verify_asset_access to always allow."""
-    with patch("app.routers.telemetry.verify_asset_access", new_callable=AsyncMock) as mock:
-        mock.return_value = "test-user-id"
-        yield mock
+    """Overrides verify_asset_access via FastAPI's dependency_overrides -
+    the correct mechanism for Depends()-injected dependencies, same
+    reasoning as mock_ingestion_key above. This fixture previously used
+    unittest.mock.patch, which has no effect on a Depends()-injected
+    callable (FastAPI captures a direct reference at route-registration
+    time, before a later patch could intercept it) - a real, silent gap
+    that went undetected because no test exercised this fixture until
+    GET /telemetry/volume's tests did."""
+    app.dependency_overrides[verify_asset_access] = lambda: "test-user-id"
+    yield
+    app.dependency_overrides.pop(verify_asset_access, None)
