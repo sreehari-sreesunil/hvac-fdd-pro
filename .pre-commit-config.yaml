@@ -31,6 +31,10 @@ repos:
       - id: mypy
         name: mypy (auth-service)
         files: ^services/auth-service/
+        # Same reasoning as asset-service/notification-service's tests/
+        # excludes: test function signatures and pytest fixtures are
+        # conventionally left untyped.
+        exclude: ^services/auth-service/tests/
         args: [--config-file=services/auth-service/pyproject.toml]
         additional_dependencies: [pydantic]
       - id: mypy
@@ -52,7 +56,15 @@ repos:
         name: mypy (common)
         files: ^libs/common/
         args: [--config-file=libs/common/pyproject.toml]
-        additional_dependencies: [pydantic]
+        # jose and structlog are real runtime dependencies of this
+        # package (see libs/common/pyproject.toml) but weren't listed
+        # here, so mypy's isolated hook environment couldn't see their
+        # types at all - not the "Any"-collapse pattern seen elsewhere,
+        # a plain missing-dependency error. types-python-jose is a
+        # separate stubs-only package (python-jose ships no inline
+        # types); structlog ships its own types, so just installing it
+        # here is enough.
+        additional_dependencies: [pydantic, types-python-jose, structlog]
       - id: mypy
         name: mypy (ml-service)
         files: ^services/ml-service/

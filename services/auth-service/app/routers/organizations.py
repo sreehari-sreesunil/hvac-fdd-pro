@@ -44,7 +44,7 @@ def create_organization(
 def list_my_organizations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> list[Organization]:
+) -> list[OrganizationOut]:
     """List every organization the current user belongs to.
 
     Args:
