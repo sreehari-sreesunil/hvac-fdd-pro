@@ -401,6 +401,35 @@ async def get_telemetry_volume(
 # ---- Metric mapping (human JWT) ----
 
 
+@router.get("/metric-mappings", response_model=list[MetricMappingOut])
+async def list_metric_mappings(
+    asset_id: str,
+    db: Session = Depends(get_db),
+    _user_id: str = Depends(verify_asset_access),
+) -> list[MetricMapping]:
+    """List every existing metric mapping for an asset.
+
+    The complement of GET /telemetry/unmapped (which lists raw keys
+    with NO mapping yet) - this lists what's already mapped. Neither
+    endpoint existed as a pair until now; only the unmapped-keys side
+    was built originally. This is needed for the sensor-mapping/
+    model-readiness feature: showing a user their asset's CURRENT
+    mapping state (not just what's missing) is required to build a
+    real "here's what you have vs. what a model needs" comparison.
+
+    Uses verify_asset_access (not just get_current_user_id, which
+    create_metric_mapping below uses) - matching the stricter pattern
+    already used by list_readings/list_unmapped_keys/
+    get_telemetry_volume for read endpoints scoped to one asset.
+    """
+    return (
+        db.query(MetricMapping)
+        .filter(MetricMapping.asset_id == asset_id)
+        .order_by(MetricMapping.created_at.desc())
+        .all()
+    )
+
+
 @router.post(
     "/metric-mappings",
     response_model=MetricMappingCreateResponse,
