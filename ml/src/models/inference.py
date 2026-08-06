@@ -20,6 +20,24 @@ from src.features.live_features import build_live_features
 # unresolved tradeoff rather than a settled choice.
 _CONFIDENCE_THRESHOLDS = {"high": 0.85, "moderate": 0.60}
 
+# In-process cache, not Redis or any external store - this service runs
+# as a single process/container with no horizontal scaling, so there's
+# no second instance that would need a SHARED cache; a plain dict
+# already solves this correctly at this scale (matches the project's
+# established "no unnecessary heavy infra" philosophy - the alert
+# scheduler chose in-process APScheduler over Celery/Redis for the same
+# reason). Keyed on (model_name, resolved models_dir) rather than just
+# model_name - critical for tests, which monkeypatch models_dir to a
+# different temp directory per test; keying on model_name alone would
+# silently return a stale model loaded from a PREVIOUS test's temp
+# directory, a real correctness bug, not just a performance detail.
+# No eviction/invalidation: models are static trained artifacts - if
+# one is retrained and re-saved under the same filename, picking up the
+# new version requires restarting the service, same as today (Python
+# module state doesn't hot-reload) - an accepted, honest limitation,
+# not silently different behavior from before this cache existed.
+_model_cache: dict[tuple[str, str], tuple[object, dict]] = {}
+
 
 def _confidence_label(probability: float) -> str:
     if probability >= _CONFIDENCE_THRESHOLDS["high"]:
@@ -30,7 +48,8 @@ def _confidence_label(probability: float) -> str:
 
 
 def load_model(model_name: str, models_dir: Path) -> tuple[object, dict]:
-    """Load a saved model and its metadata sidecar.
+    """Load a saved model and its metadata sidecar, from cache if
+    already loaded.
 
     Args:
         model_name: e.g. "simulated_condenser_fouling" - matches the
@@ -39,11 +58,22 @@ def load_model(model_name: str, models_dir: Path) -> tuple[object, dict]:
         models_dir: Directory containing the saved model files.
 
     Returns:
-        (model, metadata) tuple.
+        (model, metadata) tuple. The SAME object references on a cache
+        hit, not a copy - callers must not mutate the returned model or
+        metadata dict, since that would corrupt it for every subsequent
+        caller. Nothing in this codebase currently does, but worth
+        stating explicitly now that a cache makes it a real hazard
+        rather than a harmless one-off mutation.
     """
+    cache_key = (model_name, str(models_dir))
+    if cache_key in _model_cache:
+        return _model_cache[cache_key]
+
     model = joblib.load(models_dir / f"{model_name}.joblib")
     with open(models_dir / f"{model_name}.metadata.json") as f:
         metadata = json.load(f)
+
+    _model_cache[cache_key] = (model, metadata)
     return model, metadata
 
 
