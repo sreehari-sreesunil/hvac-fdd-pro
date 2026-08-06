@@ -5,10 +5,11 @@ This is the entry point for every user's session — everything downstream
 on tokens issued here being trustworthy.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.core.limiter import limiter
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -24,10 +25,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def signup(payload: UserCreate, db: Session = Depends(get_db)) -> User:
+@limiter.limit("3/minute")
+def signup(request: Request, payload: UserCreate, db: Session = Depends(get_db)) -> User:
     """Register a new user account.
 
     Args:
+        request: Required by slowapi's rate-limit decorator (inspects
+            the caller's IP via this) - not otherwise used in the body.
         payload: Signup fields — email, password, optional full name.
         db: Database session.
 
@@ -36,6 +40,14 @@ def signup(payload: UserCreate, db: Session = Depends(get_db)) -> User:
 
     Raises:
         HTTPException: 400 if the email is already registered.
+
+    Rate limited to 3/minute per IP - prevents automated mass account
+    creation/spam while staying generous enough that a shared office/
+    household network signing up several real users in quick succession
+    won't get blocked. Like inference.py's confidence thresholds, this
+    exact number is a reasonable, defensible starting point, not a
+    validated-against-real-traffic constant - worth revisiting once
+    real usage patterns exist.
     """
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -52,10 +64,12 @@ def signup(payload: UserCreate, db: Session = Depends(get_db)) -> User:
 
 
 @router.post("/login", response_model=TokenPair)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:
     """Authenticate a user and issue a new access/refresh token pair.
 
     Args:
+        request: Required by slowapi's rate-limit decorator.
         payload: Login credentials — email and password.
         db: Database session.
 
@@ -64,6 +78,14 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:
 
     Raises:
         HTTPException: 401 if credentials are wrong, 403 if the account is deactivated.
+
+    Rate limited to 5/minute per IP - the classic brute-force protection
+    case this feature exists for. Generous enough that a real user who
+    mistypes their password a couple of times isn't blocked, but bounds
+    how fast a scripted attack can try passwords against one account
+    from one source. Real, honest limitation (see main.py's comment on
+    the Limiter): keyed on IP, not account - a distributed attack across
+    many source IPs isn't stopped by this alone.
     """
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
@@ -81,10 +103,12 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:
 
 
 @router.post("/refresh", response_model=TokenPair)
-def refresh(payload: RefreshRequest, db: Session = Depends(get_db)) -> TokenPair:
+@limiter.limit("20/minute")
+def refresh(request: Request, payload: RefreshRequest, db: Session = Depends(get_db)) -> TokenPair:
     """Exchange a valid refresh token for a new access/refresh token pair.
 
     Args:
+        request: Required by slowapi's rate-limit decorator.
         payload: Contains the refresh_token to exchange.
         db: Database session.
 
@@ -94,6 +118,11 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)) -> TokenPair
     Raises:
         HTTPException: 401 if the refresh token is invalid/expired, or the
             user no longer exists / is deactivated.
+
+    Rate limited to 20/minute per IP - more generous than login/signup,
+    since legitimate clients call this routinely (per this project's own
+    apiFetch convention: refresh-on-401) rather than as a rare, deliberate
+    action. Still bounded, in case a stolen refresh token gets hammered.
     """
     user_id = decode_and_verify_token(
         payload.refresh_token,
