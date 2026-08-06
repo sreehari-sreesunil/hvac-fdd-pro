@@ -6,9 +6,12 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.core.deps import security, verify_asset_access
+from app.db.session import get_db
+from app.models.prediction import Prediction
 from app.services.buffer_builder import build_buffer
 
 # ml/ is not an installable package - see docs/TECH_DEBT.md's
@@ -29,13 +32,21 @@ async def get_prediction(
     model_name: str,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     _user_id: str = Depends(verify_asset_access),
+    db: Session = Depends(get_db),
 ) -> dict:
-    """Score an asset's recent telemetry against one saved model.
+    """Score an asset's recent telemetry against one saved model, and
+    persist the result.
 
     model_name must match a <name>.joblib/<name>.metadata.json pair in
     the models directory (e.g. "simulated_condenser_fouling") - explicit
     selection for now, not automatic "try every applicable model" -
     that's a real product decision for later, not assumed here.
+
+    Persistence added here - previously every prediction was computed
+    and returned but never saved, so no history existed to report on or
+    to build the argmax-based fault-attribution fix on top of (see
+    Prediction model's docstring). The response contract is unchanged;
+    this is purely additive.
     """
     models_dir = Path(settings.models_dir)
     metadata_path = models_dir / f"{model_name}.metadata.json"
@@ -56,6 +67,25 @@ async def get_prediction(
     buffer = await build_buffer(asset_id, required_raw_metrics, credentials.credentials)
 
     result = predict(model_name, buffer, models_dir)
+
+    # result's shape varies by model type (classifier vs anomaly
+    # detector) - see predict()'s docstring. .get() with a default of
+    # None on every optional field means this works for either shape
+    # without an if/else branch here duplicating that dispatch logic,
+    # which already lives in inference.py and shouldn't be repeated.
+    prediction_row = Prediction(
+        asset_id=asset_id,
+        model_name=model_name,
+        predicted_label=result.get("predicted_label"),
+        fault_probability=result.get("fault_probability"),
+        confidence=result.get("confidence"),
+        is_anomaly=result.get("is_anomaly"),
+        anomaly_score=result.get("anomaly_score"),
+        feature_values=result.get("feature_values"),
+    )
+    db.add(prediction_row)
+    db.commit()
+
     return result
 
 

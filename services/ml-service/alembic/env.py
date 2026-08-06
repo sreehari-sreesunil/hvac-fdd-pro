@@ -17,6 +17,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.config import settings  # noqa: E402
 from app.db.session import Base  # noqa: E402
 
+# Explicit imports, not relying on some other import path (a router, the
+# scheduler) to have already pulled these in first - target_metadata
+# below only sees a model if it's been imported somewhere in this
+# process BEFORE this line runs. Without this, autogenerate can silently
+# produce an empty migration for a genuinely new model, which is a
+# confusing, hard-to-diagnose failure mode (found while adding
+# Prediction - AssetBaseline's own migration apparently worked
+# previously via a less robust, accidental import chain, not this
+# explicit one).
+from app.models.asset_baseline import AssetBaseline  # noqa: E402, F401
+from app.models.prediction import Prediction  # noqa: E402, F401
+
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
