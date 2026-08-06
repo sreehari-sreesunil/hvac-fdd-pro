@@ -8,5 +8,5 @@ dist/
 node_modules/
 .next/
 .coverage
-.coverage
 .vscode/
+backups/
