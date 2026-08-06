@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import baselines, predictions
+from app.routers import baselines, models, predictions
 from app.scheduler import start_scheduler, stop_scheduler
 
 # Python's default log level is WARNING - without this, every logger.info()
@@ -43,6 +43,7 @@ app.add_middleware(
 
 app.include_router(predictions.router)
 app.include_router(baselines.router)
+app.include_router(models.router)
 
 
 @app.get("/health")

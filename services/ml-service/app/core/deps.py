@@ -17,6 +17,24 @@ from common.security import decode_and_verify_token
 security = HTTPBearer()
 
 
+async def verify_authenticated_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> str:
+    """Verify the caller has a valid JWT, with no asset/org membership
+    check - for endpoints that aren't scoped to a specific asset (e.g.
+    GET /models, which lists globally-available trained models and
+    their required sensor metrics, not any one asset's data). Any
+    authenticated user can see this; there's nothing asset- or
+    org-specific to authorize against."""
+    token = credentials.credentials
+    user_id = decode_and_verify_token(token, settings.jwt_secret_key, settings.jwt_algorithm)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+        )
+    return user_id
+
+
 async def verify_asset_access(
     asset_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(security),
