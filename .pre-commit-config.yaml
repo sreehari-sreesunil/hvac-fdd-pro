@@ -96,3 +96,23 @@ repos:
         exclude: ^services/copilot-service/alembic/
         args: [--config-file=services/copilot-service/pyproject.toml]
         additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (telemetry-service)
+        files: ^services/telemetry-service/
+        # No alembic/ dir - this service has no Alembic migrations,
+        # unlike the other 5 (a real, separate inconsistency, not
+        # addressed here). tests/ excluded for the same reason as
+        # every other service - untyped test signatures/fixtures are
+        # conventional.
+        exclude: ^services/telemetry-service/tests/
+        args: [--config-file=services/telemetry-service/pyproject.toml]
+        additional_dependencies: [pydantic]
+      - id: mypy
+        name: mypy (ml)
+        files: ^ml/
+        # tests/ excluded per convention. notebooks (.ipynb) aren't
+        # checked by mypy at all regardless, so no need to exclude them
+        # explicitly.
+        exclude: ^ml/tests/
+        args: [--config-file=ml/pyproject.toml]
+        additional_dependencies: [pydantic]

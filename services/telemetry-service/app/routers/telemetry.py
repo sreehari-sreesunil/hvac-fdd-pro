@@ -202,8 +202,15 @@ def _parse_csv_rows(raw: bytes) -> tuple[list[TelemetryReadingCreate], list[CsvR
 
         try:
             item = TelemetryReadingCreate(
-                asset_id=row["asset_id"],
-                external_key=row["external_key"],
+                # csv.DictReader can produce a None value for a row
+                # shorter than the header (a malformed CSV row) - same
+                # reasoning as value/recorded_at's existing type:ignore
+                # below: a None here safely becomes a Pydantic
+                # ValidationError, caught by the except clause right
+                # below and turned into a per-row CsvRowError, not a
+                # live bug reaching this far.
+                asset_id=row["asset_id"],  # type: ignore[arg-type]
+                external_key=row["external_key"],  # type: ignore[arg-type]
                 value=row["value"],  # type: ignore[arg-type]
                 recorded_at=row["recorded_at"],  # type: ignore[arg-type]
                 idempotency_key=idempotency_key,

@@ -1,5 +1,7 @@
 """Database session/engine setup for telemetry-service."""
 
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
@@ -11,7 +13,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Session:  # type: ignore[misc]
+def get_db() -> Generator[Session, None, None]:
     """Yield a database session, closed automatically after the request."""
     db = SessionLocal()
     try:

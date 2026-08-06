@@ -7,6 +7,7 @@ without at least seeing that distinction.
 
 import json
 from pathlib import Path
+from typing import Any
 
 import joblib
 import pandas as pd
@@ -36,7 +37,7 @@ _CONFIDENCE_THRESHOLDS = {"high": 0.85, "moderate": 0.60}
 # new version requires restarting the service, same as today (Python
 # module state doesn't hot-reload) - an accepted, honest limitation,
 # not silently different behavior from before this cache existed.
-_model_cache: dict[tuple[str, str], tuple[object, dict]] = {}
+_model_cache: dict[tuple[str, str], tuple[Any, dict]] = {}
 
 
 def _confidence_label(probability: float) -> str:
@@ -47,7 +48,7 @@ def _confidence_label(probability: float) -> str:
     return "low"
 
 
-def load_model(model_name: str, models_dir: Path) -> tuple[object, dict]:
+def load_model(model_name: str, models_dir: Path) -> tuple[Any, dict]:
     """Load a saved model and its metadata sidecar, from cache if
     already loaded.
 
@@ -58,12 +59,22 @@ def load_model(model_name: str, models_dir: Path) -> tuple[object, dict]:
         models_dir: Directory containing the saved model files.
 
     Returns:
-        (model, metadata) tuple. The SAME object references on a cache
-        hit, not a copy - callers must not mutate the returned model or
-        metadata dict, since that would corrupt it for every subsequent
-        caller. Nothing in this codebase currently does, but worth
-        stating explicitly now that a cache makes it a real hazard
-        rather than a harmless one-off mutation.
+        (model, metadata) tuple. model is typed Any, not object -
+        it's genuinely one of several heterogeneous sklearn-compatible
+        estimator types (RandomForest, XGBoost, Isolation Forest, etc.)
+        with no shared base class, and predict()'s hasattr-based
+        duck-typing on it is deliberate (see predict()'s own comment
+        below). object would be statically "safer" but wrong here - it
+        would claim mypy can verify nothing is called on the returned
+        value, when predict() explicitly does call .predict()/
+        .predict_proba()/.score_samples() on it based on runtime
+        introspection, not a known static type. The SAME object
+        references on a cache hit, not a copy - callers must not
+        mutate the returned model or metadata dict, since that would
+        corrupt it for every subsequent caller. Nothing in this
+        codebase currently does, but worth stating explicitly now that
+        a cache makes it a real hazard rather than a harmless one-off
+        mutation.
     """
     cache_key = (model_name, str(models_dir))
     if cache_key in _model_cache:

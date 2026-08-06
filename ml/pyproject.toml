@@ -27,3 +27,17 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+# Deliberately lighter than every services/*/pyproject.toml - this
+# project explicitly isn't a deployed service (see its own description
+# above) and contains genuine research/exploratory code (training,
+# algorithm-comparison scripts) alongside the smaller "production"
+# subset ml-service actually imports at runtime (inference.py,
+# live_features.py). Full disallow_untyped_defs strictness would either
+# require retrofitting exploratory scripts that were never meant to be
+# typed that way, or produce a wave of pointless suppressions - neither
+# is real engineering judgment, just applying a rule uniformly where it
+# doesn't fit.

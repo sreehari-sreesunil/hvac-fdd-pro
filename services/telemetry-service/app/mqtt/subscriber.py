@@ -29,6 +29,7 @@ import logging
 
 import paho.mqtt.client as mqtt
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.core.deps import hash_key
@@ -41,7 +42,7 @@ logger = logging.getLogger("telemetry-service.mqtt")
 TOPIC_FILTER = "telemetry/+/readings"
 
 
-def _authenticate_device(db, device_id: str, raw_key: str) -> EdgeDevice | None:
+def _authenticate_device(db: Session, device_id: str, raw_key: str) -> EdgeDevice | None:
     """Validate an ingestion key exactly like HTTP's verify_ingestion_key
     does: hash the raw key, find a non-revoked IngestionKey row for it,
     and confirm it actually belongs to the device claimed in the topic
