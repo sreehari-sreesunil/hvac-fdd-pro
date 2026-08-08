@@ -1,6 +1,7 @@
 """Prediction endpoint: fetch real telemetry, assemble features, run
 inference against a saved model."""
 
+import re
 import sys
 from pathlib import Path
 
@@ -25,6 +26,17 @@ from src.models.explainability import explain  # noqa: E402
 from src.models.inference import load_model, predict  # noqa: E402
 
 router = APIRouter()
+
+# Strict allowlist for model_name - it's interpolated directly into a
+# file path (models_dir / f"{model_name}.metadata.json") and passed to
+# joblib.load() (pickle deserialization under the hood). An unvalidated
+# model_name is a real path-traversal-adjacent risk: "../" segments
+# could reach outside models_dir, and joblib.load() on an unintended
+# file is a genuinely serious outcome, not just a 404. Every real saved
+# model name (e.g. "simulated_condenser_fouling") is lowercase letters,
+# digits, and underscores only - this pattern is not a guess, it
+# matches what train_final_models.py actually produces.
+MODEL_NAME_PATTERN = r"^[a-zA-Z0-9_]+$"
 
 
 async def _run_and_persist_prediction(
@@ -83,7 +95,7 @@ async def _run_and_persist_prediction(
 @router.get("/predictions/{asset_id}")
 async def get_prediction(
     asset_id: str,
-    model_name: str,
+    model_name: str = Query(..., pattern=MODEL_NAME_PATTERN),
     credentials: HTTPAuthorizationCredentials = Depends(security),
     _user_id: str = Depends(verify_asset_access),
     db: Session = Depends(get_db),
@@ -173,7 +185,22 @@ async def attribute_fault(
     "partial, honest result over all-or-nothing failure" approach (e.g.
     CSV upload's per-row error handling, GET /models skipping malformed
     metadata).
+
+    model_names is validated by hand here, not via Query(pattern=...) -
+    that constraint applies to the OUTER list type in Pydantic/FastAPI,
+    not per-item, and attempting it crashes with an uncaught 500
+    (TypeError: Unable to apply constraint 'pattern' to supplied value
+    [...] for schema of type 'list') rather than a clean 422 - found by
+    actually testing this, not assumed to work the same as the scalar
+    str case used by get_prediction/get_prediction_explanation above.
     """
+    for model_name in model_names:
+        if not re.match(MODEL_NAME_PATTERN, model_name):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid model_name: '{model_name}'",
+            )
+
     all_results: list[ClassifierResult] = []
     skipped: list[SkippedModel] = []
 
@@ -222,7 +249,7 @@ async def attribute_fault(
 @router.get("/predictions/{asset_id}/explain")
 async def get_prediction_explanation(
     asset_id: str,
-    model_name: str,
+    model_name: str = Query(..., pattern=MODEL_NAME_PATTERN),
     credentials: HTTPAuthorizationCredentials = Depends(security),
     _user_id: str = Depends(verify_asset_access),
 ) -> dict:

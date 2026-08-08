@@ -39,6 +39,18 @@ from common.roles import Role
 
 router = APIRouter()
 
+# Real, but partial, mitigation - see ingest_readings_csv below. Not a
+# complete DoS defense on its own: a genuinely complete guarantee also
+# needs a reverse-proxy/load-balancer-level request body size limit,
+# which doesn't exist yet in this project's current architecture (no
+# reverse proxy in front of these services at all today) - that's a
+# real, honest gap, not silently claimed to be solved here. 50MB is
+# generous headroom for a real bulk upload (the largest real ingestion
+# this project has done - ~18,000 readings via ingest_test_data.py -
+# produced a telemetry_db backup of 5.4MB, and that's compressed
+# database storage, not even raw CSV text) while still bounding the
+# worst case.
+MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
 
 # ---- Edge device management (human JWT + facility role required) ----
 
@@ -312,8 +324,21 @@ async def ingest_readings_csv(
     principle for anything that *can* be parsed. A structural problem
     (missing required column, empty file) is reported the same way, as a
     single row-0 entry in invalid_rows, rather than a different error
-    shape."""
+    shape.
+
+    Rejects files over MAX_CSV_UPLOAD_BYTES before the expensive
+    row-by-row parsing/DB-insertion work runs - a real, but partial,
+    mitigation for an unbounded-upload resource-exhaustion risk found
+    during this project's input validation audit (there was previously
+    no size check of any kind here). See MAX_CSV_UPLOAD_BYTES's own
+    comment for what this does and doesn't guarantee.
+    """
     raw = await file.read()
+    if len(raw) > MAX_CSV_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"CSV file too large - max {MAX_CSV_UPLOAD_BYTES // (1024 * 1024)}MB",
+        )
     items, invalid_rows = _parse_csv_rows(raw)
 
     if items:
