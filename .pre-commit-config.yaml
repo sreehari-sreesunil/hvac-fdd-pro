@@ -93,7 +93,13 @@ repos:
       - id: mypy
         name: mypy (copilot-service)
         files: ^services/copilot-service/
-        exclude: ^services/copilot-service/alembic/
+        # Also excludes tests/ (this service's first-ever real test
+        # directory - tests/eval/ already existed as a separate
+        # DeepEval harness, but this is the first time pytest-based
+        # tests exist here) - test function signatures and pytest
+        # fixtures are conventionally left untyped, same reasoning
+        # already applied to every other service this session.
+        exclude: ^services/copilot-service/(alembic|tests)/
         args: [--config-file=services/copilot-service/pyproject.toml]
         additional_dependencies: [pydantic]
       - id: mypy

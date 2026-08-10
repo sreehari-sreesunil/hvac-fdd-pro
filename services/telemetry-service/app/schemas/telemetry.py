@@ -2,14 +2,14 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---- EdgeDevice ----
 
 
 class EdgeDeviceCreate(BaseModel):
     facility_id: str
-    name: str
+    name: str = Field(max_length=255)
 
 
 class EdgeDeviceOut(BaseModel):
@@ -57,7 +57,7 @@ class IngestionKeyOut(BaseModel):
 
 class MetricMappingCreate(BaseModel):
     asset_id: str
-    external_key: str
+    external_key: str = Field(max_length=255)
     metric_definition_id: str
 
 
@@ -81,10 +81,10 @@ class MetricMappingCreateResponse(BaseModel):
 
 class TelemetryReadingCreate(BaseModel):
     asset_id: str
-    external_key: str
+    external_key: str = Field(max_length=255)
     value: float
     recorded_at: datetime
-    idempotency_key: str | None = None
+    idempotency_key: str | None = Field(default=None, max_length=255)
 
 
 class TelemetryReadingBulkCreate(BaseModel):

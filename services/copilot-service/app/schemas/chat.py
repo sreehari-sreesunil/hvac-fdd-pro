@@ -1,13 +1,20 @@
 """Chat request/response schemas."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
-    message: str
+    # max_length=4000 is not just hygiene here - a real cost-control
+    # measure. This field feeds a paid, per-token LLM API call (Groq)
+    # on every request; an unbounded message is a genuine, direct
+    # billing exposure, not just a resource-exhaustion concern the way
+    # most of this audit's other max_length additions are. 4000
+    # characters is generous for a real chat question while bounding
+    # the worst case.
+    message: str = Field(max_length=4000)
     # Omit to start a new conversation; pass back the conversation_id
     # from a prior ChatResponse to continue an existing one.
-    conversation_id: str | None = None
+    conversation_id: str | None = Field(default=None, max_length=255)
 
 
 class ChatResponse(BaseModel):
