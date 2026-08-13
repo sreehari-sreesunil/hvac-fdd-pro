@@ -25,100 +25,90 @@ repos:
       - id: ruff
         args: [--fix]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+  # Local hooks, not mirrors-mypy: mirrors-mypy runs mypy inside an
+  # isolated virtualenv containing ONLY `additional_dependencies` (here,
+  # just pydantic) - none of sqlalchemy/python-jose/passlib/httpx/common
+  # (this repo's own shared local package) were ever actually resolvable
+  # there. Since every service's pyproject.toml also sets
+  # ignore_missing_imports = true, those unresolvable imports silently
+  # degraded to `Any` instead of erroring - which is what was masking
+  # this for a long time (see docs/TECH_DEBT.md's mypy backlog entries).
+  # These hooks instead invoke each project's OWN real Poetry
+  # environment (already correctly set up with every real dependency,
+  # including the editable `common` path dependency, which Poetry
+  # already handles natively) - `poetry -C <dir> run mypy <target>` runs
+  # against the real, fully-installed venv, the same one `poetry run
+  # mypy` already gives a developer locally. This also means each
+  # pyproject.toml's own [tool.mypy] `exclude` (e.g. ml/'s research-
+  # script exclusions) is honored automatically, since mypy is doing its
+  # own recursive discovery from a package/directory target here instead
+  # of pre-commit handing it a list of individually changed file paths.
+  #
+  # Requires each project's dependencies to already be installed (`poetry
+  # install` in that directory) for the hook to find a real venv to run
+  # in - true for any of these directories a developer has actually
+  # worked in locally. ml-service and copilot-service are the one real
+  # exception on this Windows dev machine specifically: their `poetry
+  # install` can't complete locally (chroma-hnswlib/shap need MSVC Build
+  # Tools, not installed here - see docs/TECH_DEBT.md) - use `docker
+  # compose exec <service> poetry run mypy app --config-file=pyproject.toml`
+  # instead when checking those two locally. CI installs every service
+  # directly via `poetry install` on ubuntu-latest, which has prebuilt
+  # wheels for both and hits neither issue.
+  - repo: local
     hooks:
-      - id: mypy
+      - id: mypy-auth-service
         name: mypy (auth-service)
+        entry: poetry -C services/auth-service run mypy app --config-file=pyproject.toml
+        language: system
         files: ^services/auth-service/
-        # Same reasoning as asset-service/notification-service's tests/
-        # excludes: test function signatures and pytest fixtures are
-        # conventionally left untyped.
-        exclude: ^services/auth-service/tests/
-        args: [--config-file=services/auth-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
+        pass_filenames: false
+      - id: mypy-asset-service
         name: mypy (asset-service)
+        entry: poetry -C services/asset-service run mypy app --config-file=pyproject.toml
+        language: system
         files: ^services/asset-service/
-        # Test functions and pytest fixtures are conventionally left
-        # untyped (signatures carry little type-safety value, fixtures
-        # are dynamically injected by pytest) - excluded the same way
-        # ml-service/notification-service/copilot-service already
-        # exclude their alembic/ directories below. This exclude has
-        # to live HERE, not in pyproject.toml's [tool.mypy] exclude,
-        # for the same reason documented on those alembic excludes:
-        # pre-commit passes specific changed file paths directly as
-        # arguments, bypassing pyproject.toml's exclude entirely.
-        exclude: ^services/asset-service/tests/
-        args: [--config-file=services/asset-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
-        name: mypy (common)
-        files: ^libs/common/
-        args: [--config-file=libs/common/pyproject.toml]
-        # jose and structlog are real runtime dependencies of this
-        # package (see libs/common/pyproject.toml) but weren't listed
-        # here, so mypy's isolated hook environment couldn't see their
-        # types at all - not the "Any"-collapse pattern seen elsewhere,
-        # a plain missing-dependency error. types-python-jose is a
-        # separate stubs-only package (python-jose ships no inline
-        # types); structlog ships its own types, so just installing it
-        # here is enough.
-        additional_dependencies: [pydantic, types-python-jose, structlog]
-      - id: mypy
-        name: mypy (ml-service)
-        files: ^services/ml-service/
-        # pyproject.toml's [tool.mypy] exclude only applies when mypy
-        # does its own recursive directory discovery - pre-commit passes
-        # specific changed file paths directly as arguments, which
-        # bypasses that setting entirely (a known mypy behavior, not a
-        # config mistake). The exclude has to live here instead.
-        # Also excludes tests/ (ml-service's first-ever test directory,
-        # added this session) - test function signatures and pytest
-        # fixtures are conventionally left untyped, same reasoning
-        # already applied to asset-service/notification-service.
-        exclude: ^services/ml-service/(alembic|tests)/
-        args: [--config-file=services/ml-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
-        name: mypy (notification-service)
-        files: ^services/notification-service/
-        # Excludes both alembic/ (auto-generated migrations, not worth
-        # annotating) and tests/ (test functions and pytest fixtures
-        # are conventionally left untyped - same reasoning already
-        # applied to asset-service's tests/ exclude above).
-        exclude: ^services/notification-service/(alembic|tests)/
-        args: [--config-file=services/notification-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
-        name: mypy (copilot-service)
-        files: ^services/copilot-service/
-        # Also excludes tests/ (this service's first-ever real test
-        # directory - tests/eval/ already existed as a separate
-        # DeepEval harness, but this is the first time pytest-based
-        # tests exist here) - test function signatures and pytest
-        # fixtures are conventionally left untyped, same reasoning
-        # already applied to every other service this session.
-        exclude: ^services/copilot-service/(alembic|tests)/
-        args: [--config-file=services/copilot-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
+        pass_filenames: false
+      - id: mypy-telemetry-service
         name: mypy (telemetry-service)
+        entry: poetry -C services/telemetry-service run mypy app --config-file=pyproject.toml
+        language: system
         files: ^services/telemetry-service/
-        # No alembic/ dir - this service has no Alembic migrations,
-        # unlike the other 5 (a real, separate inconsistency, not
-        # addressed here). tests/ excluded for the same reason as
-        # every other service - untyped test signatures/fixtures are
-        # conventional.
-        exclude: ^services/telemetry-service/tests/
-        args: [--config-file=services/telemetry-service/pyproject.toml]
-        additional_dependencies: [pydantic]
-      - id: mypy
+        pass_filenames: false
+      - id: mypy-notification-service
+        name: mypy (notification-service)
+        entry: poetry -C services/notification-service run mypy app --config-file=pyproject.toml
+        language: system
+        files: ^services/notification-service/
+        pass_filenames: false
+      - id: mypy-ml-service
+        name: mypy (ml-service)
+        # See the Windows caveat in this repo section's header comment -
+        # local poetry install fails here specifically; use
+        # `docker compose exec ml-service poetry run mypy app
+        # --config-file=pyproject.toml` to check this one locally.
+        entry: poetry -C services/ml-service run mypy app --config-file=pyproject.toml
+        language: system
+        files: ^services/ml-service/
+        pass_filenames: false
+      - id: mypy-copilot-service
+        name: mypy (copilot-service)
+        # Same Windows-local caveat as ml-service above - use
+        # `docker compose exec copilot-service poetry run mypy app
+        # --config-file=pyproject.toml` here instead.
+        entry: poetry -C services/copilot-service run mypy app --config-file=pyproject.toml
+        language: system
+        files: ^services/copilot-service/
+        pass_filenames: false
+      - id: mypy-common
+        name: mypy (common)
+        entry: poetry -C libs/common run mypy common --config-file=pyproject.toml
+        language: system
+        files: ^libs/common/
+        pass_filenames: false
+      - id: mypy-ml
         name: mypy (ml)
+        entry: poetry -C ml run mypy . --config-file=pyproject.toml
+        language: system
         files: ^ml/
-        # tests/ excluded per convention. notebooks (.ipynb) aren't
-        # checked by mypy at all regardless, so no need to exclude them
-        # explicitly.
-        exclude: ^ml/tests/
-        args: [--config-file=ml/pyproject.toml]
-        additional_dependencies: [pydantic]
+        pass_filenames: false

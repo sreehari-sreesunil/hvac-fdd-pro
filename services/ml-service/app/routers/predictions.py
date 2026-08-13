@@ -4,6 +4,7 @@ inference against a saved model."""
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -89,7 +90,11 @@ async def _run_and_persist_prediction(
     db.add(prediction_row)
     db.commit()
 
-    return result
+    # predict() is imported via sys.path insertion (see docs/TECH_DEBT.md's
+    # "ml-service: sys.path import of ml/src instead of a proper package" -
+    # a deliberate architectural choice, not addressed here), so mypy can't
+    # resolve its real return type and treats it as Any.
+    return cast(dict, result)
 
 
 @router.get("/predictions/{asset_id}")
@@ -277,4 +282,5 @@ async def get_prediction_explanation(
     buffer = await build_buffer(asset_id, required_raw_metrics, credentials.credentials)
 
     result = explain(model_name, buffer, models_dir)
-    return result
+    # Same sys.path-import limitation as _run_and_persist_prediction above.
+    return cast(dict, result)

@@ -1,3 +1,5 @@
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -21,7 +23,10 @@ async def create_asset(
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
 
-    await verify_org_membership(facility.organization_id, credentials.credentials)
+    # SQLAlchemy legacy Column() style: mypy sees Column[str] on instance
+    # attribute access, not the real runtime str - a known SQLAlchemy
+    # typing limitation, not a bug here (repeats at every call site below).
+    await verify_org_membership(cast(str, facility.organization_id), credentials.credentials)
 
     # your turn: build and save the Asset here, using payload.facility_id,
     # payload.asset_type_id, payload.name, payload.external_ref
@@ -50,7 +55,7 @@ async def list_assets(
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
 
-    await verify_org_membership(facility.organization_id, credentials.credentials)
+    await verify_org_membership(cast(str, facility.organization_id), credentials.credentials)
     return db.query(Asset).filter(Asset.facility_id == facility_id).all()
 
 
@@ -73,6 +78,6 @@ async def get_asset(
         # a facility that no longer exists.
         raise HTTPException(status_code=500, detail="Asset's facility not found")
 
-    await verify_org_membership(facility.organization_id, credentials.credentials)
+    await verify_org_membership(cast(str, facility.organization_id), credentials.credentials)
 
     return asset

@@ -29,7 +29,11 @@ app = FastAPI(title="auth-service", version="0.1.0")
 # distributed source IPs - this raises the bar against casual/scripted
 # brute-forcing, it is not a complete defense on its own.
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# slowapi's own handler is typed for the narrower RateLimitExceeded, not
+# Starlette's generic Exception - a known upstream slowapi/Starlette typing
+# mismatch (Starlette's add_exception_handler wants a handler that accepts
+# any Exception), not a bug in this code; the handler is correct at runtime.
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(
     CORSMiddleware,

@@ -8,6 +8,8 @@ to auth-service (see app/core/deps.py verify_org_membership) — never by
 trusting a claim baked into the JWT itself.
 """
 
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -103,6 +105,9 @@ async def get_facility(
     if facility is None:
         raise HTTPException(status_code=404, detail="Facility not found")
 
-    await verify_org_membership(facility.organization_id, credentials.credentials)
+    # SQLAlchemy legacy Column() style: mypy sees Column[str] on instance
+    # attribute access, not the real runtime str - a known SQLAlchemy
+    # typing limitation, not a bug here.
+    await verify_org_membership(cast(str, facility.organization_id), credentials.credentials)
 
     return facility

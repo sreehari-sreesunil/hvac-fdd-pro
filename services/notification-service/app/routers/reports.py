@@ -8,6 +8,7 @@ aggregation in this project is built.
 """
 
 import asyncio
+from typing import cast
 
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
@@ -87,11 +88,18 @@ async def get_facility_report(
     by_source: dict[str, int] = {}
     alert_count_by_asset: dict[str, int] = dict.fromkeys(asset_ids, 0)
 
+    # SQLAlchemy legacy Column() style: mypy sees Column[str] on instance
+    # attribute access, not the real runtime str - a known SQLAlchemy
+    # typing limitation, not a bug here.
     for alert in alerts:
-        by_severity[alert.severity] = by_severity.get(alert.severity, 0) + 1
-        by_status[alert.status] = by_status.get(alert.status, 0) + 1
-        by_source[alert.source] = by_source.get(alert.source, 0) + 1
-        alert_count_by_asset[alert.asset_id] = alert_count_by_asset.get(alert.asset_id, 0) + 1
+        severity = cast(str, alert.severity)
+        status_ = cast(str, alert.status)
+        source = cast(str, alert.source)
+        asset_id = cast(str, alert.asset_id)
+        by_severity[severity] = by_severity.get(severity, 0) + 1
+        by_status[status_] = by_status.get(status_, 0) + 1
+        by_source[source] = by_source.get(source, 0) + 1
+        alert_count_by_asset[asset_id] = alert_count_by_asset.get(asset_id, 0) + 1
 
     # Fetched concurrently, not one asset at a time in a loop - a
     # facility could have many assets, and each is an independent

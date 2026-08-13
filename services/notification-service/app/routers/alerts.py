@@ -94,9 +94,14 @@ async def acknowledge_alert(
     alert = db.query(Alert).filter(Alert.id == alert_id, Alert.asset_id == asset_id).first()
     if alert is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
-    alert.status = "acknowledged"
-    alert.acknowledged_at = datetime.utcnow()
-    alert.acknowledged_by = user_id
+    # SQLAlchemy legacy Column() style: mypy infers the instance attribute
+    # itself as Column[T] from the class-level Column() declaration, so a
+    # plain-value assignment looks like a type mismatch to mypy even
+    # though it's exactly how SQLAlchemy instrumented attributes are meant
+    # to be set - a known, real SQLAlchemy typing limitation, not a bug.
+    alert.status = "acknowledged"  # type: ignore[assignment]
+    alert.acknowledged_at = datetime.utcnow()  # type: ignore[assignment]
+    alert.acknowledged_by = user_id  # type: ignore[assignment]
     db.commit()
     db.refresh(alert)
     return alert
@@ -112,9 +117,10 @@ async def resolve_alert(
     alert = db.query(Alert).filter(Alert.id == alert_id, Alert.asset_id == asset_id).first()
     if alert is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
-    alert.status = "resolved"
-    alert.resolved_at = datetime.utcnow()
-    alert.resolved_by = user_id
+    # Same SQLAlchemy Column[T]-vs-T limitation as acknowledge_alert above.
+    alert.status = "resolved"  # type: ignore[assignment]
+    alert.resolved_at = datetime.utcnow()  # type: ignore[assignment]
+    alert.resolved_by = user_id  # type: ignore[assignment]
     db.commit()
     db.refresh(alert)
     return alert

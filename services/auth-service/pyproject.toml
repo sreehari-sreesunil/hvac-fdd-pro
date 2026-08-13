@@ -30,7 +30,9 @@ dev = [
     "pytest (>=9.1.1,<10.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
-    "mypy (>=2.2.0,<3.0.0)"
+    "mypy (>=2.2.0,<3.0.0)",
+    "types-passlib (>=1.7.7.20260211,<2.0.0.0)",
+    "types-python-jose (>=3.5.0.20260408,<4.0.0.0)"
 ]
 
 [tool.poetry.dependencies]

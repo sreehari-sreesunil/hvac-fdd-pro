@@ -11,6 +11,8 @@ no separate service-account auth needed here, since these calls act on
 behalf of a real logged-in user, not a background job.
 """
 
+from typing import cast
+
 import httpx
 from fastapi import HTTPException, status
 
@@ -45,7 +47,10 @@ async def _get_metric_id(asset_id: str, metric_name: str, token: str) -> str:
             status.HTTP_400_BAD_REQUEST,
             f"Unknown metric '{metric_name}'. Available: {list(metric_map.keys())}",
         )
-    return metric_map[metric_name]
+    # httpx's Response.json() is typed to return Any, which propagates
+    # through metric_map's dict comprehension above - a known, real httpx
+    # typing limitation, not a bug.
+    return cast(str, metric_map[metric_name])
 
 
 async def get_telemetry(asset_id: str, metric_name: str, token: str) -> dict:
@@ -86,7 +91,8 @@ async def get_baseline_status(asset_id: str, metric_name: str, token: str) -> di
         return {"error": f"No baseline has been fit yet for {metric_name} on this asset"}
     if resp.status_code != status.HTTP_200_OK:
         return {"error": f"ml-service returned {resp.status_code}"}
-    return resp.json()
+    # Same httpx Response.json()-returns-Any limitation as _get_metric_id.
+    return cast(dict, resp.json())
 
 
 async def get_alert_history(asset_id: str, token: str, status_filter: str | None = None) -> dict:

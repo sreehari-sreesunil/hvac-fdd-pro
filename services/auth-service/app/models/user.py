@@ -43,7 +43,11 @@ class Membership(Base):
     id = Column(String(36), primary_key=True, default=gen_uuid)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     organization_id = Column(String(36), ForeignKey("organizations.id"), nullable=False)
-    role = Column(Enum(Role), nullable=False, default=Role.viewer)
+    # Explicit annotation needed here specifically (unlike the plain
+    # String/Boolean/DateTime columns above) - mypy can't infer the mapped
+    # Python type through Enum(Role) the way it does for SQLAlchemy's
+    # built-in column types.
+    role: Column[Role] = Column(Enum(Role), nullable=False, default=Role.viewer)
 
     user = relationship("User", back_populates="memberships")
     organization = relationship("Organization", back_populates="memberships")

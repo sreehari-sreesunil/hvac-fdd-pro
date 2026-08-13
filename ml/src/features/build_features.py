@@ -122,7 +122,7 @@ def build_feature_table(
     table = pd.concat(labeled_dfs, ignore_index=True).sort_values("Datetime").reset_index(drop=True)
 
     baseline_rows = table[table["label"] == 0]
-    weather_models: dict[str, dict[str, float]] = {}
+    weather_models: dict[str, dict[str, float | str]] = {}
     for col in cols_to_residualize:
         weather_model = LinearRegression()
         weather_model.fit(baseline_rows[[weather_col]], baseline_rows[col])

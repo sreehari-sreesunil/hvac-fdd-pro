@@ -5,6 +5,8 @@ This is the entry point for every user's session — everything downstream
 on tokens issued here being trustworthy.
 """
 
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -88,7 +90,10 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
     many source IPs isn't stopped by this alone.
     """
     user = db.query(User).filter(User.email == payload.email).first()
-    if not user or not verify_password(payload.password, user.hashed_password):
+    # SQLAlchemy legacy Column() style: mypy sees Column[str] on instance
+    # attribute access, not the real runtime str - same known limitation
+    # as organizations.py.
+    if not user or not verify_password(payload.password, cast(str, user.hashed_password)):
         # Deliberately identical error for "no such user" and "wrong password" —
         # revealing which one it was lets an attacker enumerate valid emails.
         raise HTTPException(
@@ -97,8 +102,10 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated")
 
+    # Same SQLAlchemy Column[str]-vs-str limitation as above.
     return TokenPair(
-        access_token=create_access_token(user.id), refresh_token=create_refresh_token(user.id)
+        access_token=create_access_token(cast(str, user.id)),
+        refresh_token=create_refresh_token(cast(str, user.id)),
     )
 
 
@@ -141,6 +148,8 @@ def refresh(request: Request, payload: RefreshRequest, db: Session = Depends(get
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive"
         )
 
+    # Same SQLAlchemy Column[str]-vs-str limitation as above.
     return TokenPair(
-        access_token=create_access_token(user.id), refresh_token=create_refresh_token(user.id)
+        access_token=create_access_token(cast(str, user.id)),
+        refresh_token=create_refresh_token(cast(str, user.id)),
     )

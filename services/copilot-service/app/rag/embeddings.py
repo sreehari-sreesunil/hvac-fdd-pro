@@ -16,6 +16,8 @@ drop if omitted. We still apply it, since it's free (no runtime cost)
 and the officially recommended setting.
 """
 
+from typing import cast
+
 from sentence_transformers import SentenceTransformer
 
 from app.config import settings
@@ -38,7 +40,10 @@ def embed_documents(texts: list[str]) -> list[list[float]]:
     """Embed chunk text for STORAGE. No instruction prefix."""
     model = _get_model()
     embeddings = model.encode(texts, normalize_embeddings=True)
-    return embeddings.tolist()
+    # sentence-transformers' encode() return type isn't specific enough for
+    # mypy to carry through .tolist() here - a known, real incomplete-stub
+    # limitation, not a bug.
+    return cast(list[list[float]], embeddings.tolist())
 
 
 def embed_query(text: str) -> list[float]:

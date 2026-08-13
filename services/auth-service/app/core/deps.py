@@ -6,6 +6,8 @@ Depends(...). They handle two distinct concerns:
   - require_role: WHAT they're allowed to do in a given organization (authorization/RBAC)
 """
 
+from collections.abc import Callable
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -58,7 +60,7 @@ def get_current_user(
     return user
 
 
-def require_role(*allowed_roles: Role):
+def require_role(*allowed_roles: Role) -> Callable[..., Membership]:
     """Build a FastAPI dependency that enforces org-scoped role membership.
 
     This is a dependency FACTORY: calling require_role(Role.admin) returns a

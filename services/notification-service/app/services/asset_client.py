@@ -6,6 +6,8 @@ from the router so the router's logic (aggregating alerts) isn't mixed
 up with the mechanics of calling another service.
 """
 
+from typing import cast
+
 import httpx
 from fastapi import HTTPException, status
 
@@ -45,4 +47,7 @@ async def get_facility_assets(facility_id: str, token: str) -> list[dict]:
             detail=f"Could not fetch assets for facility {facility_id} from asset-service",
         )
 
-    return resp.json()
+    # httpx's Response.json() is typed to return Any (it can't know the
+    # real shape of an arbitrary JSON response) - a known, real httpx
+    # typing limitation, not a bug here.
+    return cast(list[dict], resp.json())

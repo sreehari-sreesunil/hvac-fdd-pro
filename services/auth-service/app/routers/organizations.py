@@ -5,6 +5,9 @@ Facility, Asset, and piece of Telemetry (owned by other services) traces
 back to one Organization via ownership chains enforced at the service layer.
 """
 
+from datetime import datetime
+from typing import cast
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -37,7 +40,17 @@ def create_organization(
     db.commit()
     db.refresh(org)
 
-    return OrganizationOut(id=org.id, name=org.name, created_at=org.created_at, role=Role.admin)
+    # SQLAlchemy's legacy declarative Column() style types instance
+    # attribute access as Column[T] under mypy even though it's the real T
+    # at runtime - a known, real SQLAlchemy typing limitation, not a bug
+    # here (same pattern repeats at every ORM-instance-to-schema boundary
+    # in this codebase).
+    return OrganizationOut(
+        id=cast(str, org.id),
+        name=cast(str, org.name),
+        created_at=cast(datetime, org.created_at),
+        role=Role.admin,
+    )
 
 
 @router.get("", response_model=list[OrganizationOut])

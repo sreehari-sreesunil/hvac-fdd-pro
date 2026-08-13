@@ -44,4 +44,10 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_allowed_origins.split(",") if origin.strip()]
 
 
-settings = Settings()
+# pydantic-settings populates required fields (jwt_secret_key,
+# internal_api_key, scheduler_service_account_email,
+# scheduler_service_account_password) from env vars/.env at runtime, not
+# constructor args - mypy can't see through BaseSettings' __init__ to know
+# that, a known, real pydantic-settings/mypy limitation (confirmed present
+# identically in every other service here).
+settings = Settings()  # type: ignore[call-arg]

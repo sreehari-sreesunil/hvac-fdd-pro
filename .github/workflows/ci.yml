@@ -18,26 +18,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # 3.12, not 3.11 like the test job below - ml-service and
+      # copilot-service both require >=3.12 (see their pyproject.toml
+      # and Dockerfiles, which use python:3.12-slim specifically, unlike
+      # every other service's python:3.11-slim) and are now installed
+      # here too for their mypy hooks. 3.12 satisfies every other
+      # service's looser >=3.10/>=3.11 constraint too, so one version
+      # covers all eight install targets below.
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+      # Pinned to match every other Poetry install step in this
+      # workflow/the real Dockerfiles - see the test job's own comment
+      # on why version drift here matters.
+      - name: Install Poetry
+        run: pip install poetry==2.4.1
+
+      # .pre-commit-config.yaml's mypy hooks now run inside each
+      # project's own real Poetry venv (`poetry -C <dir> run mypy ...`),
+      # not an isolated mirrors-mypy sandbox - see that file's own
+      # comment for the full reasoning (the old sandbox never had
+      # sqlalchemy/common installed, which silently masked real errors
+      # as `Any`). That means every one of these venvs needs to actually
+      # exist here before pre-commit/action runs below, the same way the
+      # test job already installs per-service for pytest. common is
+      # installed first since every service depends on it as an editable
+      # path dependency. ml-service and copilot-service install cleanly
+      # here (unlike on the Windows dev machine referenced in
+      # docs/TECH_DEBT.md) - ubuntu-latest has prebuilt wheels for
+      # chroma-hnswlib/shap, so neither needs MSVC Build Tools.
+      - name: Install dependencies for every mypy target
+        run: |
+          for dir in libs/common services/auth-service services/asset-service services/telemetry-service services/notification-service services/ml-service services/copilot-service ml; do
+            echo "::group::poetry install ($dir)"
+            poetry -C "$dir" install --no-interaction --no-ansi
+            echo "::endgroup::"
+          done
+
       # Runs the exact .pre-commit-config.yaml already used locally -
-      # same hooks, same versions, same per-service mypy scoping. If it
-      # passes here, it would have passed a local `pre-commit run
-      # --all-files` too, and vice versa - no separate CI-only lint
-      # config to keep in sync with the local one.
-      # continue-on-error: this repo has a pre-existing, documented
-      # mypy "Returning Any" backlog across every service (see
-      # docs/TECH_DEBT.md) - real, tracked, and deliberately not fixed
-      # under this project's time constraints. Blocking every future
-      # commit on pre-existing debt trains people to bypass CI with
-      # --no-verify as a habit (which happened twice already landing
-      # this feature) rather than catching genuinely NEW problems.
-      # Standard pattern for rolling out strict typing onto an
-      # existing codebase: advisory now, tighten back to blocking once
-      # the backlog is paid down (tracked separately, not indefinite).
+      # same hooks, same versions, same per-project mypy scoping (now
+      # against the real venvs installed above). If it passes here, it
+      # would have passed a local `pre-commit run --all-files` too
+      # (given the same venvs installed), and vice versa - no separate
+      # CI-only lint config to keep in sync with the local one.
       - uses: pre-commit/action@v3.0.1
-        continue-on-error: true
 
   test:
     name: pytest (${{ matrix.service }})
