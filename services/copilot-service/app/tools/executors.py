@@ -122,3 +122,78 @@ async def search_knowledge_base(query: str) -> dict:
     if not results:
         return {"error": "No relevant documentation found"}
     return {"results": [{"text": r["text"], "source": r["source"]} for r in results]}
+
+
+async def diagnose_fault(asset_id: str, token: str) -> dict:
+    """Tool: run the full fault-diagnosis pipeline for this asset -
+    argmax attribution across every real trained classifier (ml-
+    service's GET /predictions/{asset_id}/attribute), then a SHAP
+    explanation of the SPECIFIC model actually being reported as the
+    fault (GET /predictions/{asset_id}/explain).
+
+    Deliberately explains the ATTRIBUTED model, not just whichever
+    classifier happens to fire first or is checked first - multiple
+    classifiers can fire on the same real event (see ml-service's
+    attribute_fault endpoint, built specifically to resolve this), and
+    explaining a DIFFERENT model than the one being reported as the
+    answer would give a confusing, internally inconsistent response:
+    "the system thinks it's X" paired with an explanation of why some
+    other model Y thinks something else.
+
+    The model list to check comes from GET /models (every real trained
+    model), not a hardcoded list here - avoids this tool silently
+    going stale if new models are trained and saved later.
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+
+    async with httpx.AsyncClient() as client:
+        models_resp = await client.get(f"{settings.ml_service_url}/models", headers=headers)
+    if models_resp.status_code != status.HTTP_200_OK:
+        return {"error": f"ml-service returned {models_resp.status_code} listing models"}
+    model_names = [m["model_name"] for m in models_resp.json()]
+    if not model_names:
+        return {"error": "No trained models are available"}
+
+    async with httpx.AsyncClient() as client:
+        attribute_resp = await client.get(
+            f"{settings.ml_service_url}/predictions/{asset_id}/attribute",
+            params={"model_names": model_names},
+            headers=headers,
+        )
+    if attribute_resp.status_code != status.HTTP_200_OK:
+        return {"error": f"ml-service returned {attribute_resp.status_code} running attribution"}
+    attribution = attribute_resp.json()
+
+    if not attribution["fault_detected"]:
+        return {
+            "fault_detected": False,
+            "models_evaluated": attribution["models_evaluated"],
+            "summary": "No fault was detected by any of the evaluated classifiers.",
+        }
+
+    attributed_model = attribution["attributed_model"]
+    async with httpx.AsyncClient() as client:
+        explain_resp = await client.get(
+            f"{settings.ml_service_url}/predictions/{asset_id}/explain",
+            params={"model_name": attributed_model},
+            headers=headers,
+        )
+
+    result = {
+        "fault_detected": True,
+        "attributed_model": attributed_model,
+        "attributed_fault_probability": attribution["attributed_fault_probability"],
+        "all_results": attribution["all_results"],
+    }
+    if explain_resp.status_code != status.HTTP_200_OK:
+        # Attribution still succeeded even if the explanation call
+        # failed - return what we DO have rather than discarding a
+        # real, useful result over a secondary failure.
+        result["explanation_error"] = (
+            f"ml-service returned {explain_resp.status_code} explaining this prediction"
+        )
+        return result
+
+    explanation = explain_resp.json()
+    result["feature_contributions"] = explanation.get("feature_contributions", [])
+    return result

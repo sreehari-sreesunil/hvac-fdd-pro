@@ -105,4 +105,26 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "diagnose_fault",
+            "description": (
+                "Run a full fault diagnosis for this asset: checks every trained "
+                "classifier model, attributes the fault to the single most confident "
+                "one if multiple fire on the same event, and explains WHICH sensor "
+                "readings actually drove that specific prediction (SHAP feature "
+                "importance). Use this when the user asks 'what's wrong with this "
+                "unit', 'why is there a fault', 'diagnose this asset', or wants the "
+                "reasoning behind a specific fault call - not for simple current-value "
+                "or baseline-deviation checks, which get_telemetry/get_baseline_status "
+                "already cover."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
+    },
 ]

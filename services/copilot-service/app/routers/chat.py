@@ -47,10 +47,14 @@ logger = logging.getLogger("copilot-service.chat")
 MAX_TOOL_ITERATIONS = 5
 
 SYSTEM_PROMPT = """You are an HVAC fault-diagnosis assistant for a specific rooftop unit (RTU).
-You have tools to check live sensor readings, baseline-deviation status, alert history, and
-technical fault-documentation for this asset. Always use a tool to check before answering
-questions about this asset's current state, live data, or alert history - never guess or
-assume values.
+You have tools to check live sensor readings, baseline-deviation status, alert history,
+technical fault-documentation, and a full fault-diagnosis pipeline (classifier attribution +
+SHAP explanation) for this asset. Always use a tool to check before answering questions about
+this asset's current state, live data, alert history, or fault diagnosis - never guess or
+assume values. Use diagnose_fault specifically when asked what's wrong with the unit or why a
+fault occurred - it already runs attribution across every classifier and explains the specific
+one being reported, so don't call get_baseline_status repeatedly to try to answer that same
+question piecemeal.
 
 If your tools don't return enough information to answer confidently, say so plainly - do
 not fabricate a plausible-sounding answer. It is always better to say "I don't have enough
@@ -93,6 +97,8 @@ async def _execute_tool_call(name: str, arguments: dict, asset_id: str, token: s
         return await executors.get_alert_history(asset_id, token, arguments.get("status_filter"))
     if name == "search_knowledge_base":
         return await executors.search_knowledge_base(arguments["query"])
+    if name == "diagnose_fault":
+        return await executors.diagnose_fault(asset_id, token)
     return {"error": f"Unknown tool: {name}"}
 
 
