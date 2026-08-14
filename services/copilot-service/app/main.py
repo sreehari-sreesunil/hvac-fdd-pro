@@ -1,18 +1,20 @@
 """copilot-service: RAG + tool-calling AI copilot."""
 
-import logging
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import chat
+from common.logging_config import configure_logging
 
 # Python's default log level is WARNING - without this, unhandled
 # exception tracebacks and any logger.info()/exception() calls in this
 # service are silently suppressed. Same real observability gap already
-# found and fixed for ml-service's scheduler earlier this session.
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+# found and fixed for ml-service's scheduler earlier this session. Uses
+# the shared structlog-based setup (common.logging_config) rather than
+# a standalone logging.basicConfig(), matching every other service's
+# approach - see project decisions log for why.
+configure_logging("copilot-service")
 
 app = FastAPI(title=settings.service_name)
 
