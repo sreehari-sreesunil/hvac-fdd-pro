@@ -48,12 +48,12 @@ export function IssueKeyDialog({
 
       {apiKey && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 rounded-md border border-accent-warning/30 bg-accent-warning/10 p-3 text-sm text-accent-warning-ink">
+          <div className="flex items-center gap-2 rounded-structural border border-accent-warning/30 bg-accent-warning/10 p-3 text-sm text-accent-warning-ink">
             <AlertTriangle size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
             <span>This key won&apos;t be shown again. Copy it now.</span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-md border border-border bg-bg p-3">
+          <div className="flex items-center gap-2 rounded-surface bg-neo-base p-3 shadow-neo-active">
             <code className="flex-1 overflow-x-auto font-mono-num text-sm text-text-primary">
               {apiKey}
             </code>
@@ -63,7 +63,7 @@ export function IssueKeyDialog({
                 navigator.clipboard.writeText(apiKey);
                 setCopied(true);
               }}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-elevated hover:text-text-primary"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-surface text-text-muted hover:bg-elevated hover:text-text-primary"
               aria-label="Copy key"
             >
               {copied ? (

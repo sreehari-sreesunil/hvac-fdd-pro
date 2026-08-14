@@ -37,11 +37,11 @@ export function Modal({
     >
       <div
         className={cn(
-          "w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-xl",
+          "w-full max-w-md rounded-surface bg-elevated p-6 shadow-neo-resting",
           className,
         )}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-4 flex items-start justify-between gap-3 border-b border-border pb-3">
           <h2 id="modal-title" className="font-display text-lg font-semibold text-text-primary">
             {title}
           </h2>
@@ -49,7 +49,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md p-1 text-text-muted hover:bg-elevated hover:text-text-primary"
+            className="rounded-surface p-1 text-text-muted hover:bg-neo-base hover:text-text-primary"
           >
             <X size={18} strokeWidth={1.75} />
           </button>

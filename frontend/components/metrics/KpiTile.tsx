@@ -26,8 +26,10 @@ export function KpiTile({
   const { value, unit } = convertForDisplay(latest.value, metric.unit, system);
 
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-md border border-border bg-elevated px-2.5 py-1.5">
-      <span className="truncate text-[11px] text-text-muted">{metric.display_name}</span>
+    <div className="flex min-w-0 flex-col gap-0.5 rounded-surface bg-neo-base px-2.5 py-1.5 shadow-neo-resting">
+      <span className="truncate font-mono text-[11px] uppercase tracking-wide text-text-muted">
+        {metric.display_name}
+      </span>
       <MonoValue className="text-sm font-medium text-text-primary">
         {value.toFixed(1)}
         {unit}

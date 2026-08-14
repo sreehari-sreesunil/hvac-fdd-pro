@@ -3,6 +3,7 @@ import type {
   EdgeDeviceOut,
   IngestionKeyCreateOut,
   MetricMappingCreateResponse,
+  MetricMappingOut,
   TelemetryCsvUploadResponse,
   TelemetryReadingBulkCreateResponse,
   TelemetryReadingOut,
@@ -28,6 +29,13 @@ export function listUnmappedKeys(assetId: string) {
   return apiFetch<string[]>(
     "telemetry",
     `/telemetry/unmapped?asset_id=${encodeURIComponent(assetId)}`,
+  );
+}
+
+export function listMetricMappings(assetId: string) {
+  return apiFetch<MetricMappingOut[]>(
+    "telemetry",
+    `/metric-mappings?asset_id=${encodeURIComponent(assetId)}`,
   );
 }
 

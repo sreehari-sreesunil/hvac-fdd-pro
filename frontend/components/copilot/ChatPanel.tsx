@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/FormField";
 import { MessageBubble } from "./MessageBubble";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 import type { ChatMessage } from "./types";
 
 const INITIAL: ChatMessage = {
@@ -37,12 +38,17 @@ export function ChatPanel({ assetId }: { assetId: string | null }) {
         },
       ]);
     },
-    onError: (err) => {
+    onError: (err, question) => {
       const content =
         err instanceof ApiError ? err.message : "Could not reach the copilot service.";
-      setMessages((prev) => [...prev, { role: "error", content }]);
+      const kind = err instanceof ApiError ? err.kind : "unavailable";
+      setMessages((prev) => [...prev, { role: "error", content, kind, question }]);
     },
   });
+
+  function ask(question: string) {
+    mutation.mutate(question);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,16 +56,16 @@ export function ChatPanel({ assetId }: { assetId: string | null }) {
     const question = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setInput("");
-    mutation.mutate(question);
+    ask(question);
   }
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((message, i) => (
-          <MessageBubble key={i} message={message} />
+          <MessageBubble key={i} message={message} onRetry={ask} retrying={mutation.isPending} />
         ))}
-        {mutation.isPending && <p className="text-sm text-text-muted">Thinking…</p>}
+        {mutation.isPending && <ThinkingIndicator />}
       </div>
       <form onSubmit={onSubmit} className="flex gap-2 border-t border-border p-4">
         <Input

@@ -77,7 +77,7 @@ export function GaugeView({
           <path
             d={fillPath}
             fill="none"
-            stroke="var(--accent-primary)"
+            stroke="var(--accent-secondary)"
             strokeWidth={STROKE}
             strokeLinecap="round"
           />

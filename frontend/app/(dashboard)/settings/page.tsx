@@ -5,6 +5,7 @@ import { useUnits } from "@/lib/units/UnitsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
+import { Badge } from "@/components/ui/Badge";
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
@@ -12,8 +13,15 @@ export default function SettingsPage() {
   const { organizations, currentOrgRole } = useAuth();
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="font-display text-xl font-semibold text-text-primary">Settings</h1>
+    <div className="mx-auto flex max-w-2xl flex-col gap-8">
+      <header className="border-b-2 border-text-primary pb-4">
+        <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+          #07 — SETTINGS
+        </p>
+        <h1 className="font-display text-3xl font-bold leading-none text-text-primary sm:text-4xl">
+          Settings
+        </h1>
+      </header>
 
       <Card>
         <CardHeader>
@@ -57,13 +65,14 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Organizations</CardTitle>
         </CardHeader>
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col">
           {organizations.map((org) => (
-            <li key={org.id} className="flex items-center justify-between py-1 text-sm">
+            <li
+              key={org.id}
+              className="flex items-center justify-between border-b border-border py-2.5 text-sm last:border-b-0"
+            >
               <span className="text-text-primary">{org.name}</span>
-              <span className="rounded-full border border-border bg-elevated px-2 py-0.5 text-xs capitalize text-text-muted">
-                {org.role}
-              </span>
+              <Badge tone="neutral">{org.role}</Badge>
             </li>
           ))}
         </ul>

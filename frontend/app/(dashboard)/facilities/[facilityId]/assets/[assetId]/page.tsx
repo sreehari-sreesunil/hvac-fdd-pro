@@ -50,18 +50,23 @@ export default function AssetDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Cpu size={18} strokeWidth={1.75} className="text-text-muted" />
-          <h1 className="font-display text-xl font-semibold text-text-primary">
-            {assetQuery.data?.name ?? <Skeleton className="h-6 w-32" />}
-          </h1>
+    <div className="flex flex-col gap-8">
+      <header className="flex items-end justify-between gap-4 border-b-2 border-text-primary pb-4">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+            #02.2 — ASSET
+          </p>
+          <div className="flex items-center gap-2">
+            <Cpu size={22} strokeWidth={1.75} className="text-text-muted" />
+            <h1 className="font-display text-3xl font-bold leading-none text-text-primary sm:text-4xl">
+              {assetQuery.data?.name ?? <Skeleton className="h-9 w-48" />}
+            </h1>
+          </div>
         </div>
         {assetQuery.data && (
           <ReliabilityIndicator state={reliability} lastRecordedAt={lastRecordedAt} />
         )}
-      </div>
+      </header>
 
       {telemetryQuery.isError && (
         <Card>
@@ -98,8 +103,8 @@ export default function AssetDetailPage() {
         </div>
       )}
 
-      <details className="group rounded-xl border border-border bg-surface p-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-text-primary">
+      <details className="group rounded-structural border border-border bg-surface p-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between font-mono text-xs uppercase tracking-widest text-text-muted">
           Recent readings (raw)
           <ChevronDown
             size={16}

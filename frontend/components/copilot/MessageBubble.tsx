@@ -1,15 +1,63 @@
-import { AlertCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  RotateCw,
+  SearchX,
+  ServerCrash,
+  Wrench,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import type { ApiErrorKind } from "@/lib/utils/errors";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import type { ChatMessage } from "./types";
 import { CitationChip } from "./CitationChip";
 
-export function MessageBubble({ message }: { message: ChatMessage }) {
+const ERROR_PRESENTATION: Record<
+  ApiErrorKind,
+  { icon: typeof AlertTriangle; tone: "warning" | "neutral" | "critical" }
+> = {
+  unavailable: { icon: ServerCrash, tone: "warning" },
+  not_found: { icon: SearchX, tone: "neutral" },
+  forbidden: { icon: Ban, tone: "neutral" },
+  unauthorized: { icon: Ban, tone: "neutral" },
+  validation: { icon: AlertTriangle, tone: "critical" },
+  unknown: { icon: AlertTriangle, tone: "critical" },
+};
+
+export function MessageBubble({
+  message,
+  onRetry,
+  retrying,
+}: {
+  message: ChatMessage;
+  /** Only meaningful for role: "error" — resends the question that failed. */
+  onRetry?: (question: string) => void;
+  retrying?: boolean;
+}) {
   if (message.role === "error") {
+    const { icon: Icon, tone } = ERROR_PRESENTATION[message.kind];
     return (
-      <div className="flex justify-start">
-        <div className="flex max-w-lg items-start gap-2 rounded-xl border border-border bg-elevated p-4 text-sm text-text-muted">
-          <AlertCircle size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-          <p>{message.content}</p>
+      <div className="flex justify-start motion-safe:animate-fade-up">
+        <div className="flex max-w-lg flex-col gap-3 rounded-structural border border-accent-critical/30 bg-accent-critical/10 p-4">
+          <div className="flex items-start gap-2">
+            <Icon size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-accent-critical-ink" />
+            <p className="text-sm text-text-primary">{message.content}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge tone={tone}>{message.kind.replace("_", " ")}</Badge>
+            {onRetry && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onRetry(message.question)}
+                disabled={retrying}
+              >
+                <RotateCw size={14} strokeWidth={1.75} />
+                Retry
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -17,13 +65,13 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
 
   const isUser = message.role === "user";
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("flex motion-safe:animate-fade-up", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-lg rounded-xl border p-4",
+          "max-w-lg rounded-surface p-4",
           isUser
-            ? "border-accent-primary/30 bg-accent-primary/10 text-text-primary"
-            : "border-border bg-surface text-text-primary",
+            ? "bg-accent-brand/10 text-text-primary shadow-neo-resting"
+            : "border-l-2 border-accent-glow bg-neo-base text-text-primary shadow-neo-resting",
         )}
       >
         <p className="text-sm">{message.content}</p>
@@ -37,9 +85,16 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         )}
 
         {!isUser && message.toolsCalled.length > 0 && (
-          <p className="mt-3 text-xs text-text-muted">
-            Used: {message.toolsCalled.join(", ")}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-text-subtle">
+              Used
+            </span>
+            {message.toolsCalled.map((tool) => (
+              <Badge key={tool} tone="neutral" icon={Wrench}>
+                {tool}
+              </Badge>
+            ))}
+          </div>
         )}
       </div>
     </div>

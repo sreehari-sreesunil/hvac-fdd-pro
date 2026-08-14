@@ -46,8 +46,15 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="font-display text-xl font-semibold text-text-primary">Dashboard</h1>
+    <div className="flex flex-col gap-8">
+      <header className="border-b-2 border-text-primary pb-4">
+        <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+          #01 — OVERVIEW
+        </p>
+        <h1 className="font-display text-3xl font-bold leading-none text-text-primary sm:text-4xl">
+          Dashboard
+        </h1>
+      </header>
 
       {facilitiesQuery.isError && (
         <QueryErrorState
@@ -87,13 +94,18 @@ export default function DashboardPage() {
 
       {!facilitiesQuery.isError && !isLoading && allAssets.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {allAssets.map(({ asset, facility }) => (
-            <AssetCard
+          {allAssets.map(({ asset, facility }, i) => (
+            <div
               key={asset.id}
-              asset={asset}
-              assetType={assetTypeById.get(asset.asset_type_id)}
-              facilityId={facility.id}
-            />
+              className="motion-safe:animate-fade-up"
+              style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+            >
+              <AssetCard
+                asset={asset}
+                assetType={assetTypeById.get(asset.asset_type_id)}
+                facilityId={facility.id}
+              />
+            </div>
           ))}
         </div>
       )}

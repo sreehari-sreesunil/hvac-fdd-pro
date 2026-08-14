@@ -27,9 +27,11 @@ export function MetricVisualization({
   const reliability = deriveReliability(lastRecordedAt);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3 rounded-surface bg-neo-base p-4 shadow-neo-resting">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-text-primary">{metric.display_name}</span>
+        <span className="font-display text-sm font-semibold text-text-primary">
+          {metric.display_name}
+        </span>
         <ReliabilityIndicator state={reliability} lastRecordedAt={lastRecordedAt} />
       </div>
 

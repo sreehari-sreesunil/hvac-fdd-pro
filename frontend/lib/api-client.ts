@@ -8,12 +8,14 @@ import {
 } from "./auth/token-store";
 import type { TokenPair } from "./api-types";
 
-export type Service = "auth" | "asset" | "telemetry" | "copilot";
+export type Service = "auth" | "asset" | "telemetry" | "ml" | "notification" | "copilot";
 
 const BASE_URLS: Record<Service, string> = {
   auth: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8000",
   asset: process.env.NEXT_PUBLIC_ASSET_SERVICE_URL ?? "http://localhost:8001",
   telemetry: process.env.NEXT_PUBLIC_TELEMETRY_SERVICE_URL ?? "http://localhost:8002",
+  ml: process.env.NEXT_PUBLIC_ML_SERVICE_URL ?? "http://localhost:8003",
+  notification: process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL ?? "http://localhost:8004",
   copilot: process.env.NEXT_PUBLIC_COPILOT_SERVICE_URL ?? "http://localhost:8005",
 };
 

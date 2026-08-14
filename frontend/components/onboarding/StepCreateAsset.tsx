@@ -67,7 +67,7 @@ export function StepCreateAsset({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-lg font-semibold text-text-primary">
+        <h2 className="font-display text-2xl font-bold text-text-primary">
           Add your first asset
         </h2>
         <p className="mt-1 text-sm text-text-muted">

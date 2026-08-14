@@ -12,7 +12,7 @@ import { ApiError } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Input } from "@/components/ui/FormField";
+import { FormField, Input } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
@@ -70,16 +70,19 @@ export default function FacilityDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {facilityQuery.data && (
-        <div>
-          <h1 className="font-display text-xl font-semibold text-text-primary">
+        <header className="border-b-2 border-text-primary pb-4">
+          <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+            #02.1 — FACILITY
+          </p>
+          <h1 className="font-display text-3xl font-bold leading-none text-text-primary sm:text-4xl">
             {facilityQuery.data.name}
           </h1>
           {facilityQuery.data.address && (
-            <p className="text-sm text-text-muted">{facilityQuery.data.address}</p>
+            <p className="mt-2 text-sm text-text-muted">{facilityQuery.data.address}</p>
           )}
-        </div>
+        </header>
       )}
 
       <Card>
@@ -118,7 +121,7 @@ export default function FacilityDetailPage() {
                 <Cpu size={14} strokeWidth={1.75} className="text-text-muted" />
                 <a
                   href={`/facilities/${facilityId}/assets/${asset.id}`}
-                  className="text-sm text-text-primary hover:text-accent-primary-ink"
+                  className="text-sm text-text-primary hover:text-accent-brand-ink"
                 >
                   {asset.name}
                 </a>
@@ -148,13 +151,15 @@ export default function FacilityDetailPage() {
             className="mb-4 flex items-end gap-2"
           >
             <div className="flex-1">
-              <Input
-                aria-label="Device name"
-                placeholder="Roof panel gateway"
-                required
-                value={deviceName}
-                onChange={(e) => setDeviceName(e.target.value)}
-              />
+              <FormField label="Device name" htmlFor="new-device-name">
+                <Input
+                  id="new-device-name"
+                  placeholder="Roof panel gateway"
+                  required
+                  value={deviceName}
+                  onChange={(e) => setDeviceName(e.target.value)}
+                />
+              </FormField>
             </div>
             <Button type="submit" size="sm" disabled={createDevice.isPending}>
               {createDevice.isPending ? "Adding…" : "Add device"}

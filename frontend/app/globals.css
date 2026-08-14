@@ -1,43 +1,104 @@
 @import "tailwindcss";
 
-/* ---- Palettes: two real, distinct modes, switched via [data-theme] ---- */
+/* ---- Palette: "Graphite + Ice Mint + Soft Voltage" ----
+   Dark is the hero mode this palette was designed for (carbon/graphite
+   surfaces, cold pastel accents). Light is a derived counterpart in the
+   same hue family for users who prefer it — kept functional and AA-safe,
+   but dark got the primary design attention. */
 :root,
 [data-theme="light"] {
-  --bg: #f3f5f7;
+  --bg: #f4f6f9;
   --surface: #ffffff;
-  --elevated: #e7ebf0;
+  --elevated: #e7ecf2;
   --text-primary: #0f1620;
-  --text-muted: #5a6478;
-  --border: #d3d9e0;
-  /* Cyan itself is too light to pass AA as small text/icon color on this
-     palette's surfaces (~1.5:1). Use a darker teal of the same hue for
-     text/icon-stroke contexts in light mode; fills/backgrounds still use
-     the literal --accent-primary hex from the spec. */
-  --accent-primary-ink: #0f766e;
-  /* Same reasoning for amber/red as small text on light surfaces (~2:1 and
-     ~3.7:1 respectively) — darkened for AA, fills stay the literal hex. */
+  /* Darkened from the original #5b6b82/#8993a6 — those only cleared
+     ~2.6-4.6:1 against --neo-base (the tightest case: a mid-gray
+     background close in luminance to muted text), failing or barely
+     clearing WCAG AA's 4.5:1. These pass with real margin (5.5:1 /
+     4.7:1) while staying visibly lighter than --text-primary. */
+  --text-muted: #4f5f72;
+  --text-subtle: #586a7d;
+  --border: #d7dee7;
+  /* Every accent below is a light/pastel hue by design (mint, arctic blue,
+     soft violet, pastel success/warning/critical) — none of them pass AA
+     as small text/icon color on a light surface, so each ink variant is a
+     deepened version of the same hue for text/icon-stroke contexts. Fills
+     always stay the literal hex from the palette. */
+  --accent-primary-ink: #15803d;
   --accent-warning-ink: #92400e;
-  --accent-critical-ink: #b91c1c;
+  --accent-critical-ink: #be123c;
+  --accent-brand-ink: #0f766e;
+  --accent-secondary-ink: #1d4ed8;
+  --accent-glow-ink: #6d28d9;
+
+  /* Neomorphic base: neutral mid-tone gray so embossed dual shadows have
+     somewhere to read against (pure white can't cast a visible light-side
+     shadow). Interactive surfaces only — never replaces --surface/--bg. */
+  --neo-base: #e9ecf1;
+  --neo-shadow-light: #ffffff;
+  --neo-shadow-dark: rgba(163, 173, 191, 0.55);
 }
 
 [data-theme="dark"] {
-  --bg: #0b1220;
-  --surface: #131b2a;
-  --elevated: #1b2536;
-  --text-primary: #edeff3;
-  --text-muted: #8b96a8;
-  --border: #26324a;
-  /* Cyan/amber/red already pass AA against these dark surfaces. */
-  --accent-primary-ink: #4fd6c4;
-  --accent-warning-ink: #f2a63d;
-  --accent-critical-ink: #e1554f;
+  /* Carbon Black / Graphite Surface / Floating Panel */
+  --bg: #0b1020;
+  --surface: #121a2b;
+  --elevated: #1a2438;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --border: #263247;
+  /* These pastel accents were chosen to read clearly on dark surfaces
+     already — ink variants are the literal fill hex, no darkening needed. */
+  --accent-primary-ink: #4ade80;
+  --accent-warning-ink: #fbbf24;
+  --accent-critical-ink: #fb7185;
+  --accent-brand-ink: #7cf2d4;
+  --accent-secondary-ink: #7ab8ff;
+  --accent-glow-ink: #a78bfa;
+
+  /* Neomorphic base: the "Floating Panel" tone doubles as the embossed
+     surface — a mid-tone step up from --surface so the dual light/dark
+     shadow pair stays visible against dark backgrounds. */
+  --neo-base: #1a2438;
+  --neo-shadow-light: rgba(255, 255, 255, 0.05);
+  --neo-shadow-dark: rgba(0, 0, 0, 0.6);
 }
 
 :root {
-  /* Shared accents, identical in both modes */
-  --accent-primary: #4fd6c4;
-  --accent-warning: #f2a63d;
-  --accent-critical: #e1554f;
+  /* Shared accents, identical in both modes. */
+  /* Semantic trio — fault severity only, never repurposed for brand/UI. */
+  --accent-primary: #4ade80; /* Success */
+  --accent-warning: #fbbf24;
+  --accent-critical: #fb7185;
+  /* Ice Mint — the one bold brand accent for primary actions/links/focus,
+     kept fully separate from the status trio above. */
+  --accent-brand: #7cf2d4;
+  /* Arctic Blue — secondary accent, reserved for telemetry/chart data. */
+  --accent-secondary: #7ab8ff;
+  /* Soft Voltage — reserved for predictive/AI surfaces (Copilot). Glow
+     effects are intentionally rare: only live indicators, active tabs,
+     selected KPIs, and hover states get one. */
+  --accent-glow: #a78bfa;
+  /* Every accent above is a light/pastel fill in both themes, so text
+     painted directly on top of one (e.g. a filled button) needs a fixed
+     dark ink rather than white — white fails AA against a pastel fill. */
+  --ink-on-accent: #071019;
+
+  /* Radius scale: near-zero for structural/page-chrome elements, a small
+     consistent value for neomorphic interactive surfaces only. */
+  --radius-structural: 0px;
+  --radius-surface: 8px;
+
+  /* Neomorphic shadow presets: dual same-hue shadows (light corner + dark
+     corner) against --neo-base. Kept low-opacity/low-blur deliberately —
+     this should read as subtle tactile depth, not a heavy drop shadow. */
+  --neo-shadow-resting: -4px -4px 8px var(--neo-shadow-light),
+    4px 4px 8px var(--neo-shadow-dark);
+  --neo-shadow-active: inset -2px -2px 5px var(--neo-shadow-light),
+    inset 2px 2px 5px var(--neo-shadow-dark);
+  --neo-shadow-disabled: -1px -1px 3px var(--neo-shadow-light),
+    1px 1px 3px var(--neo-shadow-dark);
 }
 
 @theme inline {
@@ -53,12 +114,36 @@
   --color-accent-warning-ink: var(--accent-warning-ink);
   --color-accent-critical: var(--accent-critical);
   --color-accent-critical-ink: var(--accent-critical-ink);
+  --color-accent-brand: var(--accent-brand);
+  --color-accent-brand-ink: var(--accent-brand-ink);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-ink: var(--accent-secondary-ink);
+  --color-accent-glow: var(--accent-glow);
+  --color-accent-glow-ink: var(--accent-glow-ink);
+  --color-ink-on-accent: var(--ink-on-accent);
+  --color-neo-base: var(--neo-base);
+  --color-text-subtle: var(--text-subtle);
 
-  --font-display: var(--font-space-grotesk);
+  --font-display: var(--font-fraunces);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-ibm-plex-mono);
 
-  /* Type scale: 12/14/16/20/28/40/56, weight-driven hierarchy */
+  /* Radius scale: 0 for structural/page-chrome, a small consistent value
+     for neomorphic interactive surfaces only (rounded-structural /
+     rounded-surface utilities). */
+  --radius-structural: 0px;
+  --radius-surface: 8px;
+
+  /* Neomorphic shadow presets as shadow-neo-resting / -active / -disabled
+     utilities. See --neo-shadow-* definitions above for the per-theme
+     dual-shadow values. */
+  --shadow-neo-resting: var(--neo-shadow-resting);
+  --shadow-neo-active: var(--neo-shadow-active);
+  --shadow-neo-disabled: var(--neo-shadow-disabled);
+
+  /* Type scale: 12/14/16/20/28/40/56/72, weight-driven hierarchy. 4xl added
+     for oversized brutalist display headlines that crop past their
+     container. */
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.4;
   --text-sm: 0.875rem;
@@ -73,9 +158,17 @@
   --text-2xl--line-height: 1.15;
   --text-3xl: 3.5rem;
   --text-3xl--line-height: 1.05;
+  --text-4xl: 4.5rem;
+  --text-4xl--line-height: 1;
 
   --animate-pulse-live: pulse-live 2s ease-in-out infinite;
   --animate-roll-tick: roll-tick 0.3s ease-out;
+  --animate-fade-up: fade-up 0.4s ease-out both;
+  /* Ambient background motif on the auth/onboarding hero surface only —
+     a slow, low-amplitude breathing effect, not a loud animation. */
+  --animate-schematic-drift: schematic-drift 12s ease-in-out infinite;
+  /* A quick confident "pop" for a wizard step flipping to complete. */
+  --animate-step-complete: step-complete 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @keyframes pulse-live {
@@ -99,6 +192,41 @@
   }
 }
 
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes schematic-drift {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.015);
+  }
+}
+
+@keyframes step-complete {
+  0% {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 body {
   background: var(--bg);
   color: var(--text-primary);
@@ -107,7 +235,7 @@ body {
 
 /* Visible keyboard focus on every interactive element */
 :focus-visible {
-  outline: 2px solid var(--accent-primary-ink);
+  outline: 2px solid var(--accent-brand-ink);
   outline-offset: 2px;
   border-radius: 2px;
 }

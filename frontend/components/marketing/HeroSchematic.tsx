@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, type MotionValue } from "framer-motion";
 import { usePrefersReducedMotion } from "@/lib/utils/usePrefersReducedMotion";
 
 // Decorative animated schematic — the numbers below are illustrative motion,
 // not real telemetry (the marketing page has no data connection).
-export function HeroSchematic() {
+export function HeroSchematic({
+  faultOpacity,
+}: {
+  /** Driven by the hero's scroll-scrub when embedded there; defaults to
+   *  fully visible when used standalone. */
+  faultOpacity?: MotionValue<number> | number;
+}) {
   const [supplyTemp, setSupplyTemp] = useState(58.4);
   // SMIL <animateMotion> doesn't respond to the motion-safe: CSS variant, so
   // the traveling flow dots are only rendered when motion is allowed.
@@ -21,7 +28,7 @@ export function HeroSchematic() {
   return (
     <svg
       viewBox="0 0 800 520"
-      className="h-full w-full text-accent-primary"
+      className="h-full w-full text-accent-brand"
       role="img"
       aria-label="Schematic of a rooftop HVAC unit with supply air, return air, compressor, and coils"
     >
@@ -77,7 +84,7 @@ export function HeroSchematic() {
       )}
 
       {/* Live-updating sensor point */}
-      <g transform="translate(560, 260)">
+      <g transform="translate(560, 260)" className="text-accent-primary">
         <circle r="5" fill="currentColor" className="motion-safe:animate-pulse-live" />
         <text x="12" y="4" className="font-mono-num" fontSize="13" fill="currentColor">
           {supplyTemp.toFixed(1)}°F
@@ -85,13 +92,17 @@ export function HeroSchematic() {
       </g>
 
       {/* Mid-fault sensor point with annotation callout */}
-      <g transform="translate(240, 300)" className="text-accent-warning">
+      <motion.g
+        transform="translate(240, 300)"
+        className="text-accent-warning"
+        style={{ opacity: faultOpacity ?? 1 }}
+      >
         <circle r="5" fill="currentColor" className="motion-safe:animate-pulse-live" />
         <line x1="0" y1="0" x2="30" y2="-40" stroke="currentColor" strokeWidth="1" opacity="0.6" />
         <text x="34" y="-40" fontSize="12" fill="currentColor" className="font-sans">
           Superheat drift detected
         </text>
-      </g>
+      </motion.g>
     </svg>
   );
 }

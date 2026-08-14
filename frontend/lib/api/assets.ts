@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api-client";
-import type { AssetOut, AssetTypeOut, FacilityOut } from "@/lib/api-types";
+import type { AssetOut, AssetTypeOut, FacilityOut, MetricDefinitionCreate, MetricDefinitionOut } from "@/lib/api-types";
 
 export function createFacility(body: {
   organization_id: string;
@@ -54,4 +54,11 @@ export function listAssets(facilityId: string) {
 
 export function getAsset(assetId: string) {
   return apiFetch<AssetOut>("asset", `/assets/${assetId}`);
+}
+
+export function createMetricDefinition(assetTypeId: string, body: MetricDefinitionCreate) {
+  return apiFetch<MetricDefinitionOut>("asset", `/asset-types/${assetTypeId}/metrics`, {
+    method: "POST",
+    body,
+  });
 }

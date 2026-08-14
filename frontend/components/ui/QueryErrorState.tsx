@@ -22,7 +22,7 @@ export function QueryErrorState({
 
   if (kind === "unavailable") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-accent-warning/30 bg-accent-warning/10 py-16 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-structural border-2 border-accent-warning/30 bg-accent-warning/10 py-16 text-center">
         <ServerCrash size={28} strokeWidth={1.5} className="text-accent-warning-ink" aria-hidden />
         <div className="flex flex-col gap-1">
           <p className="font-display text-base font-semibold text-text-primary">
@@ -45,7 +45,7 @@ export function QueryErrorState({
 
   if (kind === "forbidden") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-structural border-2 border-dashed border-border py-16 text-center">
         <Ban size={28} strokeWidth={1.5} className="text-text-muted" aria-hidden />
         <div className="flex flex-col gap-1">
           <p className="font-display text-base font-semibold text-text-primary">
@@ -61,7 +61,7 @@ export function QueryErrorState({
 
   if (kind === "not_found") {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-structural border-2 border-dashed border-border py-16 text-center">
         <SearchX size={28} strokeWidth={1.5} className="text-text-muted" aria-hidden />
         <div className="flex flex-col gap-1">
           <p className="font-display text-base font-semibold text-text-primary">Not found</p>
@@ -74,7 +74,7 @@ export function QueryErrorState({
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-accent-critical/30 bg-accent-critical/10 py-16 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-structural border-2 border-accent-critical/30 bg-accent-critical/10 py-16 text-center">
       <AlertTriangle size={28} strokeWidth={1.5} className="text-accent-critical-ink" aria-hidden />
       <div className="flex flex-col gap-1">
         <p className="font-display text-base font-semibold text-text-primary">

@@ -66,9 +66,9 @@ export function LineChartView({
           />
           <Tooltip
             contentStyle={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
+              background: "var(--elevated)",
+              border: "none",
+              borderRadius: "var(--radius-surface)",
               fontFamily: "var(--font-mono)",
               fontSize: 12,
             }}
@@ -80,7 +80,7 @@ export function LineChartView({
           <Line
             type="monotone"
             dataKey="value"
-            stroke="var(--accent-primary)"
+            stroke="var(--accent-secondary)"
             strokeWidth={2}
             dot={false}
             isAnimationActive={!reduceMotion}

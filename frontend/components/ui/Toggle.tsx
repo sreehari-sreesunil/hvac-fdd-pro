@@ -21,14 +21,14 @@ export function Toggle({
       aria-label={label}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
-        checked ? "bg-accent-primary" : "bg-border",
+        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full shadow-neo-active transition-colors",
+        checked ? "bg-accent-brand" : "bg-neo-base",
         className,
       )}
     >
       <span
         className={cn(
-          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+          "inline-block h-4 w-4 transform rounded-full bg-white shadow-neo-resting transition-transform",
           checked ? "translate-x-6" : "translate-x-1",
         )}
       />

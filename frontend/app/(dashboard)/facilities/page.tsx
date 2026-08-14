@@ -26,14 +26,21 @@ export default function FacilitiesPage() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold text-text-primary">Facilities</h1>
+    <div className="flex flex-col gap-8">
+      <header className="flex items-end justify-between gap-4 border-b-2 border-text-primary pb-4">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
+            #02 — FACILITIES
+          </p>
+          <h1 className="font-display text-3xl font-bold leading-none text-text-primary sm:text-4xl">
+            Facilities
+          </h1>
+        </div>
         <Button size="sm" onClick={() => setModalOpen(true)}>
           <Plus size={14} strokeWidth={2} />
           Add facility
         </Button>
-      </div>
+      </header>
 
       {facilitiesQuery.isError && (
         <QueryErrorState
@@ -63,18 +70,20 @@ export default function FacilitiesPage() {
       {!facilitiesQuery.isError && !!facilitiesQuery.data?.length && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {facilitiesQuery.data.map((facility) => (
-            <Link key={facility.id} href={`/facilities/${facility.id}`}>
-              <Card className="h-full transition-colors hover:border-accent-primary/50">
+            <Link key={facility.id} href={`/facilities/${facility.id}`} className="group">
+              <Card className="h-full transition-shadow hover:shadow-neo-active">
                 <div className="flex items-center gap-2">
                   <Building2 size={16} strokeWidth={1.75} className="text-text-muted" />
-                  <span className="font-display text-base font-semibold text-text-primary">
+                  <span className="font-display text-base font-semibold text-text-primary group-hover:text-accent-brand-ink">
                     {facility.name}
                   </span>
                 </div>
                 {facility.address && (
                   <p className="mt-1 text-sm text-text-muted">{facility.address}</p>
                 )}
-                <p className="mt-2 font-mono-num text-xs text-text-muted">{facility.timezone}</p>
+                <p className="mt-2 font-mono text-xs uppercase tracking-wide text-text-subtle">
+                  {facility.timezone}
+                </p>
               </Card>
             </Link>
           ))}

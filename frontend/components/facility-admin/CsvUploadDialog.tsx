@@ -194,7 +194,7 @@ export function CsvUploadDialog({
             type="file"
             accept=".csv"
             onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-            className="text-sm text-text-primary file:mr-3 file:rounded-md file:border file:border-border file:bg-elevated file:px-3 file:py-1.5 file:text-sm file:text-text-primary"
+            className="text-sm text-text-primary file:mr-3 file:rounded-surface file:border-0 file:bg-neo-base file:px-3 file:py-1.5 file:text-sm file:text-text-primary file:shadow-neo-resting"
             required
           />
         </FormField>
@@ -209,7 +209,7 @@ export function CsvUploadDialog({
         )}
 
         {isWide && parsed && (
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-elevated p-3">
+          <div className="flex flex-col gap-3 rounded-structural border border-border bg-bg p-3">
             <p className="text-xs text-text-muted">
               Detected wide format — each other column becomes a metric for the asset you
               choose below. Select which column is the timestamp and which asset these
@@ -244,7 +244,7 @@ export function CsvUploadDialog({
         )}
 
         {!isWide && result && (
-          <div className="flex flex-col gap-2 rounded-md border border-border bg-elevated p-3">
+          <div className="flex flex-col gap-2 rounded-structural border border-border bg-bg p-3">
             <p className="text-sm text-text-primary">{summaryParts.join(", ")}.</p>
 
             {result.unmapped_count > 0 && (
@@ -266,7 +266,7 @@ export function CsvUploadDialog({
         )}
 
         {isWide && wideResult && (
-          <div className="flex flex-col gap-2 rounded-md border border-border bg-elevated p-3">
+          <div className="flex flex-col gap-2 rounded-structural border border-border bg-bg p-3">
             <p className="text-sm text-text-primary">{wideSummaryParts.join(", ")}.</p>
 
             {wideResult.unmapped_count > 0 && (

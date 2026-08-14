@@ -22,7 +22,7 @@ export function ReliabilityIndicator({
     return (
       <div className={cn("flex items-center gap-1.5 text-accent-primary-ink", className)}>
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-accent-primary motion-safe:animate-pulse-live" />
+          <span className="absolute inline-flex h-full w-full rounded-full bg-accent-primary shadow-[0_0_6px_var(--accent-primary)] motion-safe:animate-pulse-live" />
         </span>
         <span className="text-xs font-medium">Live</span>
       </div>

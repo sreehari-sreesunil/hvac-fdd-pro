@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <div
               key={toast.id}
               className={cn(
-                "flex items-center gap-2 rounded-lg border bg-surface px-4 py-3 text-sm shadow-lg motion-safe:animate-roll-tick",
+                "flex items-center gap-2 rounded-surface border bg-elevated px-4 py-3 text-sm shadow-neo-resting motion-safe:animate-roll-tick",
                 VARIANT_CLASSES[toast.variant],
               )}
             >

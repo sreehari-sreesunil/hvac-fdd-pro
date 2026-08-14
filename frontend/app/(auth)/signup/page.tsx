@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ApiError } from "@/lib/api-client";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FormField, Input } from "@/components/ui/FormField";
 
@@ -34,9 +35,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-8">
-      <h1 className="font-display text-xl font-semibold text-text-primary">Sign up</h1>
-      <p className="mt-1 text-sm text-text-muted">Set up your organization in a few steps.</p>
+    <Card className="p-8">
+      <p className="font-mono text-xs uppercase tracking-widest text-text-muted">#00 — ACCESS</p>
+      <h1 className="font-display text-3xl font-bold leading-none text-text-primary">Sign up</h1>
+      <p className="mt-2 text-sm text-text-muted">Set up your organization in a few steps.</p>
 
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
         <FormField label="Full name" htmlFor="full_name">
@@ -69,7 +71,7 @@ export default function SignupPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </FormField>
-        {error && <p className="text-sm text-accent-critical">{error}</p>}
+        {error && <p className="text-sm text-accent-critical-ink">{error}</p>}
         <Button type="submit" disabled={submitting} className="mt-2 w-full">
           {submitting ? "Creating account…" : "Create account"}
         </Button>
@@ -77,10 +79,10 @@ export default function SignupPage() {
 
       <p className="mt-6 text-center text-sm text-text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-accent-primary-ink hover:underline">
+        <Link href="/login" className="font-medium text-accent-brand-ink hover:underline">
           Log in
         </Link>
       </p>
-    </div>
+    </Card>
   );
 }

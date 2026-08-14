@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { Card } from "@/components/ui/Card";
 
 export function WizardShell({
   steps,
@@ -11,7 +12,10 @@ export function WizardShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-8">
+    <Card className="p-8">
+      <p className="mb-1 font-mono text-xs uppercase tracking-widest text-text-muted">
+        #00 — SETUP
+      </p>
       <ol className="mb-8 flex items-center gap-2">
         {steps.map((step, i) => {
           const done = i < currentStep;
@@ -19,10 +23,13 @@ export function WizardShell({
           return (
             <li key={step} className="flex flex-1 items-center gap-2">
               <div
+                key={done ? "done" : "pending"}
                 className={cn(
-                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium",
-                  done && "border-accent-primary bg-accent-primary text-[#04231f]",
-                  active && !done && "border-accent-primary text-accent-primary",
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-medium motion-safe:animate-step-complete",
+                  done && "border-accent-brand bg-accent-brand text-ink-on-accent",
+                  active &&
+                    !done &&
+                    "border-accent-brand text-accent-brand-ink shadow-[0_0_8px_var(--accent-brand)]",
                   !active && !done && "border-border text-text-muted",
                 )}
               >
@@ -30,7 +37,7 @@ export function WizardShell({
               </div>
               <span
                 className={cn(
-                  "hidden text-sm sm:inline",
+                  "hidden font-mono text-xs uppercase tracking-wide sm:inline",
                   active ? "font-medium text-text-primary" : "text-text-muted",
                 )}
               >
@@ -41,7 +48,9 @@ export function WizardShell({
           );
         })}
       </ol>
-      {children}
-    </div>
+      <div key={currentStep} className="motion-safe:animate-fade-up">
+        {children}
+      </div>
+    </Card>
   );
 }

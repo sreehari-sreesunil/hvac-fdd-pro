@@ -9,11 +9,18 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: Size;
 };
 
+/* Ice Mint / rose fills are light, pastel hues — white text on top of them
+   fails AA. Both light-fill variants use --ink-on-accent (a fixed dark
+   ink) instead. */
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "bg-accent-primary text-[#04231f] hover:brightness-95",
-  secondary: "bg-elevated text-text-primary border border-border hover:bg-border/40",
-  ghost: "bg-transparent text-text-primary hover:bg-elevated",
-  danger: "bg-accent-critical text-white hover:brightness-95",
+  primary:
+    "bg-accent-brand text-ink-on-accent hover:brightness-110 active:brightness-95 disabled:bg-neo-base disabled:text-text-muted",
+  secondary:
+    "bg-neo-base text-text-primary hover:text-accent-brand-ink disabled:text-text-muted",
+  ghost:
+    "bg-transparent text-text-primary shadow-none hover:bg-neo-base hover:shadow-neo-resting disabled:text-text-muted",
+  danger:
+    "bg-accent-critical text-ink-on-accent hover:brightness-110 active:brightness-95 disabled:bg-neo-base disabled:text-text-muted",
 };
 
 const SIZE_CLASSES: Record<Size, string> = {
@@ -27,7 +34,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 rounded-surface font-medium",
+          "shadow-neo-resting transition-[filter,box-shadow] active:shadow-neo-active",
+          "disabled:cursor-not-allowed disabled:shadow-neo-disabled disabled:opacity-70",
           VARIANT_CLASSES[variant],
           SIZE_CLASSES[size],
           className,

@@ -62,7 +62,7 @@ export function AssetCard({
           <Cpu size={16} strokeWidth={1.75} className="text-text-muted" aria-hidden />
           <Link
             href={`/facilities/${facilityId}/assets/${asset.id}`}
-            className="font-display text-base font-semibold text-text-primary hover:text-accent-primary-ink"
+            className="font-display text-base font-semibold text-text-primary hover:text-accent-brand-ink"
           >
             {asset.name}
           </Link>

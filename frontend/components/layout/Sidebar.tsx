@@ -4,7 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Building2, ChevronDown, ChevronRight, Cpu, LayoutGrid, Settings } from "lucide-react";
+import {
+  Bell,
+  Bot,
+  Brain,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Cpu,
+  FileBarChart2,
+  LayoutGrid,
+  Radar,
+  Settings,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { listFacilities } from "@/lib/api/assets";
 import { listAssets } from "@/lib/api/assets";
@@ -27,7 +39,7 @@ function FacilityRow({ facilityId, facilityName, expanded }: { facilityId: strin
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-elevated hover:text-text-primary"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-surface text-text-muted hover:bg-neo-base hover:text-text-primary"
           aria-label={open ? `Collapse ${facilityName}` : `Expand ${facilityName}`}
         >
           {expanded ? (
@@ -43,8 +55,8 @@ function FacilityRow({ facilityId, facilityName, expanded }: { facilityId: strin
         <Link
           href={`/facilities/${facilityId}`}
           className={cn(
-            "flex-1 truncate rounded-md px-2 py-1.5 text-sm hover:bg-elevated",
-            pathname === `/facilities/${facilityId}` && "bg-elevated font-medium text-accent-primary-ink",
+            "flex-1 truncate rounded-surface px-2 py-1.5 text-sm hover:bg-neo-base",
+            pathname === `/facilities/${facilityId}` && "bg-neo-base font-medium text-accent-brand-ink",
             !expanded && "sr-only",
           )}
         >
@@ -64,9 +76,9 @@ function FacilityRow({ facilityId, facilityName, expanded }: { facilityId: strin
               key={asset.id}
               href={`/facilities/${facilityId}/assets/${asset.id}`}
               className={cn(
-                "flex items-center gap-1.5 truncate rounded-md px-2 py-1 text-sm text-text-muted hover:bg-elevated hover:text-text-primary",
+                "flex items-center gap-1.5 truncate rounded-surface px-2 py-1 text-sm text-text-muted hover:bg-neo-base hover:text-text-primary",
                 pathname === `/facilities/${facilityId}/assets/${asset.id}` &&
-                  "bg-elevated font-medium text-accent-primary-ink",
+                  "bg-neo-base font-medium text-accent-brand-ink",
               )}
             >
               <Cpu size={12} strokeWidth={1.75} className="shrink-0" />
@@ -92,6 +104,10 @@ export function Sidebar({ expanded }: { expanded: boolean }) {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
     { href: "/facilities", label: "Facilities", icon: Building2 },
+    { href: "/alerts", label: "Alerts", icon: Bell },
+    { href: "/reports", label: "Reports", icon: FileBarChart2 },
+    { href: "/sensor-readiness", label: "Sensor Readiness", icon: Radar },
+    { href: "/predictions", label: "Fault Diagnosis", icon: Brain },
     { href: "/copilot", label: "AI Copilot", icon: Bot },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
@@ -122,8 +138,8 @@ export function Sidebar({ expanded }: { expanded: boolean }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-2.5 rounded-md px-2 py-2 text-sm font-medium text-text-muted hover:bg-elevated hover:text-text-primary",
-                active && "bg-elevated text-accent-primary-ink",
+                "flex items-center gap-2.5 rounded-surface px-2 py-2 text-sm font-medium text-text-muted hover:bg-neo-base hover:text-text-primary",
+                active && "bg-neo-base text-accent-brand-ink shadow-neo-resting",
                 !expanded && "justify-center",
               )}
               title={link.label}
@@ -139,7 +155,7 @@ export function Sidebar({ expanded }: { expanded: boolean }) {
 
       <div className="flex flex-col gap-0.5">
         {expanded && (
-          <p className="px-2 text-xs font-medium uppercase tracking-wide text-text-muted">
+          <p className="px-2 font-mono text-xs uppercase tracking-widest text-text-muted">
             Facilities
           </p>
         )}

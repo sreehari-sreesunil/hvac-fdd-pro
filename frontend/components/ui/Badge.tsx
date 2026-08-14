@@ -1,13 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-type Tone = "neutral" | "primary" | "warning" | "critical";
+type Tone = "neutral" | "primary" | "warning" | "critical" | "glow";
 
 const TONE_CLASSES: Record<Tone, string> = {
-  neutral: "bg-elevated text-text-muted border-border",
-  primary: "bg-accent-primary/10 text-accent-primary-ink border-accent-primary/30",
-  warning: "bg-accent-warning/10 text-accent-warning-ink border-accent-warning/30",
-  critical: "bg-accent-critical/10 text-accent-critical-ink border-accent-critical/30",
+  neutral: "bg-neo-base text-text-muted",
+  primary: "bg-accent-brand/10 text-accent-brand-ink",
+  warning: "bg-accent-warning/10 text-accent-warning-ink",
+  critical: "bg-accent-critical/10 text-accent-critical-ink",
+  /** Reserved for AI/predictive surfaces (Copilot, fault attribution) —
+   *  never a general-purpose accent. */
+  glow: "bg-accent-glow/10 text-accent-glow-ink",
 };
 
 export function Badge({
@@ -24,7 +27,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-surface px-2.5 py-1 font-mono text-xs font-medium uppercase tracking-wide shadow-neo-resting",
         TONE_CLASSES[tone],
         className,
       )}
