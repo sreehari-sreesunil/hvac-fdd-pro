@@ -14,11 +14,11 @@ from unrelated tooling (`camelot-py`, `matplotlib`, `mkdocs-material`,
 dependencies).
 
 Status as of this writing: **audit complete. The A06 dependency
-findings below have been fixed, tested, and deployed** (see the
-"Fixed" notes inline). The A09 logging gap and the remaining
-deployment-prep items (A02, A05/A08) are still open. The Notion
-tracker is the source of truth for whether any item has since
-changed status.
+findings and the A09 logging gap have been fixed, tested, and
+deployed** (see the "Fixed" notes inline). The remaining
+deployment-prep items (A02, A05/A08) and lower-priority follow-ups
+are still open. The Notion tracker is the source of truth for
+whether any item has since changed status.
 
 ---
 
@@ -194,14 +194,41 @@ failed login is logged. No successful login is logged. No RBAC denial
 is logged. This is close to a textbook OWASP A09 example - the
 infrastructure to fix it already exists and just isn't wired up.
 
-**Recommended fix:** call `configure_logging()` at startup in the
-remaining 5 services' `app/main.py`, matching telemetry-service's
-existing pattern, and add real security-event logging to
-`auth-service` first (failed login attempts, successful logins, RBAC
-denials), since it's the highest-value and most security-critical
-target. This is real feature work, not a one-line fix, and deserves
-its own focused session rather than being folded into the dependency
-bumps above.
+**Fixed.** `configure_logging()` is now wired into the startup path of
+all 5 previously-missing services (`auth-service`, `asset-service`,
+`notification-service` added it fresh; `ml-service` and
+`copilot-service` had a standalone `logging.basicConfig()` instead,
+replaced with `configure_logging()` for consistency with every other
+service).
+
+Real security-event logging was added to `auth-service` specifically,
+as the highest-value target: `auth.login.failed` (distinguishing
+`invalid_credentials` from `account_deactivated` as a `reason` field,
+while deliberately not revealing which case it was in the HTTP
+response itself, matching the existing enumeration-prevention
+reasoning), `auth.login.success`, and `auth.rbac.denied` (from
+`require_role`'s dependency, covering both `not_a_member` and
+`insufficient_role` denial branches, with the attempted and allowed
+roles included in the latter).
+
+Verified per-service via Docker rebuild, each service's test suite,
+and `mypy`. The `auth-service` logging itself was verified live
+against the running stack: a real failed login, a real successful
+login, and a real RBAC denial (a fresh zero-membership attacker
+account against `POST /organizations/{id}/invite`) all produced
+correct structured log lines. Commits: `1581eec` (auth-service wiring),
+`b242557` (asset-service wiring), `f31aaa5` (notification-service
+wiring), `e3d0f9a` (ml-service wiring), `2a65033` (copilot-service
+wiring), `c25349b` (auth-service security-event logging).
+
+**Remaining, not yet done:** the other 4 services (`asset-service`,
+`telemetry-service`, `notification-service`, `ml-service`,
+`copilot-service`) have `configure_logging()` wired up but no actual
+security-event logging calls yet - they'll log through the shared
+infrastructure whenever a future piece of work adds `logger.*()` calls
+to their own security-relevant code paths (e.g. RBAC denials in
+services other than auth-service). Not urgent, since `auth-service`
+was the single highest-value target and is now covered.
 
 ## A10:2021 - Server-Side Request Forgery (SSRF)
 
@@ -219,10 +246,12 @@ Confirmed via direct grep of every `app/services/*_client.py` file.
    telemetry-service; bump `cryptography`/`ecdsa` across all 6
    services.~~ **DONE.** See A06 above for commit hashes and
    verification detail.
-2. **Real feature work, still open:** wire `configure_logging()` into
-   the 5 services missing it; add security-event logging to
-   `auth-service` (failed login, successful login, RBAC denial) as the
-   first, highest-value target.
+2. ~~**Real feature work:** wire `configure_logging()` into the 5
+   services missing it; add security-event logging to `auth-service`
+   (failed login, successful login, RBAC denial).~~ **DONE.** See A09
+   above for commit hashes and verification detail. Security-event
+   logging for the other 4 services' own security-relevant paths
+   remains a lower-priority follow-up, not urgent.
 3. **Deployment-prep items, not urgent yet:** pin Docker base images
    to digests; set up TLS/HTTPS (non-optional before any real AWS
    deployment).
