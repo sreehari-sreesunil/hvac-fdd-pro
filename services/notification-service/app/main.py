@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import alerts, reports
+from common.logging_config import configure_logging
+
+configure_logging("notification-service")
 
 app = FastAPI(title=settings.service_name)
 
