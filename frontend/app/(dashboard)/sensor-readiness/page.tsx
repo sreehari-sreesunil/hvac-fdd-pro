@@ -8,6 +8,7 @@ import { createMetricMapping, listMetricMappings, listUnmappedKeys } from "@/lib
 import { listModels } from "@/lib/api/ml";
 import { qk } from "@/lib/query/keys";
 import { ApiError } from "@/lib/api-client";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -87,13 +88,18 @@ export default function SensorReadinessPage() {
   });
   const [addMetricFor, setAddMetricFor] = useState<string | null>(null);
   const assetId = selection.assetId;
+  const { currentOrgId } = useAuth();
 
   const assetQuery = useQuery({
     queryKey: qk.asset(assetId ?? ""),
     queryFn: () => getAsset(assetId as string),
     enabled: !!assetId,
   });
-  const assetTypesQuery = useQuery({ queryKey: qk.assetTypes(), queryFn: listAssetTypes });
+  const assetTypesQuery = useQuery({
+    queryKey: qk.assetTypes(currentOrgId ?? ""),
+    queryFn: () => listAssetTypes(currentOrgId as string),
+    enabled: !!currentOrgId,
+  });
   const mappingsQuery = useQuery({
     queryKey: qk.metricMappings(assetId ?? ""),
     queryFn: () => listMetricMappings(assetId as string),

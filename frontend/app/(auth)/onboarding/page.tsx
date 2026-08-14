@@ -34,8 +34,12 @@ export default function OnboardingPage() {
           }}
         />
       )}
-      {step === 2 && facilityId && (
-        <StepCreateAsset facilityId={facilityId} onDone={() => router.push("/dashboard")} />
+      {step === 2 && facilityId && currentOrgId && (
+        <StepCreateAsset
+          facilityId={facilityId}
+          organizationId={currentOrgId}
+          onDone={() => router.push("/dashboard")}
+        />
       )}
     </WizardShell>
   );

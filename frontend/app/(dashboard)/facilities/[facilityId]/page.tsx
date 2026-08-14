@@ -23,7 +23,7 @@ import { CsvUploadDialog } from "@/components/facility-admin/CsvUploadDialog";
 
 export default function FacilityDetailPage() {
   const { facilityId } = useParams<{ facilityId: string }>();
-  const { hasRole } = useAuth();
+  const { hasRole, currentOrgId } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -199,13 +199,16 @@ export default function FacilityDetailPage() {
       </Card>
 
       <Modal open={assetModalOpen} onClose={() => setAssetModalOpen(false)} title="Add asset">
-        <AssetForm
-          facilityId={facilityId}
-          onDone={() => {
-            setAssetModalOpen(false);
-            queryClient.invalidateQueries({ queryKey: qk.assets(facilityId) });
-          }}
-        />
+        {currentOrgId && (
+          <AssetForm
+            facilityId={facilityId}
+            organizationId={currentOrgId}
+            onDone={() => {
+              setAssetModalOpen(false);
+              queryClient.invalidateQueries({ queryKey: qk.assets(facilityId) });
+            }}
+          />
+        )}
       </Modal>
 
       <IssueKeyDialog

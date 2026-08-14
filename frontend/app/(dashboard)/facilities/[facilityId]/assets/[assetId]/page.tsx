@@ -9,6 +9,7 @@ import { qk } from "@/lib/query/keys";
 import { TELEMETRY_POLL_INTERVAL_MS } from "@/lib/reliability/constants";
 import { applySimulatedReliability, deriveReliability } from "@/lib/reliability/deriveReliability";
 import { useUnits } from "@/lib/units/UnitsProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { Card } from "@/components/ui/Card";
 import { ReliabilityIndicator } from "@/components/ui/ReliabilityIndicator";
 import { MonoValue } from "@/components/ui/MonoValue";
@@ -22,9 +23,14 @@ export default function AssetDetailPage() {
   const { assetId } = useParams<{ facilityId: string; assetId: string }>();
   const searchParams = useSearchParams();
   const { formatValue } = useUnits();
+  const { currentOrgId } = useAuth();
 
   const assetQuery = useQuery({ queryKey: qk.asset(assetId), queryFn: () => getAsset(assetId) });
-  const assetTypesQuery = useQuery({ queryKey: qk.assetTypes(), queryFn: listAssetTypes });
+  const assetTypesQuery = useQuery({
+    queryKey: qk.assetTypes(currentOrgId ?? ""),
+    queryFn: () => listAssetTypes(currentOrgId as string),
+    enabled: !!currentOrgId,
+  });
   const telemetryQuery = useQuery({
     queryKey: qk.telemetry(assetId),
     queryFn: () => listTelemetry(assetId),

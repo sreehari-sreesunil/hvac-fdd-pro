@@ -13,14 +13,19 @@ const CREATE_NEW = "__create_new__";
 
 export function StepCreateAsset({
   facilityId,
+  organizationId,
   onDone,
 }: {
   facilityId: string;
+  organizationId: string;
   onDone: () => void;
 }) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const assetTypesQuery = useQuery({ queryKey: qk.assetTypes(), queryFn: listAssetTypes });
+  const assetTypesQuery = useQuery({
+    queryKey: qk.assetTypes(organizationId),
+    queryFn: () => listAssetTypes(organizationId),
+  });
 
   const [assetTypeId, setAssetTypeId] = useState<string>("");
   const [newTypeName, setNewTypeName] = useState("");
@@ -39,6 +44,7 @@ export function StepCreateAsset({
       let typeId = assetTypeId;
       if (selection === CREATE_NEW) {
         const type = await createAssetType({
+          organization_id: organizationId,
           name: newTypeName,
           metrics: [
             {
@@ -51,7 +57,7 @@ export function StepCreateAsset({
           ],
         });
         typeId = type.id;
-        await queryClient.invalidateQueries({ queryKey: qk.assetTypes() });
+        await queryClient.invalidateQueries({ queryKey: qk.assetTypes(organizationId) });
       }
       await createAsset({ facility_id: facilityId, asset_type_id: typeId, name: assetName });
       await queryClient.invalidateQueries({ queryKey: qk.assets(facilityId) });

@@ -11,10 +11,21 @@ import { useToast } from "@/components/ui/Toast";
 
 const CREATE_NEW = "__create_new__";
 
-export function AssetForm({ facilityId, onDone }: { facilityId: string; onDone: () => void }) {
+export function AssetForm({
+  facilityId,
+  organizationId,
+  onDone,
+}: {
+  facilityId: string;
+  organizationId: string;
+  onDone: () => void;
+}) {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const assetTypesQuery = useQuery({ queryKey: qk.assetTypes(), queryFn: listAssetTypes });
+  const assetTypesQuery = useQuery({
+    queryKey: qk.assetTypes(organizationId),
+    queryFn: () => listAssetTypes(organizationId),
+  });
 
   const [assetTypeId, setAssetTypeId] = useState("");
   const [newTypeName, setNewTypeName] = useState("");
@@ -32,9 +43,9 @@ export function AssetForm({ facilityId, onDone }: { facilityId: string; onDone: 
     try {
       let typeId = assetTypeId;
       if (selection === CREATE_NEW) {
-        const type = await createAssetType({ name: newTypeName });
+        const type = await createAssetType({ organization_id: organizationId, name: newTypeName });
         typeId = type.id;
-        await queryClient.invalidateQueries({ queryKey: qk.assetTypes() });
+        await queryClient.invalidateQueries({ queryKey: qk.assetTypes(organizationId) });
       }
       await createAsset({ facility_id: facilityId, asset_type_id: typeId, name });
       await queryClient.invalidateQueries({ queryKey: qk.assets(facilityId) });

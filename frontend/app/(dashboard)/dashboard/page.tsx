@@ -22,7 +22,11 @@ export default function DashboardPage() {
     enabled: !!currentOrgId,
   });
 
-  const assetTypesQuery = useQuery({ queryKey: qk.assetTypes(), queryFn: listAssetTypes });
+  const assetTypesQuery = useQuery({
+    queryKey: qk.assetTypes(currentOrgId ?? ""),
+    queryFn: () => listAssetTypes(currentOrgId as string),
+    enabled: !!currentOrgId,
+  });
 
   const facilities = facilitiesQuery.data ?? [];
   const assetQueries = useQueries({

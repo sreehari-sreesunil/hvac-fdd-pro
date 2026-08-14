@@ -22,6 +22,7 @@ export function getFacility(facilityId: string) {
 }
 
 export function createAssetType(body: {
+  organization_id: string;
   name: string;
   description?: string;
   metrics?: {
@@ -35,8 +36,11 @@ export function createAssetType(body: {
   return apiFetch<AssetTypeOut>("asset", "/asset-types", { method: "POST", body });
 }
 
-export function listAssetTypes() {
-  return apiFetch<AssetTypeOut[]>("asset", "/asset-types");
+export function listAssetTypes(organizationId: string) {
+  return apiFetch<AssetTypeOut[]>(
+    "asset",
+    `/asset-types?organization_id=${encodeURIComponent(organizationId)}`,
+  );
 }
 
 export function createAsset(body: {

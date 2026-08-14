@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createMetricDefinition } from "@/lib/api/assets";
-import { qk } from "@/lib/query/keys";
 import { ApiError } from "@/lib/api-client";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -46,7 +45,10 @@ export function AddMetricDefinitionModal({
         unit: unit || undefined,
         chart_type: chartType,
       });
-      await queryClient.invalidateQueries({ queryKey: qk.assetTypes() });
+      // Partial key match (qk.assetTypes now requires an org id, which this
+      // single-purpose modal doesn't have in scope) - invalidates every
+      // cached asset-types query regardless of which org it was fetched for.
+      await queryClient.invalidateQueries({ queryKey: ["asset-types"] });
       showToast("Metric definition added");
       onClose();
     } catch (err) {
