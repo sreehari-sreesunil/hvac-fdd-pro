@@ -1,6 +1,5 @@
 """ml-service: fault detection inference service."""
 
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -10,12 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import baselines, models, predictions
 from app.scheduler import start_scheduler, stop_scheduler
+from common.logging_config import configure_logging
 
 # Python's default log level is WARNING - without this, every logger.info()
 # call in this service (including the scheduler's own startup/run logs)
 # is silently suppressed. A service that can't show its own routine
 # activity is a real observability gap, not just a debugging inconvenience.
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+# Uses the shared structlog-based setup (common.logging_config) rather
+# than a standalone logging.basicConfig(), matching every other
+# service's approach - see project decisions log for why.
+configure_logging("ml-service")
 
 
 @asynccontextmanager
