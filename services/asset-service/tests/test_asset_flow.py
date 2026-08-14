@@ -17,7 +17,7 @@ def test_create_asset_succeeds_for_a_member(client, mock_membership_admin, auth_
     # An Asset also references an AssetType by id — same reasoning.
     asset_type_resp = client.post(
         "/asset-types",
-        json={"name": "RTU", "metrics": []},
+        json={"organization_id": "org-a", "name": "RTU", "metrics": []},
         headers=auth_headers,
     )
     asset_type_id = asset_type_resp.json()["id"]
@@ -81,7 +81,9 @@ def test_list_assets_for_a_facility(client, mock_membership_admin, auth_headers)
     )
     facility_id = facility_resp.json()["id"]
     asset_type_resp = client.post(
-        "/asset-types", json={"name": "RTU", "metrics": []}, headers=auth_headers
+        "/asset-types",
+        json={"organization_id": "org-a", "name": "RTU", "metrics": []},
+        headers=auth_headers,
     )
     asset_type_id = asset_type_resp.json()["id"]
 

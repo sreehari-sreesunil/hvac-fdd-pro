@@ -40,6 +40,7 @@ class MetricDefinitionOut(MetricDefinitionCreate):
 
 
 class AssetTypeCreate(BaseModel):
+    organization_id: str
     name: str = Field(max_length=255)
     description: str | None = Field(default=None, max_length=2000)
     metrics: list[MetricDefinitionCreate] = []
@@ -47,6 +48,7 @@ class AssetTypeCreate(BaseModel):
 
 class AssetTypeOut(BaseModel):
     id: str
+    organization_id: str
     name: str
     description: str | None = None
     metric_definitions: list[MetricDefinitionOut] = []

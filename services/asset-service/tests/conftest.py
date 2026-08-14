@@ -33,9 +33,13 @@ def mock_membership_admin():
             "app.routers.facilities.verify_org_membership", new_callable=AsyncMock
         ) as mock_facilities,
         patch("app.routers.assets.verify_org_membership", new_callable=AsyncMock) as mock_assets,
+        patch(
+            "app.routers.asset_types.verify_org_membership", new_callable=AsyncMock
+        ) as mock_asset_types,
     ):
         mock_facilities.return_value = "admin"
         mock_assets.return_value = "admin"
+        mock_asset_types.return_value = "admin"
         yield mock_facilities  # existing tests referencing this fixture still get a usable mock object
 
 
@@ -49,12 +53,16 @@ def mock_membership_denied():
             "app.routers.facilities.verify_org_membership", new_callable=AsyncMock
         ) as mock_facilities,
         patch("app.routers.assets.verify_org_membership", new_callable=AsyncMock) as mock_assets,
+        patch(
+            "app.routers.asset_types.verify_org_membership", new_callable=AsyncMock
+        ) as mock_asset_types,
     ):
         denial = HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this organization"
         )
         mock_facilities.side_effect = denial
         mock_assets.side_effect = denial
+        mock_asset_types.side_effect = denial
         yield mock_facilities
 
 

@@ -29,7 +29,7 @@ def test_create_facility_rejects_an_address_over_500_characters(
 def test_create_asset_type_rejects_a_name_over_255_characters(client, auth_headers):
     response = client.post(
         "/asset-types",
-        json={"name": "a" * 256},
+        json={"organization_id": "org-a", "name": "a" * 256},
         headers=auth_headers,
     )
     assert response.status_code == 422
@@ -38,14 +38,20 @@ def test_create_asset_type_rejects_a_name_over_255_characters(client, auth_heade
 def test_create_asset_type_rejects_a_description_over_2000_characters(client, auth_headers):
     response = client.post(
         "/asset-types",
-        json={"name": "Real Asset Type", "description": "a" * 2001},
+        json={"organization_id": "org-a", "name": "Real Asset Type", "description": "a" * 2001},
         headers=auth_headers,
     )
     assert response.status_code == 422
 
 
-def test_add_metric_definition_rejects_a_metric_name_over_255_characters(client, auth_headers):
-    create_resp = client.post("/asset-types", json={"name": "RTU"}, headers=auth_headers)
+def test_add_metric_definition_rejects_a_metric_name_over_255_characters(
+    client, mock_membership_admin, auth_headers
+):
+    create_resp = client.post(
+        "/asset-types",
+        json={"organization_id": "org-a", "name": "RTU"},
+        headers=auth_headers,
+    )
     asset_type_id = create_resp.json()["id"]
 
     response = client.post(
@@ -56,12 +62,18 @@ def test_add_metric_definition_rejects_a_metric_name_over_255_characters(client,
     assert response.status_code == 422
 
 
-def test_create_asset_type_still_works_normally_under_the_limit(client, auth_headers):
+def test_create_asset_type_still_works_normally_under_the_limit(
+    client, mock_membership_admin, auth_headers
+):
     """Positive control - proves the limits above aren't accidentally
     rejecting normal, well-formed input."""
     response = client.post(
         "/asset-types",
-        json={"name": "Normal RTU", "description": "A perfectly reasonable description."},
+        json={
+            "organization_id": "org-a",
+            "name": "Normal RTU",
+            "description": "A perfectly reasonable description.",
+        },
         headers=auth_headers,
     )
     assert response.status_code == 201
