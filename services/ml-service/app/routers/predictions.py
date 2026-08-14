@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -61,7 +62,14 @@ async def _run_and_persist_prediction(
             detail=f"No saved model named '{model_name}'",
         )
 
-    _, metadata = load_model(model_name, models_dir)
+    # load_model/predict are synchronous, CPU-bound (joblib deserialization,
+    # real sklearn/XGBoost inference) - run in a thread pool, not called
+    # directly, or they'd block this whole service's single-threaded
+    # asyncio event loop for their full duration, serializing every other
+    # concurrent request behind them regardless of what that request
+    # needed. Real, load-tested finding, not a theoretical concern - see
+    # docs/LOAD_TEST_RESULTS.md.
+    _, metadata = await run_in_threadpool(load_model, model_name, models_dir)
     required_raw_metrics = metadata.get("required_raw_metrics")
     if not required_raw_metrics:
         raise HTTPException(
@@ -70,7 +78,7 @@ async def _run_and_persist_prediction(
         )
 
     buffer = await build_buffer(asset_id, required_raw_metrics, token)
-    result = predict(model_name, buffer, models_dir)
+    result = await run_in_threadpool(predict, model_name, buffer, models_dir)
 
     # result's shape varies by model type (classifier vs anomaly
     # detector) - see predict()'s docstring. .get() with a default of
@@ -271,7 +279,10 @@ async def get_prediction_explanation(
             detail=f"No saved model named '{model_name}'",
         )
 
-    _, metadata = load_model(model_name, models_dir)
+    # Same blocking-call reasoning as _run_and_persist_prediction above -
+    # SHAP explanation is real CPU work too, arguably heavier than a
+    # plain predict() call.
+    _, metadata = await run_in_threadpool(load_model, model_name, models_dir)
     required_raw_metrics = metadata.get("required_raw_metrics")
     if not required_raw_metrics:
         raise HTTPException(
@@ -281,6 +292,6 @@ async def get_prediction_explanation(
 
     buffer = await build_buffer(asset_id, required_raw_metrics, credentials.credentials)
 
-    result = explain(model_name, buffer, models_dir)
+    result = await run_in_threadpool(explain, model_name, buffer, models_dir)
     # Same sys.path-import limitation as _run_and_persist_prediction above.
     return cast(dict, result)

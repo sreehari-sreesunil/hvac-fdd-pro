@@ -6,6 +6,7 @@ without at least seeing that distinction.
 """
 
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +39,15 @@ _CONFIDENCE_THRESHOLDS = {"high": 0.85, "moderate": 0.60}
 # module state doesn't hot-reload) - an accepted, honest limitation,
 # not silently different behavior from before this cache existed.
 _model_cache: dict[tuple[str, str], tuple[Any, dict]] = {}
+# Guards _model_cache's check-then-load-then-set pattern. Only matters
+# now that load_model() is called from a thread pool (see ml-service's
+# predictions.py) - genuinely concurrent requests can race on a cache
+# miss for the same model, both redundantly deserializing it from disk.
+# Not a correctness bug (each load produces a correct, independent
+# model object), just wasted work - a plain in-process Lock is the
+# right-sized fix, not anything heavier, matching this project's
+# established "no unnecessary heavy infra" philosophy.
+_model_cache_lock = threading.Lock()
 
 
 def _confidence_label(probability: float) -> str:
@@ -77,15 +87,16 @@ def load_model(model_name: str, models_dir: Path) -> tuple[Any, dict]:
         mutation.
     """
     cache_key = (model_name, str(models_dir))
-    if cache_key in _model_cache:
-        return _model_cache[cache_key]
+    with _model_cache_lock:
+        if cache_key in _model_cache:
+            return _model_cache[cache_key]
 
-    model = joblib.load(models_dir / f"{model_name}.joblib")
-    with open(models_dir / f"{model_name}.metadata.json") as f:
-        metadata = json.load(f)
+        model = joblib.load(models_dir / f"{model_name}.joblib")
+        with open(models_dir / f"{model_name}.metadata.json") as f:
+            metadata = json.load(f)
 
-    _model_cache[cache_key] = (model, metadata)
-    return model, metadata
+        _model_cache[cache_key] = (model, metadata)
+        return model, metadata
 
 
 def predict(model_name: str, buffer: pd.DataFrame, models_dir: Path) -> dict:
