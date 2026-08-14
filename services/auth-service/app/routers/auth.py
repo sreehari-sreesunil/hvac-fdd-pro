@@ -7,6 +7,7 @@ on tokens issued here being trustworthy.
 
 from typing import cast
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -22,6 +23,8 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RefreshRequest, TokenPair, UserCreate, UserOut
 from common.security import decode_and_verify_token
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -94,13 +97,22 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)
     # attribute access, not the real runtime str - same known limitation
     # as organizations.py.
     if not user or not verify_password(payload.password, cast(str, user.hashed_password)):
+        # Logged at warning, not info - a failed login attempt is a real
+        # security-relevant event (OWASP A09). Deliberately logs the
+        # attempted email, not the password, and does not distinguish
+        # "no such user" from "wrong password" in the log either - same
+        # enumeration-prevention reasoning as the HTTP response below.
+        logger.warning("auth.login.failed", email=payload.email, reason="invalid_credentials")
         # Deliberately identical error for "no such user" and "wrong password" —
         # revealing which one it was lets an attacker enumerate valid emails.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password"
         )
     if not user.is_active:
+        logger.warning("auth.login.failed", user_id=str(user.id), reason="account_deactivated")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated")
+
+    logger.info("auth.login.success", user_id=str(user.id))
 
     # Same SQLAlchemy Column[str]-vs-str limitation as above.
     return TokenPair(

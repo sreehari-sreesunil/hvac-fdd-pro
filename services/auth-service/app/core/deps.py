@@ -8,6 +8,7 @@ Depends(...). They handle two distinct concerns:
 
 from collections.abc import Callable
 
+import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -16,6 +17,8 @@ from app.config import settings
 from app.db.session import get_db
 from app.models.user import Membership, Role, User
 from common.security import decode_and_verify_token
+
+logger = structlog.get_logger(__name__)
 
 # Registering this scheme is what makes Swagger UI show the "Authorize"
 # padlock and a proper Bearer-token input field.
@@ -87,10 +90,28 @@ def require_role(*allowed_roles: Role) -> Callable[..., Membership]:
             .first()
         )
         if not membership:
+            logger.warning(
+                "auth.rbac.denied",
+                user_id=str(current_user.id),
+                org_id=org_id,
+                reason="not_a_member",
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this organization"
             )
         if membership.role not in allowed_roles:
+            logger.warning(
+                "auth.rbac.denied",
+                user_id=str(current_user.id),
+                org_id=org_id,
+                reason="insufficient_role",
+                role=(
+                    membership.role.value
+                    if hasattr(membership.role, "value")
+                    else str(membership.role)
+                ),
+                allowed_roles=[r.value if hasattr(r, "value") else str(r) for r in allowed_roles],
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role for this action"
             )
