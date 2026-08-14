@@ -34,14 +34,27 @@ export function AssetForm({
   const [submitting, setSubmitting] = useState(false);
 
   const hasTypes = (assetTypesQuery.data?.length ?? 0) > 0;
-  const selection = assetTypeId || (hasTypes ? "" : CREATE_NEW);
+  // The first real asset type once one has loaded — the fallback the
+  // <select> defaults to when the user hasn't explicitly chosen anything.
+  // Computed fresh every render (not synced into state via an effect) so
+  // it can never drift from what's actually on screen.
+  const firstTypeId = assetTypesQuery.data?.[0]?.id ?? null;
+  // Previously `assetTypeId || (hasTypes ? "" : CREATE_NEW)`: when
+  // untouched, that fell back to "" (matching no real <option>), so the
+  // browser silently displayed its own first-option default — an
+  // existing type — while `assetTypeId` itself stayed "". Submitting
+  // then sent an empty asset_type_id (or, worse, silently discarded a
+  // typed "new type name" if the code read `selection` instead).
+  // Falling back to the same real id here means the visible selection
+  // and the value actually submitted are always the same thing.
+  const selection = assetTypeId || firstTypeId || CREATE_NEW;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      let typeId = assetTypeId;
+      let typeId = selection;
       if (selection === CREATE_NEW) {
         const type = await createAssetType({ organization_id: organizationId, name: newTypeName });
         typeId = type.id;

@@ -34,14 +34,19 @@ export function StepCreateAsset({
   const [submitting, setSubmitting] = useState(false);
 
   const hasTypes = (assetTypesQuery.data?.length ?? 0) > 0;
-  const selection = assetTypeId || (hasTypes ? "" : CREATE_NEW);
+  // The first real asset type once one has loaded — see AssetForm.tsx's
+  // identical fix for the full explanation. Computed fresh every render
+  // (not synced into state via an effect) so it can never drift from
+  // what's actually on screen.
+  const firstTypeId = assetTypesQuery.data?.[0]?.id ?? null;
+  const selection = assetTypeId || firstTypeId || CREATE_NEW;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      let typeId = assetTypeId;
+      let typeId = selection;
       if (selection === CREATE_NEW) {
         const type = await createAssetType({
           organization_id: organizationId,
