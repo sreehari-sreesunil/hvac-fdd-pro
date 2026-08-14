@@ -8,6 +8,9 @@ from app.core.limiter import limiter
 from app.db.session import Base, engine
 from app.models import user  # noqa: F401
 from app.routers import auth, organizations
+from common.logging_config import configure_logging
+
+configure_logging("auth-service")
 
 app = FastAPI(title="auth-service", version="0.1.0")
 
