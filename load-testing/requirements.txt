@@ -1,0 +1,7 @@
+# Load-testing tooling, not a deployed service - a plain requirements.txt
+# rather than a Poetry project is a deliberate, lighter choice here,
+# matching this project's "no unnecessary heavy infrastructure"
+# philosophy: this is a script run ad hoc by a developer, not part of
+# the CI-tested, per-service dependency-locked production surface.
+locust>=2.31.0,<3.0.0
+requests>=2.32.0,<3.0.0
