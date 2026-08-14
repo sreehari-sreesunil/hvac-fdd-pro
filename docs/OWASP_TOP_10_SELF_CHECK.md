@@ -13,10 +13,12 @@ from unrelated tooling (`camelot-py`, `matplotlib`, `mkdocs-material`,
 `beautifulsoup4`, `kubernetes`, etc. - none of which are real project
 dependencies).
 
-Status as of this writing: **audit complete, fixes not yet applied.**
-This document records the findings and the recommended actions; the
-Notion tracker is the source of truth for whether each item has since
-been resolved.
+Status as of this writing: **audit complete. The A06 dependency
+findings below have been fixed, tested, and deployed** (see the
+"Fixed" notes inline). The A09 logging gap and the remaining
+deployment-prep items (A02, A05/A08) are still open. The Notion
+tracker is the source of truth for whether any item has since
+changed status.
 
 ---
 
@@ -120,8 +122,20 @@ usage:
   (HMAC) exclusively, never ECDSA.
 
 Worth bumping as cheap hygiene regardless of non-exploitability.
-**Recommended fix: bump both to their latest patched versions across
-all 6 services' `poetry.lock` files.**
+
+**Fixed.** `cryptography` bumped to 50.0.0 across all 6 services and
+`libs/common`. `ecdsa` remains at 0.19.2 in every lockfile - already
+the latest version available, so no further action possible there.
+Verified per-service via real Docker rebuild, each service's full
+test suite, and `mypy`; `auth-service` and `ml-service` additionally
+got a live check against the running stack (real login/JWT issuance,
+and a real prediction call) to confirm the crypto bump didn't disturb
+JWT signing/verification or model inference. Commits: `e8a5309`
+(auth-service), `206cd58` (libs/common), `1cedbf8`
+(telemetry-service), `098f27b` (asset-service), `350eb24`
+(notification-service), `ff13f43` (ml-service). copilot-service was
+already on 50.0.0 independently - no change needed there, reverified
+clean (11/11 tests, mypy) anyway.
 
 **`python-multipart` 0.0.20, telemetry-service only** - the one
 genuinely actionable finding. 6 CVEs exist against this version; 2
@@ -130,8 +144,12 @@ don't apply (require non-default config or a code path -
 `UploadFile` handling doesn't use). The other 4 (DoS via oversized
 preamble/epilogue parsing, quadratic-time `;`-as-separator parsing,
 unbounded header count/size) **genuinely do apply** to the real, live
-CSV upload endpoint. **Recommended fix: bump to `>=0.0.30`** in
-`services/telemetry-service/pyproject.toml`.
+CSV upload endpoint.
+
+**Fixed.** Bumped to `>=0.0.30` in
+`services/telemetry-service/pyproject.toml`; locked to 0.0.32.
+Verified via Docker rebuild and the full test suite (43/43 passing,
+including the CSV upload paths). Commit: `c59631b`.
 
 **`pypdf` 5.9.0, copilot-service, direct dependency** - usage traced
 to `app/rag/chunking.py`, only ever invoked by
@@ -195,16 +213,16 @@ Confirmed via direct grep of every `app/services/*_client.py` file.
 
 ---
 
-## Summary of open action items
+## Summary of action items
 
-1. **Quick, low-risk:** bump `python-multipart` to `>=0.0.30` in
+1. ~~**Quick, low-risk:** bump `python-multipart` to `>=0.0.30` in
    telemetry-service; bump `cryptography`/`ecdsa` across all 6
-   services. Testable via each service's existing test suite plus a
-   Docker rebuild.
-2. **Real feature work:** wire `configure_logging()` into the 5
-   services missing it; add security-event logging to `auth-service`
-   (failed login, successful login, RBAC denial) as the first,
-   highest-value target.
+   services.~~ **DONE.** See A06 above for commit hashes and
+   verification detail.
+2. **Real feature work, still open:** wire `configure_logging()` into
+   the 5 services missing it; add security-event logging to
+   `auth-service` (failed login, successful login, RBAC denial) as the
+   first, highest-value target.
 3. **Deployment-prep items, not urgent yet:** pin Docker base images
    to digests; set up TLS/HTTPS (non-optional before any real AWS
    deployment).
