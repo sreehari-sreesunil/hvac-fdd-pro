@@ -5,6 +5,9 @@ from app.config import settings
 from app.db.session import Base, engine
 from app.models import asset  # noqa: F401
 from app.routers import asset_types, assets, facilities
+from common.logging_config import configure_logging
+
+configure_logging("asset-service")
 
 app = FastAPI(title="asset-service", version="0.1.0")
 
