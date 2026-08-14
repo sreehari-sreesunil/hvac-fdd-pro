@@ -49,8 +49,27 @@ from pydantic import BaseModel
 # reasonably well even though it wouldn't be the app's own best choice
 # for live generation. Standard practice, not a downgrade: real eval
 # pipelines commonly use a separate judge model from the app model.
-GROQ_MODEL = "groq/llama-3.1-8b-instant"
+#
+# Was groq/llama-3.1-8b-instant; migrated ahead of Groq's August 16,
+# 2026 decommission of that model (per Groq's own migration notice) to
+# their recommended replacement, gpt-oss-20b - which fits this file's
+# own "smaller judge model" reasoning even better than reusing the
+# app's 120b model would.
+GROQ_MODEL = "groq/openai/gpt-oss-20b"
 MAX_RETRIES = 10
+
+# gpt-oss-20b/120b's structured-output enforcement on Groq has a real,
+# documented reliability gap - Groq's own community forum reports
+# roughly a 10% failure rate on "json_validate_failed" even with
+# strict schema mode, unrelated to prompt quality (see
+# community.groq.com/t/guaranteed-structured-output-is-not-working-bug-report).
+# Not the same class of problem as llama-3.1-8b-instant's malformed-JSON
+# issue that the schema parameter was originally added to fix - this is
+# a known model/provider quirk, not a prompting problem, and it's
+# transient: retrying a fresh generation commonly succeeds. Treated the
+# same way as a rate limit - worth retrying, not worth failing the
+# whole eval run over.
+_TRANSIENT_ERROR_MARKER = "json_validate_failed"
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -94,6 +113,14 @@ class GroqJudge(DeepEvalBaseLLM):
                     f"  Rate limited, waiting {wait:.1f}s (attempt {attempt + 1}/{MAX_RETRIES})..."
                 )
                 time.sleep(wait)
+            except litellm.BadRequestError as err:
+                if _TRANSIENT_ERROR_MARKER not in str(err) or attempt == MAX_RETRIES - 1:
+                    raise
+                print(
+                    f"  Structured-output validation failed (known gpt-oss/Groq "
+                    f"reliability gap), retrying (attempt {attempt + 1}/{MAX_RETRIES})..."
+                )
+                time.sleep(2.0)
         raise RuntimeError("Unreachable")
 
     async def a_generate(self, prompt: str, schema: type[T] | None = None) -> str | BaseModel:
@@ -114,6 +141,14 @@ class GroqJudge(DeepEvalBaseLLM):
                     f"  Rate limited, waiting {wait:.1f}s (attempt {attempt + 1}/{MAX_RETRIES})..."
                 )
                 await asyncio.sleep(wait)
+            except litellm.BadRequestError as err:
+                if _TRANSIENT_ERROR_MARKER not in str(err) or attempt == MAX_RETRIES - 1:
+                    raise
+                print(
+                    f"  Structured-output validation failed (known gpt-oss/Groq "
+                    f"reliability gap), retrying (attempt {attempt + 1}/{MAX_RETRIES})..."
+                )
+                await asyncio.sleep(2.0)
         raise RuntimeError("Unreachable")
 
     def get_model_name(self) -> str:
