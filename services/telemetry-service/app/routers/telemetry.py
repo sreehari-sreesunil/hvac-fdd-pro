@@ -1,6 +1,7 @@
 """Telemetry ingestion, device/key management, and metric mapping endpoints."""
 
 import csv
+import hashlib
 import io
 import secrets
 from datetime import datetime
@@ -122,6 +123,16 @@ def _resolve_metric(db: Session, asset_id: str, external_key: str) -> str | None
     return mapping.metric_definition_id if mapping else None
 
 
+def _derive_content_key(item: TelemetryReadingCreate) -> str:
+    """Deterministic fallback idempotency key for a reading that didn't
+    supply its own. Hashes the reading's full content (not just
+    asset_id/external_key/recorded_at) so a genuinely different value at
+    the same timestamp - a real correction, not a duplicate - still gets
+    a distinct key and is accepted, not silently dropped."""
+    raw = f"{item.asset_id}|{item.external_key}|{item.value}|{item.recorded_at.isoformat()}"
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def _ingest_items(db: Session, items: list[TelemetryReadingCreate]) -> tuple[int, int, int]:
     """Insert a batch of already-validated readings, resolving metrics and
     skipping idempotency-key duplicates.
@@ -134,7 +145,7 @@ def _ingest_items(db: Session, items: list[TelemetryReadingCreate]) -> tuple[int
     Returns:
         (accepted_count, unmapped_count, duplicate_count)
     """
-    requested_keys = {item.idempotency_key for item in items if item.idempotency_key is not None}
+    requested_keys = {item.idempotency_key or _derive_content_key(item) for item in items}
     existing_keys: set[str] = set()
     if requested_keys:
         rows = (
@@ -150,12 +161,23 @@ def _ingest_items(db: Session, items: list[TelemetryReadingCreate]) -> tuple[int
     duplicate_count = 0
 
     for item in items:
-        key = item.idempotency_key
-        if key is not None and (key in existing_keys or key in seen_in_batch):
+        # A caller-supplied idempotency_key is honored as-is. Absent one
+        # (the common case for a plain CSV upload with no
+        # idempotency_key column - exactly what a real accidental
+        # re-upload of the same file looks like), derive one from the
+        # reading's own content instead of leaving it unprotected. This
+        # means re-submitting IDENTICAL data (same asset, metric,
+        # value, and timestamp) correctly dedupes, while a genuinely
+        # different value at the same timestamp - a real correction or
+        # a distinct reading - still gets a different hash and is
+        # accepted as new data, not silently dropped. Found and fixed
+        # after a real accidental duplicate CSV upload during a live
+        # walkthrough produced silent, unprotected duplicate rows.
+        key = item.idempotency_key or _derive_content_key(item)
+        if key in existing_keys or key in seen_in_batch:
             duplicate_count += 1
             continue
-        if key is not None:
-            seen_in_batch.add(key)
+        seen_in_batch.add(key)
 
         metric_definition_id = _resolve_metric(db, item.asset_id, item.external_key)
         if metric_definition_id is None:
