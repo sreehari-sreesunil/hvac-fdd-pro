@@ -28,7 +28,18 @@ export default function SignupPage() {
       await login({ email, password });
       router.push("/onboarding");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      // auth-service returns 400 "Email already registered" here - made
+      // explicitly actionable rather than just surfacing that string
+      // verbatim, since the fix is "log in instead", not "try signing up
+      // again". This intentionally never calls login()/router.push -
+      // execution stops here, so an already-registered email can't fall
+      // through into onboarding (see onboarding/page.tsx's own guard
+      // against the separate way a user could still land there).
+      if (err instanceof ApiError && err.status === 400) {
+        setError("An account with this email already exists. Log in instead.");
+      } else {
+        setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      }
     } finally {
       setSubmitting(false);
     }

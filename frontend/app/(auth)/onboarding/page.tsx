@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useRequireAuth } from "@/lib/auth/useRequireAuth";
@@ -18,7 +18,22 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [facilityId, setFacilityId] = useState<string | null>(null);
 
-  if (status !== "authenticated") {
+  // A user who already belongs to an org (e.g. landing back on this route
+  // via the browser's back button, a stale bookmark, or manually typing
+  // the URL — not through any in-app link, which never points here once
+  // onboarded) must never see this wizard again: StepCreateOrg has no
+  // concept of "the caller already has an org" and would happily create a
+  // real, duplicate one. replace (not push) so this detour doesn't linger
+  // as a back-button stop, matching how the rest of the app guards routes
+  // (see useRequireAuth/AuthProvider's own redirect-on-auth-state hooks).
+  const alreadyOnboarded = status === "authenticated" && !!currentOrgId;
+  useEffect(() => {
+    if (alreadyOnboarded) {
+      router.replace("/dashboard");
+    }
+  }, [alreadyOnboarded, router]);
+
+  if (status !== "authenticated" || alreadyOnboarded) {
     return <p className="text-center text-sm text-text-muted">Loading…</p>;
   }
 
