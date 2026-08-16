@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, require_role
 from app.db.session import get_db
 from app.models.user import Membership, Organization, Role, User
-from app.schemas.auth import MemberInvite, OrganizationCreate, OrganizationOut
+from app.schemas.auth import MemberInvite, MemberOut, OrganizationCreate, OrganizationOut
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
@@ -131,3 +131,38 @@ def invite_member(
     db.add(new_membership)
     db.commit()
     return {"detail": "Member added", "user_id": invited_user.id, "role": payload.role}
+
+
+@router.get("/{org_id}/members", response_model=list[MemberOut])
+def list_members(
+    org_id: str,
+    membership: Membership = Depends(require_role(Role.admin, Role.operator, Role.viewer)),
+    db: Session = Depends(get_db),
+) -> list[MemberOut]:
+    """List every member of an organization.
+
+    Any real member (any of the three roles) can view who else is in
+    their org - only inviting/modifying membership is admin-gated, not
+    viewing it, matching typical RBAC conventions.
+
+    Args:
+        org_id: The organization to list members for (path parameter -
+            this is what require_role(...) checks against).
+        membership: Unused directly, but its presence enforces "caller
+            must be a member of org_id, any role" before this function
+            body runs.
+        db: Database session.
+
+    Returns:
+        Every membership row for this org, joined with each user's email.
+    """
+    rows = (
+        db.query(Membership, User)
+        .join(User, Membership.user_id == User.id)
+        .filter(Membership.organization_id == org_id)
+        .all()
+    )
+    return [
+        MemberOut(user_id=cast(str, m.user_id), email=cast(str, u.email), role=cast(Role, m.role))
+        for m, u in rows
+    ]

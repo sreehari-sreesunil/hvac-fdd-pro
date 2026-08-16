@@ -169,71 +169,80 @@ def test_admin_can_invite_existing_user_to_org(client):
     assert body["role"] == "operator"
 
 
-def test_non_admin_cannot_invite(client):
-    """A viewer/operator (or non-member) cannot invite others."""
-
-    # Signup admin
+def test_any_member_can_list_org_members(client):
+    """Unlike inviting (admin-only), viewing the member list is open to
+    any real member of the org, regardless of role."""
     client.post(
         "/auth/signup",
-        json={
-            "email": "admin@example.com",
-            "password": "Password123!",
-            "full_name": "Admin User",
-        },
+        json={"email": "admin2@example.com", "password": "Password123!", "full_name": "Admin"},
     )
-
-    # Login admin
-    login_response = client.post(
-        "/auth/login",
-        json={
-            "email": "admin@example.com",
-            "password": "Password123!",
-        },
-    )
-
-    admin_token = login_response.json()["access_token"]
+    admin_token = client.post(
+        "/auth/login", json={"email": "admin2@example.com", "password": "Password123!"}
+    ).json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # Create organization
-    org_response = client.post(
-        "/organizations",
-        json={"name": "Test Organization"},
+    org_id = client.post(
+        "/organizations", json={"name": "List Members Org"}, headers=admin_headers
+    ).json()["id"]
+
+    client.post(
+        "/auth/signup",
+        json={"email": "viewer2@example.com", "password": "Password123!", "full_name": "Viewer"},
+    )
+    client.post(
+        f"/organizations/{org_id}/invite",
+        json={"email": "viewer2@example.com", "role": "viewer"},
         headers=admin_headers,
     )
 
-    assert org_response.status_code == 201
-    org_id = org_response.json()["id"]
+    # The admin who created the org can list members.
+    admin_view = client.get(f"/organizations/{org_id}/members", headers=admin_headers)
+    assert admin_view.status_code == 200
+    emails = {m["email"] for m in admin_view.json()}
+    assert emails == {"admin2@example.com", "viewer2@example.com"}
 
-    # Signup second user
+    # The invited viewer - the lowest-privilege role - can also list
+    # members, not just invite (which is admin-only).
+    viewer_token = client.post(
+        "/auth/login", json={"email": "viewer2@example.com", "password": "Password123!"}
+    ).json()["access_token"]
+    viewer_headers = {"Authorization": f"Bearer {viewer_token}"}
+    viewer_view = client.get(f"/organizations/{org_id}/members", headers=viewer_headers)
+    assert viewer_view.status_code == 200
+    assert len(viewer_view.json()) == 2
+
+
+def test_non_member_cannot_list_org_members(client):
+    """A real, unrelated user with no membership in this org at all is
+    rejected, not just role-restricted."""
     client.post(
         "/auth/signup",
-        json={
-            "email": "user@example.com",
-            "password": "Password123!",
-            "full_name": "Regular User",
-        },
+        json={"email": "admin3@example.com", "password": "Password123!", "full_name": "Admin"},
     )
+    admin_token = client.post(
+        "/auth/login", json={"email": "admin3@example.com", "password": "Password123!"}
+    ).json()["access_token"]
+    org_id = client.post(
+        "/organizations",
+        json={"name": "Private Org"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    ).json()["id"]
 
-    # Login second user
-    login_response = client.post(
-        "/auth/login",
-        json={
-            "email": "user@example.com",
-            "password": "Password123!",
-        },
+    client.post(
+        "/auth/signup",
+        json={"email": "outsider@example.com", "password": "Password123!", "full_name": "Nobody"},
     )
+    outsider_token = client.post(
+        "/auth/login", json={"email": "outsider@example.com", "password": "Password123!"}
+    ).json()["access_token"]
 
-    user_token = login_response.json()["access_token"]
-    user_headers = {"Authorization": f"Bearer {user_token}"}
-
-    # Attempt to invite another user
-    invite_response = client.post(
-        f"/organizations/{org_id}/invite",
-        json={
-            "email": "someone@example.com",
-            "role": "operator",
-        },
-        headers=user_headers,
+    response = client.get(
+        f"/organizations/{org_id}/members",
+        headers={"Authorization": f"Bearer {outsider_token}"},
     )
+    assert response.status_code == 403
 
-    assert invite_response.status_code == 403
+
+def test_non_admin_cannot_invite(client):
+    """A viewer/operator (or non-member) cannot invite others."""
+    # Signup admin

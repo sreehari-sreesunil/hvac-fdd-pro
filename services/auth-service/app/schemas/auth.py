@@ -62,3 +62,9 @@ class OrganizationOut(BaseModel):
 class MemberInvite(BaseModel):
     email: EmailStr
     role: Role = Role.viewer
+
+
+class MemberOut(BaseModel):
+    user_id: str
+    email: str
+    role: Role
