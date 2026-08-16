@@ -165,10 +165,36 @@ async def diagnose_fault(asset_id: str, token: str) -> dict:
     attribution = attribute_resp.json()
 
     if not attribution["fault_detected"]:
+        models_evaluated = attribution["models_evaluated"]
+        models_skipped = attribution.get("models_skipped", [])
+        # Real bug fixed here: the summary previously said "no fault
+        # detected" unconditionally, even when models_evaluated was
+        # completely empty - i.e. ZERO classifiers actually ran, not
+        # "ran and came back clean." Those are genuinely different
+        # situations for a facilities manager to hear, and the skip
+        # reasons (why each model couldn't run - almost always missing
+        # metric mappings) were being silently dropped here even though
+        # ml-service already returns them. Found live during a
+        # walkthrough with a genuinely new asset that had almost no
+        # metrics mapped yet - the copilot confidently said "operating
+        # normally" when the true state was "we don't have enough
+        # sensor coverage to know."
+        if not models_evaluated and models_skipped:
+            summary = (
+                "No classifiers could be evaluated for this asset - all "
+                f"{len(models_skipped)} model(s) were skipped due to missing "
+                "metric mappings. This does not mean the unit is healthy; it "
+                "means there isn't enough sensor data mapped yet to run "
+                "diagnostics. See models_skipped for exactly which metrics "
+                "are missing for each model."
+            )
+        else:
+            summary = "No fault was detected by any of the evaluated classifiers."
         return {
             "fault_detected": False,
-            "models_evaluated": attribution["models_evaluated"],
-            "summary": "No fault was detected by any of the evaluated classifiers.",
+            "models_evaluated": models_evaluated,
+            "models_skipped": models_skipped,
+            "summary": summary,
         }
 
     attributed_model = attribution["attributed_model"]

@@ -118,6 +118,48 @@ def test_no_fault_detected_does_not_call_explain():
         result = asyncio.run(diagnose_fault("asset-1", "fake-token"))
 
     assert result["fault_detected"] is False
+
+
+def test_no_models_evaluated_gives_an_honest_insufficient_data_summary():
+    """Real bug fixed here: when EVERY model is skipped (missing metric
+    mappings, not evaluated at all), the summary must say so plainly -
+    not the generic 'no fault was detected' text, which reads as 'ran
+    diagnostics, unit is fine' when the true state is 'we don't have
+    enough sensor data to run diagnostics at all'. Found live during a
+    walkthrough with a genuinely new asset."""
+    models = [{"model_name": "simulated_condenser_fouling"}]
+    attribution = {
+        "asset_id": "asset-1",
+        "models_evaluated": [],
+        "models_skipped": [
+            {
+                "model_name": "simulated_condenser_fouling",
+                "reason": "Asset asset-1's asset type is missing metric definitions for: "
+                "['RTU_REFG_COND_PRES', 'RTU_REFG_COND_TEMP']. Add these metrics to the "
+                "asset type before requesting a prediction that requires them.",
+            }
+        ],
+        "fault_detected": False,
+        "attributed_model": None,
+        "attributed_fault_probability": None,
+        "all_results": [],
+    }
+
+    mock_client = _mock_client_returning(
+        {
+            MODELS_URL: _fake_response(200, models),
+            ATTRIBUTE_URL: _fake_response(200, attribution),
+        }
+    )
+
+    with patch("app.tools.executors.httpx.AsyncClient", return_value=mock_client):
+        result = asyncio.run(diagnose_fault("asset-1", "fake-token"))
+
+    assert result["fault_detected"] is False
+    assert result["models_evaluated"] == []
+    assert len(result["models_skipped"]) == 1
+    assert "no fault was detected" not in result["summary"].lower()
+    assert "missing" in result["summary"].lower()
     assert "feature_contributions" not in result
 
 

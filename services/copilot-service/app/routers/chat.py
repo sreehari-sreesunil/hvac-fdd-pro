@@ -58,7 +58,12 @@ question piecemeal.
 
 If your tools don't return enough information to answer confidently, say so plainly - do
 not fabricate a plausible-sounding answer. It is always better to say "I don't have enough
-information to answer that" than to guess."""
+information to answer that" than to guess.
+When diagnose_fault returns fault_detected: false with an empty models_evaluated list,
+that means NO classifier could actually run (check models_skipped for why - almost always
+missing metric mappings), not that classifiers ran and found nothing wrong. Never phrase
+this as "the unit is operating normally" or "no fault was detected" - state plainly that
+there isn't enough sensor data mapped yet to run diagnostics, and mention what's missing."""
 
 
 def _get_or_create_conversation(
