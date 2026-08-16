@@ -268,19 +268,23 @@ async def ingest_reading(
     """Ingest a single telemetry reading. Always stored, even if the
     metric can't yet be resolved to a known MetricDefinition.
 
-    If an idempotency_key is supplied and a reading with that key already
-    exists, the existing reading is returned as-is (status 200) instead of
-    writing a duplicate row — this is what makes retried pushes from
-    flaky edge networks safe."""
-    if payload.idempotency_key is not None:
-        existing = (
-            db.query(TelemetryReading)
-            .filter(TelemetryReading.idempotency_key == payload.idempotency_key)
-            .first()
-        )
-        if existing is not None:
-            response.status_code = status.HTTP_200_OK
-            return existing
+    A reading with a matching idempotency_key (caller-supplied, or
+    derived from the reading's own content if absent - same fallback
+    as _ingest_items, see _derive_content_key's docstring for why) is
+    returned as-is (status 200) instead of writing a duplicate row -
+    this is what makes retried pushes from flaky edge networks safe.
+    This endpoint previously only checked a caller-supplied key,
+    leaving it unprotected against a genuine retry with no key at all
+    - a real, live-caught gap: this is the endpoint's own single-
+    reading path, not the CSV/bulk/MQTT paths that already got this
+    fix (they all share _ingest_items; this one has its own separate
+    logic due to its different response contract - the actual reading
+    object, not just counts)."""
+    key = payload.idempotency_key or _derive_content_key(payload)
+    existing = db.query(TelemetryReading).filter(TelemetryReading.idempotency_key == key).first()
+    if existing is not None:
+        response.status_code = status.HTTP_200_OK
+        return existing
 
     metric_definition_id = _resolve_metric(db, payload.asset_id, payload.external_key)
 
@@ -291,7 +295,7 @@ async def ingest_reading(
         value=payload.value,
         recorded_at=payload.recorded_at,
         source_type="edge_device",
-        idempotency_key=payload.idempotency_key,
+        idempotency_key=key,
     )
     db.add(reading)
     db.commit()

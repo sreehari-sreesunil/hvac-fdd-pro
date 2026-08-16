@@ -51,16 +51,23 @@ def test_ingest_reading_resolves_existing_mapping(client, mock_ingestion_key, au
 
 def test_metric_mapping_backfills_prior_unmapped_readings(client, mock_ingestion_key, auth_headers):
     """Creating a mapping after readings already exist backfills those
-    prior unmapped readings — the whole point of the mapping design."""
-    for _ in range(3):
+    prior unmapped readings — the whole point of the mapping design.
+
+    Uses 3 genuinely distinct readings (different recorded_at, not the
+    same reading posted 3 times) - identical content across all 3
+    would now correctly be caught by the content-derived idempotency
+    key fix (a real, live-caught duplicate-data bug), which isn't what
+    this test is about; 3 distinct real readings is also more
+    realistic fixture data regardless."""
+    for i in range(3):
         resp = client.post(
             "/telemetry",
             headers={"X-Ingestion-Key": "unused-mocked-key"},
             json={
                 "asset_id": "test-asset-id",
                 "external_key": "SAT",
-                "value": 70.0,
-                "recorded_at": "2026-07-17T11:20:00Z",
+                "value": 70.0 + i,
+                "recorded_at": f"2026-07-17T11:{20 + i * 5:02d}:00Z",
             },
         )
         assert resp.status_code == 201
