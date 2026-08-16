@@ -1,5 +1,6 @@
 export const qk = {
   organizations: () => ["organizations"] as const,
+  members: (orgId: string) => ["members", orgId] as const,
   facilities: (orgId: string) => ["facilities", orgId] as const,
   facility: (facilityId: string) => ["facility", facilityId] as const,
   assets: (facilityId: string) => ["assets", facilityId] as const,

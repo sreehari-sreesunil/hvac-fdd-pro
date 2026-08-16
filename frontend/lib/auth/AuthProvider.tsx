@@ -90,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (body: { email: string; password: string }) => {
       const pair = await authApi.login(body);
       setTokens({ accessToken: pair.access_token, refreshToken: pair.refresh_token });
+      setCurrentOrgIdState(null);
       await loadOrganizations();
       setStatus("authenticated");
     },

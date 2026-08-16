@@ -6,11 +6,12 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Toggle } from "@/components/ui/Toggle";
 import { Badge } from "@/components/ui/Badge";
+import { MembersCard } from "@/components/settings/MembersCard";
 
 export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const { system, toggleSystem } = useUnits();
-  const { organizations, currentOrgRole } = useAuth();
+  const { organizations, currentOrgId, currentOrgRole } = useAuth();
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
@@ -76,12 +77,11 @@ export default function SettingsPage() {
             </li>
           ))}
         </ul>
-        {currentOrgRole !== "admin" && (
-          <p className="mt-3 text-xs text-text-muted">
-            Only organization admins can invite teammates.
-          </p>
-        )}
       </Card>
+
+      {currentOrgId && (
+        <MembersCard organizationId={currentOrgId} isAdmin={currentOrgRole === "admin"} />
+      )}
     </div>
   );
 }

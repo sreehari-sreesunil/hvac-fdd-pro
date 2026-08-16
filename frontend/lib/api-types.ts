@@ -30,6 +30,12 @@ export type InviteResponse = {
   role: Role;
 };
 
+export type MemberOut = {
+  user_id: string;
+  email: string;
+  role: Role;
+};
+
 // ---- asset-service ----
 
 export type FacilityOut = {
