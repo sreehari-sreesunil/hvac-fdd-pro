@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -131,6 +129,7 @@ services:
         condition: service_started
       notification-service:
         condition: service_started
+
   notification-service:
     build:
       context: .
@@ -152,6 +151,7 @@ services:
         condition: service_healthy
       telemetry-service:
         condition: service_started
+
   copilot-service:
     build:
       context: .
@@ -177,6 +177,43 @@ services:
         condition: service_healthy
       asset-service:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_AUTH_SERVICE_URL: https://auth.plenumcontrol.in
+        NEXT_PUBLIC_ASSET_SERVICE_URL: https://asset.plenumcontrol.in
+        NEXT_PUBLIC_TELEMETRY_SERVICE_URL: https://telemetry.plenumcontrol.in
+        NEXT_PUBLIC_ML_SERVICE_URL: https://ml.plenumcontrol.in
+        NEXT_PUBLIC_NOTIFICATION_SERVICE_URL: https://notification.plenumcontrol.in
+        NEXT_PUBLIC_COPILOT_SERVICE_URL: https://copilot.plenumcontrol.in
+    restart: unless-stopped
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - auth-service
+      - asset-service
+      - telemetry-service
+      - ml-service
+      - notification-service
+      - copilot-service
+
 volumes:
   pgdata:
   chroma_data:
+  caddy_data:
+  caddy_config:

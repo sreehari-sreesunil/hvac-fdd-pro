@@ -1,0 +1,43 @@
+# Caddy reverse proxy config. Caddy handles TLS automatically for every
+# domain listed below via Let's Encrypt (HTTP-01 challenge over port 80,
+# renews itself with no manual cert management) - this is the whole
+# reason Caddy was chosen over nginx+certbot for this deployment.
+#
+# One subdomain per backend service, all pointing at the same server -
+# matches the frontend's existing config shape (a separate
+# NEXT_PUBLIC_*_SERVICE_URL per service, not one unified API gateway
+# path), so this needed no frontend code changes, only new env var
+# values pointing at these subdomains instead of localhost:PORT.
+#
+# DNS prerequisite: an A record for each hostname below must point at
+# this server's public IP before Caddy can obtain a real cert for it -
+# Let's Encrypt's HTTP-01 challenge needs the domain to actually
+# resolve here first.
+
+plenumcontrol.in, www.plenumcontrol.in {
+	reverse_proxy frontend:3000
+}
+
+auth.plenumcontrol.in {
+	reverse_proxy auth-service:8000
+}
+
+asset.plenumcontrol.in {
+	reverse_proxy asset-service:8001
+}
+
+telemetry.plenumcontrol.in {
+	reverse_proxy telemetry-service:8002
+}
+
+ml.plenumcontrol.in {
+	reverse_proxy ml-service:8003
+}
+
+notification.plenumcontrol.in {
+	reverse_proxy notification-service:8004
+}
+
+copilot.plenumcontrol.in {
+	reverse_proxy copilot-service:8005
+}
