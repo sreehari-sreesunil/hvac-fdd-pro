@@ -70,6 +70,8 @@ flowchart TB
     Copilot --> Chroma[(ChromaDB)]
 ```
 
+**[Interactive architecture reference](https://sreehari-sreesunil.github.io/hvac-fdd-pro/architecture.html)** - per-service diagrams referencing real endpoints, real function names, and real ADRs, not a generic overview.
+
 See [`docs/adr/`](docs/adr/) for the real architectural decisions behind this shape (one-database-per-service, no hard deletes, shared JWT secret, etc.), and [`docs/DEPLOYMENT_RUNBOOK.md`](docs/DEPLOYMENT_RUNBOOK.md) for the actual, evidence-based deployment process.
 
 ## Tech stack
