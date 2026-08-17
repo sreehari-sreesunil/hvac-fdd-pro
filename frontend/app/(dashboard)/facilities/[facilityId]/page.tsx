@@ -5,10 +5,11 @@ import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cpu, KeyRound, Plus, Radio, Upload } from "lucide-react";
 import { getFacility, listAssets } from "@/lib/api/assets";
-import { createEdgeDevice } from "@/lib/api/telemetry";
+import { createEdgeDevice, listEdgeDevices } from "@/lib/api/telemetry";
 import { qk } from "@/lib/query/keys";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ApiError } from "@/lib/api-client";
+import { formatRelativeTime } from "@/lib/utils/format";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -31,10 +32,6 @@ export default function FacilityDetailPage() {
   const [deviceName, setDeviceName] = useState("");
   const [keyDialogDeviceId, setKeyDialogDeviceId] = useState<string | null>(null);
   const [csvUploadDeviceId, setCsvUploadDeviceId] = useState<string | null>(null);
-  // telemetry-service has no GET /edge-devices list endpoint, so devices
-  // registered in earlier sessions can't be fetched back — only devices
-  // created in this session are shown. Flag for backend follow-up.
-  const [devices, setDevices] = useState<{ id: string; name: string }[]>([]);
 
   const facilityQuery = useQuery({
     queryKey: qk.facility(facilityId),
@@ -44,13 +41,18 @@ export default function FacilityDetailPage() {
     queryKey: qk.assets(facilityId),
     queryFn: () => listAssets(facilityId),
   });
+  const devicesQuery = useQuery({
+    queryKey: qk.edgeDevices(facilityId),
+    queryFn: () => listEdgeDevices(facilityId),
+  });
+  const devices = devicesQuery.data ?? [];
 
   const canManageDevices = hasRole(["admin", "operator"]);
 
   const createDevice = useMutation({
     mutationFn: () => createEdgeDevice({ facility_id: facilityId, name: deviceName }),
-    onSuccess: (device) => {
-      setDevices((prev) => [...prev, { id: device.id, name: device.name }]);
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: qk.edgeDevices(facilityId) });
       setDeviceName("");
       showToast("Device added");
     },
@@ -167,9 +169,21 @@ export default function FacilityDetailPage() {
           </form>
         )}
 
-        {devices.length === 0 ? (
+        {devicesQuery.isError && (
+          <QueryErrorState
+            error={devicesQuery.error}
+            onRetry={() => devicesQuery.refetch()}
+            resourceLabel="this facility's edge devices"
+          />
+        )}
+
+        {!devicesQuery.isError && devicesQuery.isLoading && <Skeleton className="h-10 w-full" />}
+
+        {!devicesQuery.isError && !devicesQuery.isLoading && devices.length === 0 && (
           <p className="text-sm text-text-muted">No devices registered yet.</p>
-        ) : (
+        )}
+
+        {!devicesQuery.isError && !devicesQuery.isLoading && devices.length > 0 && (
           <ul className="flex flex-col">
             {devices.map((device) => (
               <li
@@ -178,7 +192,14 @@ export default function FacilityDetailPage() {
               >
                 <span className="flex items-center gap-2 text-sm text-text-primary">
                   <Radio size={14} strokeWidth={1.75} className="text-text-muted" />
-                  {device.name}
+                  <span className="flex flex-col">
+                    {device.name}
+                    <span className="text-xs text-text-muted">
+                      {device.last_seen_at
+                        ? `Last seen ${formatRelativeTime(device.last_seen_at)}`
+                        : "Never sent data"}
+                    </span>
+                  </span>
                 </span>
                 {canManageDevices && (
                   <div className="flex items-center gap-2">

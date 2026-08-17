@@ -4,6 +4,7 @@ export const qk = {
   facilities: (orgId: string) => ["facilities", orgId] as const,
   facility: (facilityId: string) => ["facility", facilityId] as const,
   assets: (facilityId: string) => ["assets", facilityId] as const,
+  edgeDevices: (facilityId: string) => ["edge-devices", facilityId] as const,
   asset: (assetId: string) => ["asset", assetId] as const,
   assetTypes: (orgId: string) => ["asset-types", orgId] as const,
   telemetry: (assetId: string, metricDefinitionId?: string) =>

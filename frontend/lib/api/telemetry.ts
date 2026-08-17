@@ -13,6 +13,13 @@ export function createEdgeDevice(body: { facility_id: string; name: string }) {
   return apiFetch<EdgeDeviceOut>("telemetry", "/edge-devices", { method: "POST", body });
 }
 
+export function listEdgeDevices(facilityId: string) {
+  return apiFetch<EdgeDeviceOut[]>(
+    "telemetry",
+    `/edge-devices?facility_id=${encodeURIComponent(facilityId)}`,
+  );
+}
+
 export function issueIngestionKey(deviceId: string) {
   return apiFetch<IngestionKeyCreateOut>("telemetry", `/edge-devices/${deviceId}/keys`, {
     method: "POST",
