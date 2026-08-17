@@ -16,6 +16,7 @@ dependencies = [
     "alembic (>=1.18.5,<2.0.0)",
     "chromadb (>=0.5.20,<0.6.0)",
     "sentence-transformers (>=3.3.1,<4.0.0)",
+    "torch (>=2.0.0,<3.0.0)",
     "groq (>=0.13.0,<1.0.0)",
     "pypdf (>=5.1.0,<6.0.0)",
     "common"
@@ -25,8 +26,21 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[[tool.poetry.source]]
+# PyPI's default Linux wheel for torch is the full CUDA-enabled build
+# (several GB, pulled in transitively via sentence-transformers) - this
+# server has no GPU at all, so that's pure waste. Pinning torch to
+# PyTorch's own official CPU-only wheel index is the standard,
+# documented fix for exactly this situation. Found live during
+# deployment: the CUDA build alone was large enough to fill this
+# server's entire 29GB disk on its own.
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
 [tool.poetry.dependencies]
 common = {path = "../../libs/common", develop = true}
+torch = {source = "pytorch-cpu"}
 
 [dependency-groups]
 dev = [
