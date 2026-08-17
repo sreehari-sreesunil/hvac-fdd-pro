@@ -67,6 +67,38 @@ def test_register_edge_device_succeeds_for_an_authorized_caller(
     assert len(devices) == 1
 
 
+def test_list_edge_devices_denies_a_caller_with_no_facility_role(
+    client, auth_headers, mock_facility_role_denied
+):
+    """Real gap fixed here: listing devices was previously impossible
+    at all (no GET existed), so there was never even a chance for this
+    to leak - but now that it exists, it must be role-gated the same
+    way every other facility-scoped read is."""
+    response = client.get("/edge-devices?facility_id=some-facility-id", headers=auth_headers)
+    assert response.status_code == 403
+
+
+def test_list_edge_devices_returns_devices_for_an_authorized_caller(
+    client, auth_headers, mock_facility_role_allowed
+):
+    """The actual bug this closes: a device registered earlier must be
+    visible when listed afterward - previously impossible since the
+    endpoint didn't exist, so a registered device could never be seen
+    again."""
+    create_resp = client.post(
+        "/edge-devices",
+        json={"facility_id": "some-facility-id", "name": "Real Device"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+
+    response = client.get("/edge-devices?facility_id=some-facility-id", headers=auth_headers)
+    assert response.status_code == 200
+    devices = response.json()
+    assert len(devices) == 1
+    assert devices[0]["name"] == "Real Device"
+
+
 def test_issue_ingestion_key_rejects_a_caller_without_admin_or_operator_role(
     client, auth_headers, mock_facility_role_denied
 ):

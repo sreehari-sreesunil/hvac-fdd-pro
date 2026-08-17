@@ -73,6 +73,26 @@ async def register_edge_device(
     return device
 
 
+@router.get("/edge-devices", response_model=list[EdgeDeviceOut])
+async def list_edge_devices(
+    facility_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> list[EdgeDevice]:
+    """List every edge device registered for a facility.
+
+    Real gap found live: POST /edge-devices (create) existed with no
+    corresponding GET (list) at all - a registered device had no way
+    to ever be seen again after creation, which is why the frontend's
+    device management page never showed anything. Any real facility
+    role (admin, operator, or viewer) can view the list - only
+    registering a new device is role-gated the same way creation
+    already is.
+    """
+    await check_facility_role(facility_id, credentials, Role.admin, Role.operator, Role.viewer)
+    return db.query(EdgeDevice).filter(EdgeDevice.facility_id == facility_id).all()
+
+
 @router.post(
     "/edge-devices/{device_id}/keys",
     response_model=IngestionKeyCreateOut,
