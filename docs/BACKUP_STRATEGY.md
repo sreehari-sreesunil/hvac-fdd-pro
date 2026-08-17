@@ -32,17 +32,14 @@ one.
 
 ## What this does NOT cover (real, stated gaps)
 
-- **No automated scheduling.** This is a script you run by hand, not a
-  cron job or CI-scheduled task. A real deployment needs this
-  automated (e.g. a scheduled job, or a managed database's built-in
-  automated backups) - not built here, since there's no real deploy
-  target yet for a schedule to run against.
 - **No off-site/redundant storage.** Backups land on the same machine
-  running the database. A real disaster (disk failure, the whole
-  machine being lost) would take the backups down with the database
-  they're meant to protect. A real deployment needs backups shipped
-  somewhere else (object storage, a separate host) - explicitly not
-  solved here.
+  running the database (`~/hvac-fdd-pro/backups/` on the production
+  VM). A real disaster (disk failure, the whole machine being lost)
+  would take the backups down with the database they're meant to
+  protect. Deliberately deferred, not overlooked: real off-site
+  storage (object storage, a separate host) is a legitimate next step
+  for a production business with real customer data at stake, but
+  isn't proportionate to add for this project's current stage.
 - **No encryption at rest for the backup files themselves.** They
   contain the same data as the live database - anyone with filesystem
   access to `backups/` has the same access a database breach would
@@ -52,9 +49,23 @@ one.
   verification log below), which is real but small. Restore time and
   dump size at real production data volumes are unverified.
 
-These are honestly out of scope for this project's current stage (no
-real deployment exists yet to automate/replicate backups for) - listed
-here so they're a known, deliberate gap, not a silent one.
+These are honestly out of scope for this project's current stage -
+listed here so they're a known, deliberate gap, not a silent one.
+
+## Real deployment status
+
+As of the first live deployment (`plenumcontrol.in`, see
+`docs/DEPLOYMENT_RUNBOOK.md`), this script runs on a real cron
+schedule on the production server - daily at 03:00 server time,
+logging to `backup.log`:
+
+```bash
+0 3 * * * cd /home/<user>/hvac-fdd-pro && ./scripts/backup_postgres.sh >> /home/<user>/hvac-fdd-pro/backup.log 2>&1
+```
+
+Verified working: ran manually against the real production database
+before scheduling, confirmed all 6 real database dumps were created
+successfully.
 
 ## How to back up
 
