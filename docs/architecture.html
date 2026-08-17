@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HVAC-FDD Pro — System Architecture</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#0B0E13;
+    --panel:#12161D;
+    --panel-2:#171C24;
+    --line:#232A34;
+    --text:#E7ECF2;
+    --text-dim:#8592A3;
+    --amber:#F0A93D;
+    --auth:#B79CF0;
+    --asset:#5FA8F5;
+    --tel:#39C79A;
+    --ml:#F0B23D;
+    --notif:#F1667A;
+    --copilot:#3DD3D3;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "Inter", -apple-system, "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 24px 80px;}
+
+  header{
+    border-bottom:1px solid var(--line);
+    padding-bottom:22px;
+    margin-bottom:28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .brand-eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{font-size:26px;font-weight:700;margin:0 0 6px;letter-spacing:-0.01em;}
+  .subtitle{color:var(--text-dim);font-size:13.5px;max-width:560px;line-height:1.5;}
+  .repo-tag{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    background:var(--panel);
+    padding:8px 12px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+
+  nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:24px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    border-radius:8px;
+    padding:6px;
+  }
+  .tab{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-dim);
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:5px;
+    padding:9px 14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+  .tab:hover{color:var(--text);background:var(--panel-2);}
+  .tab.active{color:var(--text);background:var(--panel-2);border-color:var(--line);}
+  .tab.active .dot{box-shadow:0 0 0 3px rgba(255,255,255,0.05);}
+
+  .tab[data-id="overview"] .dot{background:var(--amber);}
+  .tab[data-id="auth"] .dot{background:var(--auth);}
+  .tab[data-id="asset"] .dot{background:var(--asset);}
+  .tab[data-id="telemetry"] .dot{background:var(--tel);}
+  .tab[data-id="ml"] .dot{background:var(--ml);}
+  .tab[data-id="notification"] .dot{background:var(--notif);}
+  .tab[data-id="copilot"] .dot{background:var(--copilot);}
+
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .panel-head{margin-bottom:16px;}
+  .panel-head .label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:4px;
+  }
+  .panel-head h2{font-size:19px;margin:0 0 6px;font-weight:600;}
+  .panel-head p{color:var(--text-dim);font-size:13.5px;line-height:1.6;max-width:800px;margin:0;}
+
+  .diagram-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px;
+    overflow-x:auto;
+    margin-bottom:18px;
+  }
+  .diagram-card svg{width:100% !important; height:auto !important;}
+
+  .notes{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+    gap:12px;
+  }
+  .note{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--amber);
+    border-radius:6px;
+    padding:14px 16px;
+    font-size:12.8px;
+    color:var(--text-dim);
+    line-height:1.55;
+  }
+  .note strong{color:var(--text);font-weight:600;}
+  .note code{font-family:var(--mono);color:var(--amber);font-size:12px;}
+
+  .panel[data-id="auth"] .note{border-left-color:var(--auth);}
+  .panel[data-id="asset"] .note{border-left-color:var(--asset);}
+  .panel[data-id="telemetry"] .note{border-left-color:var(--tel);}
+  .panel[data-id="ml"] .note{border-left-color:var(--ml);}
+  .panel[data-id="notification"] .note{border-left-color:var(--notif);}
+  .panel[data-id="copilot"] .note{border-left-color:var(--copilot);}
+  .panel[data-id="auth"] .note code{color:var(--auth);}
+  .panel[data-id="asset"] .note code{color:var(--asset);}
+  .panel[data-id="telemetry"] .note code{color:var(--tel);}
+  .panel[data-id="ml"] .note code{color:var(--ml);}
+  .panel[data-id="notification"] .note code{color:var(--notif);}
+  .panel[data-id="copilot"] .note code{color:var(--copilot);}
+
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;color:var(--text-dim);font-size:11.5px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">Plenum Control · System Reference</div>
+      <h1>HVAC-FDD Pro — Architecture &amp; Service Flows</h1>
+      <p class="subtitle">Multi-tenant HVAC fault-detection platform. Six FastAPI microservices, one shared Postgres instance (logically isolated per ADR-0001), MQTT ingestion, and an agentic RAG copilot.</p>
+    </div>
+    <div class="repo-tag">github.com/sreehari-sreesunil/hvac-fdd-pro</div>
+  </header>
+
+  <nav id="tabs">
+    <button class="tab active" data-id="overview"><span class="dot"></span>End-to-End</button>
+    <button class="tab" data-id="auth"><span class="dot"></span>auth-service</button>
+    <button class="tab" data-id="asset"><span class="dot"></span>asset-service</button>
+    <button class="tab" data-id="telemetry"><span class="dot"></span>telemetry-service</button>
+    <button class="tab" data-id="ml"><span class="dot"></span>ml-service</button>
+    <button class="tab" data-id="notification"><span class="dot"></span>notification-service</button>
+    <button class="tab" data-id="copilot"><span class="dot"></span>copilot-service</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" data-id="overview">
+    <div class="panel-head">
+      <div class="label">System · overview</div>
+      <h2>End-to-end architecture</h2>
+      <p>Frontend and edge devices enter through six independently-deployed services. Every service (except auth-service itself) verifies caller JWTs against one shared secret (ADR-0004) rather than owning its own auth logic. All six write to one Postgres <em>container</em> but six logically separate databases (ADR-0001) — no service ever queries another's database directly.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-overview"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Auth boundary:</strong> only <code>auth-service</code> issues JWTs. Every other service verifies via <code>common.security.decode_and_verify_token</code> using the same secret (ADR-0004) — a mismatched key silently breaks auth everywhere at once.</div>
+      <div class="note"><strong>Data boundary:</strong> one Postgres container, six databases (<code>auth_db</code>, <code>asset_db</code>, <code>telemetry_db</code>, <code>ml_service_db</code>, <code>notification_db</code>, <code>copilot_service_db</code>) — cross-service reads only ever go through an HTTP call, never a direct query (ADR-0001).</div>
+      <div class="note"><strong>Two data-entry paths:</strong> telemetry arrives via HTTP (JSON bulk / CSV) or MQTT (Mosquitto, topic <code>telemetry/{device_id}/readings</code>) — both funnel into the same ingestion function.</div>
+      <div class="note"><strong>Closed loop:</strong> ml-service's scheduler scores baselines every 60s and raises alerts in notification-service; copilot-service then reads those same alerts as tool-call context when a user asks about an asset.</div>
+      <div class="note"><strong>Real multi-tenancy, end to end:</strong> organizations, facilities, and asset types are all genuinely org-scoped and RBAC-enforced at the backend (not just hidden in the UI) - verified by walking through the product as a genuinely new user, which is how the asset-type scoping gap (and the platform-wide regression fixing it briefly caused) were actually found.</div>
+    </div>
+  </div>
+
+  <!-- AUTH -->
+  <div class="panel" data-id="auth">
+    <div class="panel-head">
+      <div class="label">Service · port 8000</div>
+      <h2>auth-service</h2>
+      <p>The only service that issues tokens. Owns users, organizations, and invites in <code>auth_db</code>. Every other service depends on it only for JWT verification (shared secret) or, for ml-service's scheduler, a real login as a service account.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-auth"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Endpoints:</strong> <code>POST /auth/signup</code>, <code>POST /auth/login</code>, <code>POST /auth/refresh</code>, <code>POST /organizations</code>, <code>GET /organizations</code>, <code>POST /organizations/{id}/invite</code>, <code>GET /organizations/{id}/members</code>.</div>
+      <div class="note"><strong>Read/write symmetry, closed a real gap:</strong> inviting a member existed long before listing them did - a registered member had no way to ever be seen again. Any real member (any role) can list; only admins can invite.</div>
+      <div class="note"><strong>Service-account pattern:</strong> ml-service's background scheduler logs in fresh every run as a dedicated least-privilege account rather than caching a long-lived token — simple because the scheduler interval (60s) is well within normal JWT lifetime.</div>
+    </div>
+  </div>
+
+  <!-- ASSET -->
+  <div class="panel" data-id="asset">
+    <div class="panel-head">
+      <div class="label">Service · port 8001</div>
+      <h2>asset-service</h2>
+      <p>Owns the physical hierarchy: facilities → asset types (with their metric definitions) → assets — all genuinely organization-scoped, not just facilities. This is the source of truth every other service resolves a human-readable metric name against.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-asset"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Endpoints:</strong> <code>/facilities</code>, <code>/asset-types</code> (carries <code>metric_definitions</code>), <code>/assets</code> — all JWT-protected via the shared-secret pattern.</div>
+      <div class="note"><strong>Fan-out:</strong> telemetry-service, ml-service, and copilot-service all call this service to resolve a metric name (e.g. <code>RTU_REFG_COND_PRES</code>) to its <code>metric_definition_id</code> for a specific asset.</div>
+      <div class="note"><strong>Real multi-tenancy fix:</strong> asset types were originally a global, shared catalog across every organization - found live via a walkthrough with a genuinely new org, which could see and use every other org's asset types. Fixed to be organization-scoped, same as facilities, with a real Alembic migration (this service had none before - tables were created via <code>Base.metadata.create_all()</code>, which can't alter an existing table's schema) backfilling existing data and enforcing a per-org uniqueness constraint instead of a global one.</div>
+    </div>
+  </div>
+
+  <!-- TELEMETRY -->
+  <div class="panel" data-id="telemetry">
+    <div class="panel-head">
+      <div class="label">Service · port 8002</div>
+      <h2>telemetry-service</h2>
+      <p>Three separate doors — HTTP JSON, CSV upload, and MQTT — all converge on one shared <code>_ingest_items()</code> function, so there is exactly one definition of "ingesting a reading" regardless of transport.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-telemetry"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Never drop data:</strong> a reading is written even if its raw <code>external_key</code> (e.g. a BACnet point name) can't yet be resolved to a known <code>MetricDefinition</code> — <code>GET /telemetry/unmapped</code> surfaces what's still unresolved.</div>
+      <div class="note"><strong>No cross-DB foreign keys (ADR-0005):</strong> <code>metric_definition_id</code> lives in asset-service's database, so telemetry-service can't enforce it as a real FK — resolved at read-time via API instead.</div>
+      <div class="note"><strong>MQTT auth:</strong> happens at the application layer, not via MQTT's own username/password — each message's <code>ingestion_key</code> is hashed and checked against the same <code>IngestionKey</code> table HTTP ingestion uses.</div>
+      <div class="note"><strong>Content-derived idempotency:</strong> a caller-supplied <code>idempotency_key</code> is honored as-is; if absent, one is deterministically derived from the reading's own content (asset + metric + value + timestamp, SHA-256). Found live: re-uploading the same CSV twice silently created duplicate rows, since dedup was entirely dependent on a key most callers never supply. Applies consistently across all 4 real ingestion paths (single reading, bulk, CSV, MQTT).</div>
+      <div class="note"><strong>Endpoints, closed a real gap:</strong> <code>GET /edge-devices</code> now exists - a registered device previously had no way to ever be seen again (only <code>POST</code> existed).</div>
+    </div>
+  </div>
+
+  <!-- ML -->
+  <div class="panel" data-id="ml">
+    <div class="panel-head">
+      <div class="label">Service · port 8003</div>
+      <h2>ml-service</h2>
+      <p>Two independent paths through the same core logic: an on-demand API for fitting/scoring a baseline, and a 60-second APScheduler background loop that runs that exact same scoring function for every asset with a fitted baseline and raises alerts automatically.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-ml"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Endpoints:</strong> <code>POST/GET /baselines/{asset_id}</code> (fit / score), <code>GET /predictions/{asset_id}</code> and <code>/explain</code> (classifier + gatekeeper models — deliberately not wired into the scheduler yet, per the router's own docstring).</div>
+      <div class="note"><strong>Same function, two callers:</strong> the scheduler literally imports and calls <code>score_baseline()</code> from <code>routers/baselines.py</code> — the API path and the background path can never silently drift apart.</div>
+      <div class="note"><strong>Alert dedup at the source:</strong> before creating an alert, the scheduler checks notification-service for an existing OPEN <code>baseline_deviation</code> alert on that asset — one deviation stays one open alert, not one per scheduler tick.</div>
+      <div class="note"><strong>Isolated thread:</strong> APScheduler's <code>BackgroundScheduler</code> runs jobs on a separate thread from FastAPI's event loop, so a slow scoring run can't block live HTTP requests.</div>
+      <div class="note"><strong>Real, caught-same-day regression:</strong> when asset-service's asset types became org-scoped, <code>asset_client.py</code>'s metric-name resolution wasn't updated to pass <code>organization_id</code> - silently breaking every prediction for every asset on the platform for a full day, undetected by a fully green test suite (this file had 0% real coverage of its own HTTP-calling logic - every test mocked it away). Fixed by adding the real extra hop this needs: asset → facility (for organization_id) → asset-types, plus real tests that actually exercise the HTTP chain instead of mocking it away.</div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION -->
+  <div class="panel" data-id="notification">
+    <div class="panel-head">
+      <div class="label">Service · port 8004</div>
+      <h2>notification-service</h2>
+      <p>A deliberately generic alert sink — it doesn't know or care whether an alert came from the ml-service scheduler or some future source; any producer can <code>POST /alerts</code>.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-notification"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Endpoints:</strong> <code>POST /alerts</code>, <code>GET /alerts/{asset_id}</code> (filterable by status), <code>PATCH .../acknowledge</code>, <code>PATCH .../resolve</code>.</div>
+      <div class="note"><strong>Consumers:</strong> the frontend dashboard for human ack/resolve actions, and copilot-service's <code>get_alert_history</code> tool for conversational context.</div>
+    </div>
+  </div>
+
+  <!-- COPILOT -->
+  <div class="panel" data-id="copilot">
+    <div class="panel-head">
+      <div class="label">Service · port 8005</div>
+      <h2>copilot-service</h2>
+      <p>A hand-built agentic tool-calling loop (no LangChain) around Groq's LLM API, grounded by a RAG knowledge base (ChromaDB + BGE-small embeddings) and three live data tools scoped to a single, pre-authorized asset.</p>
+    </div>
+    <div class="diagram-card"><pre class="mermaid" id="m-copilot"></pre></div>
+    <div class="notes">
+      <div class="note"><strong>Security boundary:</strong> <code>asset_id</code> is fixed at the endpoint level via <code>verify_asset_access</code> — the LLM's tools take metric names/filters only, never an asset_id, so no prompt can trick it into querying an asset the caller doesn't have access to.</div>
+      <div class="note"><strong>Embedding asymmetry:</strong> documents are embedded raw for storage; queries get an instruction prefix (<code>"Represent this sentence for searching relevant passages: "</code>) before embedding — matching BGE-small's recommended usage.</div>
+      <div class="note"><strong>Memory = replay:</strong> conversation "memory" is prior turns reloaded under a fixed token budget (oldest dropped first, not summarized) and re-sent with every call — the LLM itself is stateless.</div>
+      <div class="note"><strong>Loop cap:</strong> up to 5 tool-call iterations per turn before the endpoint fails loudly rather than looping forever.</div>
+      <div class="note"><strong>Honest "can't tell" vs. "checked, fine":</strong> <code>diagnose_fault</code> used to say "no fault was detected" whenever zero classifiers could evaluate (missing metrics), reading as a false-positive health claim. Found live on a real new asset with minimal data mapped. Now returns <code>models_skipped</code> with real per-model reasons, and the summary genuinely distinguishes "nothing could run" from "ran, found nothing" - reinforced in <code>SYSTEM_PROMPT</code> as a second line of defense.</div>
+    </div>
+  </div>
+
+  <footer>docs referenced: README.md · docker-compose.yml · docs/adr/0001–0005 · services/*/app routers &amp; scheduler.py &amp; rag/*.py — generated from the live repo, not from memory. Updated after a real live walkthrough surfaced and fixed several real, meaningful issues (see docs/DEPLOYMENT_RUNBOOK.md and the project commit history for the full detail).</footer>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad:false,
+  theme:'base',
+  themeVariables:{
+    background:'#12161D',
+    primaryColor:'#171C24',
+    primaryTextColor:'#E7ECF2',
+    primaryBorderColor:'#2A3340',
+    lineColor:'#4A5568',
+    secondaryColor:'#171C24',
+    tertiaryColor:'#171C24',
+    fontFamily:'IBM Plex Mono, monospace',
+    fontSize:'13px',
+    edgeLabelBackground:'#12161D',
+    clusterBkg:'#0F1319',
+    clusterBorder:'#2A3340'
+  },
+  flowchart:{ curve:'basis', padding:14, nodeSpacing:36, rankSpacing:52, htmlLabels:true }
+});
+
+const diagrams = {};
+
+diagrams['m-overview'] = `
+flowchart TB
+  FE["Next.js Frontend"]
+  EDGE["Edge devices / BACnet gateways"]
+  MOSQ["Mosquitto MQTT broker"]
+
+  AUTH["auth-service :8000"]
+  ASSET["asset-service :8001"]
+  TEL["telemetry-service :8002"]
+  ML["ml-service :8003"]
+  NOTIF["notification-service :8004"]
+  COPILOT["copilot-service :8005"]
+
+  GROQ[["Groq LLM API"]]
+  CHROMA[("ChromaDB\\nembedded")]
+  PG[("Postgres\\n1 container / 6 logical DBs")]
+
+  FE -->|"signup / login"| AUTH
+  FE -->|"facilities, asset types, assets"| ASSET
+  FE -->|"CSV upload, readings"| TEL
+  FE -->|"baseline & prediction views"| ML
+  FE -->|"alert feed, ack / resolve"| NOTIF
+  FE -->|"chat"| COPILOT
+
+  EDGE -->|"HTTP JSON / CSV"| TEL
+  EDGE -->|"MQTT readings"| MOSQ --> TEL
+
+  AUTH -.->|"shared JWT secret\\nADR-0004"| ASSET
+  AUTH -.-> TEL
+  AUTH -.-> ML
+  AUTH -.-> NOTIF
+  AUTH -.-> COPILOT
+
+  TEL -->|"resolve metric_definition_id"| ASSET
+  ML -->|"pull readings"| TEL
+  ML -->|"asset + metric defs"| ASSET
+  ML -->|"service-account login"| AUTH
+  ML -->|"POST baseline_deviation alert"| NOTIF
+
+  COPILOT -->|"get_telemetry"| TEL
+  COPILOT -->|"resolve metric id"| ASSET
+  COPILOT -->|"get_alert_history"| NOTIF
+  COPILOT -->|"search_knowledge_base"| CHROMA
+  COPILOT -->|"tool-calling loop"| GROQ
+
+  AUTH --> PG
+  ASSET --> PG
+  TEL --> PG
+  ML --> PG
+  NOTIF --> PG
+  COPILOT --> PG
+
+  classDef auth fill:#241F33,stroke:#B79CF0,color:#E7ECF2;
+  classDef asset fill:#182536,stroke:#5FA8F5,color:#E7ECF2;
+  classDef tel fill:#122A24,stroke:#39C79A,color:#E7ECF2;
+  classDef ml fill:#2E2413,stroke:#F0B23D,color:#E7ECF2;
+  classDef notif fill:#301A20,stroke:#F1667A,color:#E7ECF2;
+  classDef copilot fill:#0F2C2C,stroke:#3DD3D3,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+
+  class AUTH auth;
+  class ASSET asset;
+  class TEL tel;
+  class ML ml;
+  class NOTIF notif;
+  class COPILOT copilot;
+  class FE,EDGE,MOSQ,GROQ,CHROMA,PG ext;
+`;
+
+diagrams['m-auth'] = `
+flowchart TB
+  C["Caller (frontend / other services)"]
+
+  C -->|"POST /auth/signup"| SU["Create user + organization"]
+  SU --> DB[("auth_db")]
+
+  C -->|"POST /auth/login"| LG{"Verify email + password (bcrypt)"}
+  LG -->|"valid"| TOK["Issue TokenPair\\n(access + refresh JWT)"]
+  LG -->|"invalid"| ERR["401 Unauthorized"]
+  TOK --> DB
+
+  C -->|"POST /auth/refresh"| RF["Validate refresh token"] --> TOK
+
+  C -->|"POST /organizations"| ORG["Create organization"] --> DB
+  C -->|"GET /organizations"| ORGL["List caller's organizations"] --> DB
+  C -->|"POST /organizations/{id}/invite"| INV["Create invite\\n(admin only)"] --> DB
+  C -->|"GET /organizations/{id}/members"| MEM["List members\\n(any real role)"] --> DB
+
+  TOK -.->|"shared secret (ADR-0004)"| OTHERS["asset / telemetry / ml /\\nnotification / copilot services\\nverify via common.security"]
+
+  classDef primary fill:#241F33,stroke:#B79CF0,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class SU,LG,TOK,RF,ORG,ORGL,INV,MEM,ERR primary;
+  class C,DB,OTHERS ext;
+`;
+
+diagrams['m-asset'] = `
+flowchart TB
+  AUTHCHK["JWT verified\\n(shared secret, common.security)"]
+
+  AUTHCHK --> F1["POST/GET /facilities\\nGET /facilities/{id}\\n(organization_id-scoped)"]
+  AUTHCHK --> T1["POST/GET /asset-types\\n(organization_id-scoped,\\ncarries metric_definitions)"]
+  AUTHCHK --> A1["POST/GET /assets\\nGET /assets/{asset_id}"]
+
+  F1 --> DB[("asset_db")]
+  T1 --> DB
+  A1 -->|"asset references facility_id + asset_type_id"| DB
+
+  DB -->|"resolve metric_definition_id"| TEL2["telemetry-service"]
+  DB -->|"asset_client.py"| ML2["ml-service"]
+  DB -->|"resolve metric name → id"| CP2["copilot-service tool executors"]
+
+  classDef primary fill:#182536,stroke:#5FA8F5,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class F1,T1,A1 primary;
+  class AUTHCHK,DB,TEL2,ML2,CP2 ext;
+`;
+
+diagrams['m-telemetry'] = `
+flowchart TB
+  D1["POST /telemetry\\n(JSON bulk)"]
+  D2["CSV upload endpoint"]
+  D3["MQTT subscriber\\n(background thread,\\ntopic telemetry/+/readings)"]
+  MOSQ["Mosquitto broker"] --> D3
+
+  D3 -->|"hash ingestion_key,\\ncheck IngestionKey table"| ING["_ingest_items()\\nshared ingestion logic +\\ncontent-derived idempotency key\\nif caller supplies none"]
+  D1 --> ING
+  D2 --> ING
+
+  ING -->|"write reading even if\\nexternal_key unresolved"| DB[("telemetry_db")]
+  ING -.->|"no hard FK (ADR-0005)"| ASSETLINK["asset-service:\\nMetricDefinition"]
+
+  R1["GET /telemetry\\n(filter by asset + metric)"] --> DB
+  R2["GET /telemetry/unmapped\\n(unresolved external_keys)"] --> DB
+  R3["POST /edge-devices\\n(register device)"] --> DB
+  R4["GET /edge-devices\\n(list registered devices)"] --> DB
+
+  classDef primary fill:#122A24,stroke:#39C79A,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class D1,D2,D3,ING,R1,R2,R3,R4 primary;
+  class DB,MOSQ,ASSETLINK ext;
+`;
+
+diagrams['m-ml'] = `
+flowchart TB
+  subgraph API["On-demand API"]
+    B1["POST /baselines/{asset_id}\\nfit FrozenBaseline"]
+    B2["GET /baselines/{asset_id}\\nscore_baseline() → z-score"]
+    P1["GET /predictions/{asset_id}\\nclassifier / gatekeeper"]
+    P2["GET /predictions/{asset_id}/explain"]
+  end
+
+  B1 --> BUF["buffer_builder.py"]
+  BUF --> TC["telemetry_client.py"] --> TEL3["telemetry-service"]
+  BUF --> AC["asset_client.py"] --> ASSET3["asset-service"]
+  B1 --> DB[("ml_service_db")]
+  B2 --> DB
+
+  subgraph SCHED["Background scheduler — APScheduler, every 60s"]
+    S1["_get_service_account_token()"] --> AUTH3["auth-service login"]
+    S1 --> S2["for each asset+metric\\nwith a fitted baseline:\\ncall score_baseline()"]
+    S2 --> DB
+    S2 --> S3{"deviation AND\\nno open alert?"}
+    S3 -->|"yes"| S4["POST alert →\\nnotification-service"]
+    S3 -->|"no"| S5["skip (dedup)"]
+  end
+
+  classDef primary fill:#2E2413,stroke:#F0B23D,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class B1,B2,P1,P2,BUF,S1,S2,S3,S4,S5 primary;
+  class TC,AC,TEL3,ASSET3,AUTH3,DB ext;
+`;
+
+diagrams['m-notification'] = `
+flowchart TB
+  SRC1["ml-service scheduler\\n(baseline_deviation)"] --> C1["POST /alerts"]
+  C1 --> DEDUP{"existing OPEN alert,\\nsame source + asset?"}
+  DEDUP -->|"yes"| SKIP["skip — no duplicate"]
+  DEDUP -->|"no"| CREATE["create alert"] --> DB[("notification_db")]
+
+  FE2["frontend dashboard"] --> C2["GET /alerts/{asset_id}\\n(filter by status)"]
+  FE2 --> C3["PATCH .../acknowledge"]
+  FE2 --> C4["PATCH .../resolve"]
+  C2 --> DB
+  C3 --> DB
+  C4 --> DB
+
+  COPILOT3["copilot-service\\nget_alert_history tool"] --> C2
+
+  classDef primary fill:#301A20,stroke:#F1667A,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class C1,C2,C3,C4,DEDUP,CREATE,SKIP primary;
+  class SRC1,FE2,COPILOT3,DB ext;
+`;
+
+diagrams['m-copilot'] = `
+flowchart TB
+  subgraph INDEX["Offline indexing"]
+    DOC["source_docs/\\nfault documentation"] --> CHUNK["chunking.py"]
+    CHUNK --> EMB1["embeddings.py\\n(BGE-small, no prefix — documents)"]
+    EMB1 --> CHROMA[("ChromaDB, persistent\\ncollection: hvac_fault_docs")]
+  end
+
+  U["POST /chat/{asset_id}"] --> AUTHCHK["verify_asset_access\\n(asset_id fixed here, not by LLM)"]
+  AUTHCHK --> HIST["load_history_within_budget\\n(token-budgeted replay)"]
+  HIST --> LOOP["Agentic tool-calling loop\\n(max 5 iterations, hand-built)"]
+  LOOP --> LLM["Groq chat.completions"]
+  LLM -->|"tool_calls"| DISPATCH{"dispatch by name"}
+
+  DISPATCH -->|"get_telemetry"| T1["telemetry-service"]
+  DISPATCH -->|"get_baseline_status"| T2["ml-service / asset-service"]
+  DISPATCH -->|"get_alert_history"| T3["notification-service"]
+  DISPATCH -->|"search_knowledge_base"| EMB2["embed_query\\n(instruction prefix)"] --> CHROMA
+
+  T1 --> LOOP
+  T2 --> LOOP
+  T3 --> LOOP
+  CHROMA --> LOOP
+
+  LLM -->|"final answer, no tool_calls"| SAVE["persist user + assistant turns"]
+  SAVE --> DB[("copilot_service_db")]
+  SAVE --> RESP["ChatResponse:\\nanswer, sources_used,\\ntools_called, retrieved_context"]
+
+  classDef primary fill:#0F2C2C,stroke:#3DD3D3,color:#E7ECF2;
+  classDef ext fill:#12161D,stroke:#4A5568,color:#8592A3,stroke-dasharray:3 3;
+  class U,AUTHCHK,HIST,LOOP,LLM,DISPATCH,SAVE,RESP,EMB2 primary;
+  class DOC,CHUNK,EMB1,CHROMA,T1,T2,T3,DB primary;
+`;
+
+async function renderAll(){
+  for (const [id, def] of Object.entries(diagrams)){
+    const el = document.getElementById(id);
+    try{
+      const { svg } = await mermaid.render(id + '-svg', def);
+      el.innerHTML = svg;
+    }catch(e){
+      el.innerHTML = '<div style="color:#F1667A;font-family:monospace;font-size:12px;">Diagram render error: '+e.message+'</div>';
+      console.error(id, e);
+    }
+  }
+}
+renderAll();
+
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector('.panel[data-id="'+btn.dataset.id+'"]').classList.add('active');
+});
+</script>
+</body>
+</html>
