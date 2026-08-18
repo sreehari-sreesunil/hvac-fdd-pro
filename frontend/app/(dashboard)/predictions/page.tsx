@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { QueryErrorState } from "@/components/ui/QueryErrorState";
 import { AssetSelector, type AssetSelectorValue } from "@/components/shared/AssetSelector";
+import { getModelDisplayName } from "@/lib/utils/modelNames";
 import type { PredictionOut } from "@/lib/api-types";
 
 function isClassifierResult(p: PredictionOut) {
@@ -43,7 +44,7 @@ function PredictSection({ assetId, modelNames }: { assetId: string; modelNames: 
             >
               {modelNames.map((name) => (
                 <option key={name} value={name}>
-                  {name}
+                  {getModelDisplayName(name)}
                 </option>
               ))}
             </Select>
@@ -140,7 +141,7 @@ function AttributeSection({ assetId, modelNames }: { assetId: string; modelNames
                 checked={selected.has(name)}
                 onChange={() => toggle(name)}
               />
-              <span className="font-mono-num text-xs">{name}</span>
+              <span className="font-mono-num text-xs">{getModelDisplayName(name)}</span>
             </label>
           ))}
         </div>
@@ -174,7 +175,7 @@ function AttributeSection({ assetId, modelNames }: { assetId: string; modelNames
                 <span className="text-sm text-text-primary">
                   Attributed to{" "}
                   <span className="font-mono-num text-accent-glow-ink">
-                    {mutation.data.attributed_model}
+                    {getModelDisplayName(mutation.data.attributed_model)}
                   </span>{" "}
                   (
                   {((mutation.data.attributed_fault_probability ?? 0) * 100).toFixed(1)}%)
@@ -195,7 +196,9 @@ function AttributeSection({ assetId, modelNames }: { assetId: string; modelNames
                 <tbody>
                   {mutation.data.all_results.map((r) => (
                     <tr key={r.model_name} className="border-b border-border last:border-b-0">
-                      <td className="py-2 pr-4 font-mono-num text-text-primary">{r.model_name}</td>
+                      <td className="py-2 pr-4 font-mono-num text-text-primary">
+                        {getModelDisplayName(r.model_name)}
+                      </td>
                       <td className="py-2 pr-4">
                         <Badge tone={r.predicted_label === 1 ? "critical" : "primary"}>
                           {r.predicted_label === 1 ? "fault" : "ok"}
@@ -220,7 +223,8 @@ function AttributeSection({ assetId, modelNames }: { assetId: string; modelNames
                 </p>
                 {mutation.data.models_skipped.map((s) => (
                   <p key={s.model_name} className="text-xs text-text-muted">
-                    <span className="font-mono-num">{s.model_name}</span> — {s.reason}
+                    <span className="font-mono-num">{getModelDisplayName(s.model_name)}</span> —{" "}
+                    {s.reason}
                   </p>
                 ))}
               </div>
@@ -261,7 +265,7 @@ function ExplainSection({ assetId, modelNames }: { assetId: string; modelNames: 
             >
               {modelNames.map((name) => (
                 <option key={name} value={name}>
-                  {name}
+                  {getModelDisplayName(name)}
                 </option>
               ))}
             </Select>

@@ -38,14 +38,14 @@ export default function OnboardingPage() {
   // resolves, once, and freeze that value - the wizard's own subsequent
   // org creation no longer retroactively triggers the redirect.
   const [hadOrgOnArrival, setHadOrgOnArrival] = useState<boolean | null>(null);
-  useEffect(() => {
-    if (status === "authenticated" && hadOrgOnArrival === null) {
-      setHadOrgOnArrival(!!currentOrgId);
-    }
-    // Deliberately omitting currentOrgId from deps - this must only
-    // capture the value once, on arrival, not track it reactively.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, hadOrgOnArrival]);
+  // Setting state directly during render (not in an effect) is the
+  // sanctioned React pattern for "capture this once" - it's safe because
+  // the condition below stops being true the moment hadOrgOnArrival is
+  // set, so it can't loop, and currentOrgId is deliberately not read
+  // again after this to avoid retroactively tracking it.
+  if (status === "authenticated" && hadOrgOnArrival === null) {
+    setHadOrgOnArrival(!!currentOrgId);
+  }
 
   useEffect(() => {
     if (hadOrgOnArrival === true) {

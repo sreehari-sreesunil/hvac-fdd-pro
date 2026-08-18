@@ -19,6 +19,7 @@ import { QueryErrorState } from "@/components/ui/QueryErrorState";
 import { useToast } from "@/components/ui/Toast";
 import { AssetSelector, type AssetSelectorValue } from "@/components/shared/AssetSelector";
 import { AddMetricDefinitionModal } from "@/components/facility-admin/AddMetricDefinitionModal";
+import { getModelDisplayName } from "@/lib/utils/modelNames";
 
 type MetricStatus =
   | { rawName: string; state: "mapped" }
@@ -194,7 +195,7 @@ export default function SensorReadinessPage() {
           {readiness.map(({ model, statuses, ready }) => (
             <Card key={model.model_name}>
               <CardHeader>
-                <CardTitle>{model.model_name}</CardTitle>
+                <CardTitle>{getModelDisplayName(model.model_name)}</CardTitle>
                 <Badge tone={ready ? "primary" : "critical"} icon={ready ? CheckCircle2 : undefined}>
                   {ready ? "Ready" : "Not ready"}
                 </Badge>
