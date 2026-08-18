@@ -23,17 +23,37 @@ export default function OnboardingPage() {
   // the URL — not through any in-app link, which never points here once
   // onboarded) must never see this wizard again: StepCreateOrg has no
   // concept of "the caller already has an org" and would happily create a
-  // real, duplicate one. replace (not push) so this detour doesn't linger
-  // as a back-button stop, matching how the rest of the app guards routes
-  // (see useRequireAuth/AuthProvider's own redirect-on-auth-state hooks).
-  const alreadyOnboarded = status === "authenticated" && !!currentOrgId;
+  // real, duplicate one.
+  //
+  // Real bug fixed here: the original version re-evaluated this check on
+  // EVERY render, not just on arrival. StepCreateOrg's own onDone
+  // callback sets currentOrgId as part of legitimately completing step 0
+  // of THIS SAME wizard - which flipped the guard to true mid-flow and
+  // kicked the user straight to the dashboard before they ever reached
+  // Facility/Asset, since the guard couldn't distinguish "arrived already
+  // onboarded" from "just onboarded one step ago as part of this exact
+  // session." Found live during a full onboarding dry run.
+  //
+  // Fix: capture whether the user already had an org the FIRST time auth
+  // resolves, once, and freeze that value - the wizard's own subsequent
+  // org creation no longer retroactively triggers the redirect.
+  const [hadOrgOnArrival, setHadOrgOnArrival] = useState<boolean | null>(null);
   useEffect(() => {
-    if (alreadyOnboarded) {
+    if (status === "authenticated" && hadOrgOnArrival === null) {
+      setHadOrgOnArrival(!!currentOrgId);
+    }
+    // Deliberately omitting currentOrgId from deps - this must only
+    // capture the value once, on arrival, not track it reactively.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, hadOrgOnArrival]);
+
+  useEffect(() => {
+    if (hadOrgOnArrival === true) {
       router.replace("/dashboard");
     }
-  }, [alreadyOnboarded, router]);
+  }, [hadOrgOnArrival, router]);
 
-  if (status !== "authenticated" || alreadyOnboarded) {
+  if (status !== "authenticated" || hadOrgOnArrival === null || hadOrgOnArrival === true) {
     return <p className="text-center text-sm text-text-muted">Loading…</p>;
   }
 
