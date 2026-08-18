@@ -10,3 +10,4 @@ node_modules/
 .coverage
 .vscode/
 backups/
+ml/models.tar.gz

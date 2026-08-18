@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* ---- Palette: "Graphite + Ice Mint + Soft Voltage" ----
    Dark is the hero mode this palette was designed for (carbon/graphite

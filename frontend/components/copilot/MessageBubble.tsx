@@ -6,6 +6,8 @@ import {
   ServerCrash,
   Wrench,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils/cn";
 import type { ApiErrorKind } from "@/lib/utils/errors";
 import { Badge } from "@/components/ui/Badge";
@@ -68,13 +70,19 @@ export function MessageBubble({
     <div className={cn("flex motion-safe:animate-fade-up", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-lg rounded-surface p-4",
+          "rounded-surface p-4",
           isUser
-            ? "bg-accent-brand/10 text-text-primary shadow-neo-resting"
-            : "border-l-2 border-accent-glow bg-neo-base text-text-primary shadow-neo-resting",
+            ? "max-w-lg bg-accent-brand/10 text-text-primary shadow-neo-resting"
+            : "max-w-2xl border-l-2 border-accent-glow bg-neo-base text-text-primary shadow-neo-resting",
         )}
       >
-        <p className="text-sm">{message.content}</p>
+                {isUser ? (
+          <p className="text-sm">{message.content}</p>
+        ) : (
+          <div className="prose prose-sm prose-invert max-w-none text-text-primary prose-headings:text-text-primary prose-strong:text-text-primary prose-th:text-text-primary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          </div>
+        )}
 
         {!isUser && message.sourcesUsed.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
